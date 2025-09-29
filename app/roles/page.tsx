@@ -113,9 +113,7 @@ export default function RolesPage() {
   }
 
   const handleDelete = (role: Role) => {
-    if (confirm("¿Estás seguro de que deseas eliminar este rol?")) {
-      setRoles((prev) => prev.filter((r) => r.id !== role.id))
-    }
+    setRoles((prev) => prev.filter((r) => r.id !== role.id))
   }
 
   const handleSubmit = (data: any) => {

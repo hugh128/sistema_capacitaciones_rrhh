@@ -115,9 +115,7 @@ export default function ParticipantesPage() {
   }
 
   const handleDelete = (participante: Participante) => {
-    if (confirm("¿Estás seguro de que deseas eliminar este participante?")) {
-      setParticipantes((prev) => prev.filter((p) => p.id !== participante.id))
-    }
+    setParticipantes((prev) => prev.filter((p) => p.id !== participante.id))
   }
 
   const handleSubmit = (data: any) => {

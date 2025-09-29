@@ -122,9 +122,7 @@ export default function CapacitacionesPage() {
   }
 
   const handleDelete = (capacitacion: Capacitacion) => {
-    if (confirm("¿Estás seguro de que deseas eliminar esta capacitación?")) {
-      setCapacitaciones((prev) => prev.filter((c) => c.id !== capacitacion.id))
-    }
+    setCapacitaciones((prev) => prev.filter((c) => c.id !== capacitacion.id))
   }
 
   const handleSubmit = (data: any) => {

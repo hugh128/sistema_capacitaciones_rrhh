@@ -113,9 +113,7 @@ export default function DocumentosPage() {
   }
 
   const handleDelete = (documento: Documento) => {
-    if (confirm("¿Estás seguro de que deseas eliminar este documento?")) {
-      setDocumentos((prev) => prev.filter((d) => d.id !== documento.id))
-    }
+    setDocumentos((prev) => prev.filter((d) => d.id !== documento.id))
   }
 
   const handleSubmit = (data: any) => {

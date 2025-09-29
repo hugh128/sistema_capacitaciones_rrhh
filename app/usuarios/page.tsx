@@ -103,9 +103,7 @@ export default function UsuariosPage() {
   }
 
   const handleDelete = (usuario: Usuario) => {
-    if (confirm("¿Estás seguro de que deseas eliminar este usuario?")) {
-      setUsuarios((prev) => prev.filter((u) => u.id !== usuario.id))
-    }
+    setUsuarios((prev) => prev.filter((u) => u.id !== usuario.id))
   }
 
   const handleSubmit = (data: any) => {
