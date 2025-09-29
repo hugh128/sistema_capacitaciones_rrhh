@@ -37,8 +37,8 @@ export function AppHeader({ title, subtitle, showActions = true }: AppHeaderProp
           {showActions && (
             <>
               <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input placeholder="Buscar..." className="pl-10 w-64" />
+{/*                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
+                <Input placeholder="Buscar..." className="pl-10 w-64" /> */}
               </div>
 
               <Button variant="outline" size="sm">
