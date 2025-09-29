@@ -20,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface FormField {
   key: string
   label: string
-  type: "text" | "textarea" | "select" | "email" | "tel"
+  type: "text" | "textarea" | "select" | "email" | "tel" | "password"
   required?: boolean
   options?: { value: string; label: string }[]
   placeholder?: string
@@ -107,6 +107,7 @@ export function FormModal({
                   value={formData[field.key] || ""}
                   onChange={(e) => updateField(field.key, e.target.value)}
                   required={field.required}
+                  autoComplete={field.type === "password" ? "current-password" : ""}
                 />
               )}
             </div>

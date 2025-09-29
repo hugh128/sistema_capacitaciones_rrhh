@@ -120,3 +120,8 @@
     @apply bg-background text-foreground;
   }
 }
+
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #9ca3af transparent;
+}
