@@ -92,7 +92,7 @@ export function DataTable({
       </div>
 
       {/* Table */}
-      <div className="border rounded-lg overflow-hidden">
+      <div className="border rounded-lg overflow-hidden custom-scrollbar">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>

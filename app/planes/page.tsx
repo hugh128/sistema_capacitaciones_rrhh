@@ -28,6 +28,7 @@ export default function PlanesPage() {
       key: "departamentoId",
       label: "Departamento",
       render: (value: string) => {
+        if (!value || value === "all") return "Todos"
         const departamento = mockDepartamentos.find((d) => d.id === value)
         return departamento?.nombre || "Todos"
       },
@@ -61,7 +62,7 @@ export default function PlanesPage() {
       label: "Departamento",
       type: "select" as const,
       options: [
-        { value: "", label: "Todos los departamentos" },
+        { value: "all", label: "Todos los departamentos" },
         ...mockDepartamentos.map((d) => ({ value: d.id, label: d.nombre })),
       ],
     },
@@ -97,13 +98,20 @@ export default function PlanesPage() {
   }
 
   const handleSubmit = (data: any) => {
+    const processedData = {
+      ...data,
+      departamentoId: data.departamentoId === "all" ? undefined : data.departamentoId,
+    }
+
     if (editingPlan) {
       setPlanes((prev) =>
-        prev.map((p) => (p.id === editingPlan.id ? { ...p, ...data, capacitaciones: editingPlan.capacitaciones } : p)),
+        prev.map((p) =>
+          p.id === editingPlan.id ? { ...p, ...processedData, capacitaciones: editingPlan.capacitaciones } : p,
+        ),
       )
     } else {
       const newPlan: PlanCapacitacion = {
-        ...data,
+        ...processedData,
         id: Date.now().toString(),
         capacitaciones: [],
         fechaCreacion: new Date().toISOString().split("T")[0],
@@ -120,7 +128,7 @@ export default function PlanesPage() {
       <div className="flex-1 flex flex-col overflow-hidden">
         <AppHeader title="Planes de Capacitación" subtitle="Gestiona los planes de capacitación por departamento" />
 
-        <main className="flex-1 overflow-auto p-6 custom-scrollbar">
+        <main className="flex-1 overflow-auto p-6">
           <div className="max-w-7xl mx-auto space-y-6">
             {/* Plan Cards */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -188,7 +196,11 @@ export default function PlanesPage() {
         title={editingPlan ? "Editar Plan" : "Nuevo Plan"}
         description={editingPlan ? "Modifica el plan de capacitación" : "Crea un nuevo plan de capacitación"}
         fields={formFields}
-        initialData={editingPlan || {}}
+        initialData={
+          editingPlan
+            ? { ...editingPlan, departamentoId: editingPlan.departamentoId || "all" }
+            : { departamentoId: "all" }
+        }
         onSubmit={handleSubmit}
       />
     </div>

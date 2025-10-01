@@ -74,7 +74,7 @@ export default function ConfiguracionPage() {
                     <CardContent className="pt-0">
                       <CardDescription className="mb-4 text-sm">{option.description}</CardDescription>
                       <Link href={option.href}>
-                        <Button className="w-full bg-transparent" variant="outline">
+                        <Button className="w-full bg-transparent dark:hover:bg-accent cursor-pointer" variant="outline">
                           Administrar {option.title}
                         </Button>
                       </Link>

@@ -62,7 +62,7 @@ export function LoginForm() {
             <Card className="w-full phara-card border-0 shadow-2xl relative">
 
               <CardHeader className="text-center pb-6">
-                <CardTitle className="text-2xl sm:text-3xl font-bold text-primary mb-2">Iniciar Sesión</CardTitle>
+                <CardTitle className="text-2xl sm:text-3xl font-bold text-primary mb-2 dark:text-primary-foreground">Iniciar Sesión</CardTitle>
                 <div className="w-16 h-1 bg-[#F7AC25] mx-auto rounded-full"></div>
               </CardHeader>
 
@@ -147,7 +147,7 @@ export function LoginForm() {
               </CardContent>
             </Card>
 
-            <div className="text-center mt-8 text-sm text-primary font-medium">
+            <div className="text-center mt-8 text-sm text-primary font-medium dark:text-primary-foreground">
               <p>Sistema de Gestión de Capacitaciones</p>
               <p className="text-xs text-muted-foreground mt-1">versión 1.0</p>
             </div>

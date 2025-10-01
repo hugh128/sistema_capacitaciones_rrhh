@@ -45,9 +45,8 @@ export default function CapacitacionesPage() {
       label: "Estado",
       render: (value: string) => {
         const variants = {
-          programada: "secondary" as const,
-          en_progreso: "default" as const,
-          completada: "outline" as const,
+          activa: "default" as const,
+          finalizada: "outline" as const,
           cancelada: "destructive" as const,
         }
         return <Badge variant={variants[value as keyof typeof variants]}>{value}</Badge>
@@ -56,59 +55,71 @@ export default function CapacitacionesPage() {
   ]
 
   const formFields = [
-    { key: "nombre", label: "Nombre", type: "text" as const, required: true },
-    { key: "descripcion", label: "Descripción", type: "textarea" as const },
     { key: "codigo", label: "Código", type: "text" as const, required: true },
+    { key: "nombre", label: "Nombre de la Capacitación", type: "text" as const, required: true },
+    { key: "descripcion", label: "Descripción", type: "textarea" as const },
     {
       key: "tipo",
       label: "Tipo",
       type: "select" as const,
       required: true,
       options: [
-        { value: "presencial", label: "Presencial" },
-        { value: "virtual", label: "Virtual" },
-        { value: "mixta", label: "Mixta" },
+        { value: "inductiva", label: "Inductiva" },
+        { value: "continua", label: "Continua" },
+        { value: "anual", label: "Anual" },
+        { value: "específica", label: "Específica" },
       ],
     },
-    { key: "fechaInicio", label: "Fecha Inicio", type: "text" as const, placeholder: "YYYY-MM-DD" },
-    { key: "fechaFin", label: "Fecha Fin", type: "text" as const, placeholder: "YYYY-MM-DD" },
-    { key: "peoOpcional", label: "PEO (Opcional)", type: "text" as const },
-    {
-      key: "aplicaExamen",
-      label: "Aplica Examen",
-      type: "select" as const,
-      options: [
-        { value: "true", label: "Sí" },
-        { value: "false", label: "No" },
-      ],
-    },
-    {
-      key: "aplicaDiploma",
-      label: "Aplica Diploma",
-      type: "select" as const,
-      options: [
-        { value: "true", label: "Sí" },
-        { value: "false", label: "No" },
-      ],
-    },
-    {
-      key: "capacitadorId",
-      label: "Capacitador",
-      type: "select" as const,
-      options: mockPersonas.map((p) => ({ value: p.id, label: `${p.nombre} ${p.apellido}` })),
-    },
+    { key: "fechaInicio", label: "Fecha de Realización (Inicio)", type: "date" as const },
+    { key: "fechaFin", label: "Fecha de Realización (Fin)", type: "date" as const },
     {
       key: "estado",
       label: "Estado",
       type: "select" as const,
       required: true,
       options: [
-        { value: "programada", label: "Programada" },
-        { value: "en_progreso", label: "En Progreso" },
-        { value: "completada", label: "Completada" },
+        { value: "activa", label: "Activa" },
+        { value: "finalizada", label: "Finalizada" },
         { value: "cancelada", label: "Cancelada" },
       ],
     },
+    {
+      key: "capacitadorId",
+      label: "Capacitador Asignado",
+      type: "select" as const,
+      required: true,
+      options: mockPersonas
+        .filter((p) => p.estado === "activo")
+        .map((p) => ({ value: p.id, label: `${p.nombre} ${p.apellido}` })),
+    },
+    {
+      key: "aplicaExamen",
+      label: "¿Aplica Examen?",
+      type: "select" as const,
+      required: true,
+      options: [
+        { value: "true", label: "Sí" },
+        { value: "false", label: "No" },
+      ],
+    },
+    {
+      key: "puntajeMinimo",
+      label: "Puntaje Mínimo Requerido",
+      type: "number" as const,
+      placeholder: "Ej: 70",
+      conditional: { field: "aplicaExamen", value: "true" },
+    },
+    {
+      key: "aplicaDiploma",
+      label: "¿Aplica Diploma?",
+      type: "select" as const,
+      required: true,
+      options: [
+        { value: "true", label: "Sí" },
+        { value: "false", label: "No" },
+      ],
+    },
+    { key: "peoOpcional", label: "Asociación a POE (Opcional)", type: "text" as const, placeholder: "Ej: POE-SEG-001" },
   ]
 
   const handleAdd = () => {
@@ -122,7 +133,9 @@ export default function CapacitacionesPage() {
   }
 
   const handleDelete = (capacitacion: Capacitacion) => {
-    setCapacitaciones((prev) => prev.filter((c) => c.id !== capacitacion.id))
+    if (confirm("¿Estás seguro de que deseas eliminar esta capacitación?")) {
+      setCapacitaciones((prev) => prev.filter((c) => c.id !== capacitacion.id))
+    }
   }
 
   const handleSubmit = (data: any) => {
@@ -130,6 +143,7 @@ export default function CapacitacionesPage() {
       ...data,
       aplicaExamen: data.aplicaExamen === "true",
       aplicaDiploma: data.aplicaDiploma === "true",
+      puntajeMinimo: data.puntajeMinimo ? Number.parseInt(data.puntajeMinimo) : undefined,
     }
 
     if (editingCapacitacion) {
@@ -154,9 +168,9 @@ export default function CapacitacionesPage() {
 
   const getStatusIcon = (estado: string) => {
     switch (estado) {
-      case "completada":
+      case "finalizada":
         return <CheckCircle className="w-4 h-4 text-chart-2" />
-      case "en_progreso":
+      case "activa":
         return <Clock className="w-4 h-4 text-chart-4" />
       case "cancelada":
         return <AlertCircle className="w-4 h-4 text-destructive" />
@@ -179,7 +193,7 @@ export default function CapacitacionesPage() {
           }
         />
 
-        <main className="flex-1 overflow-auto p-6 custom-scrollbar">
+        <main className="flex-1 overflow-auto p-6">
           <div className="max-w-7xl mx-auto space-y-6">
             {/* Training Cards */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -223,12 +237,17 @@ export default function CapacitacionesPage() {
                       <div className="flex gap-2 mt-3">
                         {capacitacion.aplicaExamen && (
                           <Badge variant="secondary" className="text-xs">
-                            Examen
+                            Examen {capacitacion.puntajeMinimo && `(${capacitacion.puntajeMinimo}%)`}
                           </Badge>
                         )}
                         {capacitacion.aplicaDiploma && (
                           <Badge variant="secondary" className="text-xs">
                             Diploma
+                          </Badge>
+                        )}
+                        {capacitacion.peoOpcional && (
+                          <Badge variant="secondary" className="text-xs">
+                            POE
                           </Badge>
                         )}
                       </div>
@@ -264,6 +283,7 @@ export default function CapacitacionesPage() {
                 ...editingCapacitacion,
                 aplicaExamen: editingCapacitacion.aplicaExamen.toString(),
                 aplicaDiploma: editingCapacitacion.aplicaDiploma.toString(),
+                puntajeMinimo: editingCapacitacion.puntajeMinimo?.toString() || "",
               }
             : {}
         }

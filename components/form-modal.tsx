@@ -20,7 +20,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 interface FormField {
   key: string
   label: string
-  type: "text" | "textarea" | "select" | "email" | "tel" | "password"
+  type: "text" | "textarea" | "select" | "email" | "tel" | "password" | "date" | "number"
   required?: boolean
   options?: { value: string; label: string }[]
   placeholder?: string
@@ -31,10 +31,11 @@ interface FormModalProps {
   onOpenChange: (open: boolean) => void
   title: string
   description?: string
-  fields: FormField[]
+  fields?: FormField[]
   initialData?: any
-  onSubmit: (data: any) => void
+  onSubmit?: (data: any) => void
   loading?: boolean
+  customContent?: React.ReactNode
 }
 
 export function FormModal({
@@ -46,12 +47,13 @@ export function FormModal({
   initialData = {},
   onSubmit,
   loading = false,
+  customContent,
 }: FormModalProps) {
   const [formData, setFormData] = useState(initialData)
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSubmit(formData)
+    onSubmit?.(formData)
   }
 
   const updateField = (key: string, value: string) => {
@@ -60,68 +62,71 @@ export function FormModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          {fields.map((field) => (
-            <div key={field.key} className="space-y-2">
-              <Label htmlFor={field.key}>
-                {field.label}
-                {field.required && <span className="text-destructive ml-1">*</span>}
-              </Label>
+        {customContent ? (
+          customContent
+        ) : (
+          <form onSubmit={handleSubmit} className="space-y-4">
+            {fields?.map((field) => (
+              <div key={field.key} className="space-y-2">
+                <Label htmlFor={field.key}>
+                  {field.label}
+                  {field.required && <span className="text-destructive ml-1">*</span>}
+                </Label>
 
-              {field.type === "textarea" ? (
-                <Textarea
-                  id={field.key}
-                  placeholder={field.placeholder}
-                  value={formData[field.key] || ""}
-                  onChange={(e) => updateField(field.key, e.target.value)}
-                  required={field.required}
-                />
-              ) : field.type === "select" ? (
-                <Select
-                  value={formData[field.key] || ""}
-                  onValueChange={(value) => updateField(field.key, value)}
-                  required={field.required}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder={field.placeholder} />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {field.options?.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              ) : (
-                <Input
-                  id={field.key}
-                  type={field.type}
-                  placeholder={field.placeholder}
-                  value={formData[field.key] || ""}
-                  onChange={(e) => updateField(field.key, e.target.value)}
-                  required={field.required}
-                  autoComplete={field.type === "password" ? "current-password" : ""}
-                />
-              )}
-            </div>
-          ))}
+                {field.type === "textarea" ? (
+                  <Textarea
+                    id={field.key}
+                    placeholder={field.placeholder}
+                    value={formData[field.key] || ""}
+                    onChange={(e) => updateField(field.key, e.target.value)}
+                    required={field.required}
+                  />
+                ) : field.type === "select" ? (
+                  <Select
+                    value={formData[field.key] || ""}
+                    onValueChange={(value) => updateField(field.key, value)}
+                    required={field.required}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder={field.placeholder} />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {field.options?.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Input
+                    id={field.key}
+                    type={field.type}
+                    placeholder={field.placeholder}
+                    value={formData[field.key] || ""}
+                    onChange={(e) => updateField(field.key, e.target.value)}
+                    required={field.required}
+                  />
+                )}
+              </div>
+            ))}
 
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
-              Cancelar
-            </Button>
-            <Button type="submit" disabled={loading}>
-              {loading ? "Guardando..." : "Guardar"}
-            </Button>
-          </DialogFooter>
-        </form>
+            <DialogFooter>
+              <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="dark:hover:bg-accent">
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={loading}>
+                {loading ? "Guardando..." : "Guardar"}
+              </Button>
+            </DialogFooter>
+          </form>
+        )}
       </DialogContent>
     </Dialog>
   )

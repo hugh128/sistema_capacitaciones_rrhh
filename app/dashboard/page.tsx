@@ -41,7 +41,7 @@ export default function DashboardPage() {
                       </Link>
 
                       <Link href="/configuracion">
-                        <Button variant="outline" size="sm" className="cursor-pointer">
+                        <Button variant="outline" size="sm" className="dark:hover:bg-accent cursor-pointer">
                           Configurar Sistema
                         </Button>
                       </Link>

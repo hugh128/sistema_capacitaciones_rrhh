@@ -77,16 +77,17 @@ export interface Capacitacion {
   id: string
   nombre: string
   descripcion?: string
-  tipo: "presencial" | "virtual" | "mixta"
+  tipo: "inductiva" | "continua" | "anual" | "específica"
   fechaInicio?: string
   fechaFin?: string
   codigo: string
   peoOpcional?: string
   aplicaExamen: boolean
+  puntajeMinimo?: number
   aplicaDiploma: boolean
   capacitadorId?: string
   planesAsociados: string[] // IDs de planes
-  estado: "programada" | "en_progreso" | "completada" | "cancelada"
+  estado: "activa" | "finalizada" | "cancelada"
   fechaCreacion: string
 }
 
@@ -94,7 +95,7 @@ export interface Participante {
   id: string
   personaId: string
   capacitacionId: string
-  estado: "asignado" | "completado" | "aprobado" | "reprobado"
+  estado: "asignado" | "asistió" | "aprobado" | "reprobado" | "pendiente"
   fechaAsignacion: string
   fechaCompletado?: string
   notaExamen?: number
@@ -138,13 +139,13 @@ export interface Reporte {
 export const mockEmpresas: Empresa[] = [
   {
     id: "1",
-    nombre: "TechCorp Solutions",
-    descripcion: "Empresa de tecnología y consultoría",
-    direccion: "Zona 10, Ciudad de Guatemala",
+    nombre: "Laboratorio Phara",
+    descripcion: "Industria farmateutica",
+    direccion: "Zona 10, Quetzaltenango",
     telefono: "2234-5678",
-    email: "info@techcorp.com",
+    email: "laboratorio@phara.com",
     estado: "activa",
-    fechaCreacion: "2024-01-15",
+    fechaCreacion: "2000-01-15",
   },
   {
     id: "2",
@@ -154,7 +155,7 @@ export const mockEmpresas: Empresa[] = [
     telefono: "2345-6789",
     email: "contacto@innovate.com",
     estado: "activa",
-    fechaCreacion: "2024-02-01",
+    fechaCreacion: "2015-02-01",
   },
 ]
 
@@ -357,47 +358,65 @@ export const mockCapacitaciones: Capacitacion[] = [
     id: "1",
     nombre: "Seguridad Industrial",
     descripcion: "Normas y procedimientos de seguridad en el trabajo",
-    tipo: "presencial",
+    tipo: "específica",
     fechaInicio: "2024-03-15",
     fechaFin: "2024-03-16",
     codigo: "SEG-001",
     peoOpcional: "PEO-SEG-001",
     aplicaExamen: true,
+    puntajeMinimo: 70,
     aplicaDiploma: true,
     capacitadorId: "2",
     planesAsociados: ["1"],
-    estado: "en_progreso",
+    estado: "activa",
     fechaCreacion: "2024-02-01",
   },
   {
     id: "2",
     nombre: "Liderazgo Efectivo",
     descripcion: "Desarrollo de habilidades de liderazgo",
-    tipo: "virtual",
+    tipo: "continua",
     fechaInicio: "2024-03-20",
     fechaFin: "2024-03-22",
     codigo: "LID-001",
     aplicaExamen: true,
+    puntajeMinimo: 80,
     aplicaDiploma: true,
     capacitadorId: "2",
     planesAsociados: ["1"],
-    estado: "completada",
+    estado: "finalizada",
     fechaCreacion: "2024-02-05",
   },
   {
     id: "3",
     nombre: "Excel Avanzado",
     descripcion: "Funciones avanzadas de Microsoft Excel",
-    tipo: "mixta",
+    tipo: "específica",
     fechaInicio: "2024-04-01",
     fechaFin: "2024-04-05",
     codigo: "EXC-001",
     aplicaExamen: true,
+    puntajeMinimo: 75,
     aplicaDiploma: true,
     capacitadorId: "2",
     planesAsociados: ["2"],
-    estado: "programada",
+    estado: "activa",
     fechaCreacion: "2024-02-10",
+  },
+  {
+    id: "4",
+    nombre: "Inducción Corporativa",
+    descripcion: "Introducción a la empresa y sus políticas",
+    tipo: "inductiva",
+    fechaInicio: "2024-04-15",
+    fechaFin: "2024-04-16",
+    codigo: "IND-001",
+    aplicaExamen: false,
+    aplicaDiploma: true,
+    capacitadorId: "2",
+    planesAsociados: ["1"],
+    estado: "activa",
+    fechaCreacion: "2024-03-01",
   },
 ]
 
@@ -406,7 +425,7 @@ export const mockParticipantes: Participante[] = [
     id: "1",
     personaId: "1",
     capacitacionId: "1",
-    estado: "completado",
+    estado: "aprobado",
     fechaAsignacion: "2024-03-01",
     fechaCompletado: "2024-03-16",
     notaExamen: 85,
@@ -434,6 +453,24 @@ export const mockParticipantes: Participante[] = [
     notaExamen: 88,
     asistencia: true,
     documentosAsociados: ["5"],
+  },
+  {
+    id: "4",
+    personaId: "4",
+    capacitacionId: "1",
+    estado: "asignado",
+    fechaAsignacion: "2024-03-01",
+    asistencia: false,
+    documentosAsociados: [],
+  },
+  {
+    id: "5",
+    personaId: "1",
+    capacitacionId: "3",
+    estado: "pendiente",
+    fechaAsignacion: "2024-03-25",
+    asistencia: false,
+    documentosAsociados: [],
   },
 ]
 
@@ -476,7 +513,6 @@ export const mockAuditLogs: AuditLog[] = [
     },
     usuarioId: "1",
     fecha: "2024-03-15T10:30:00Z",
-    ip: "192.168.1.100",
   },
   {
     id: "2",
@@ -487,7 +523,6 @@ export const mockAuditLogs: AuditLog[] = [
     valoresNuevos: { estado: "aprobado", notaExamen: 85 },
     usuarioId: "2",
     fecha: "2024-03-16T14:20:00Z",
-    ip: "192.168.1.101",
   },
   {
     id: "3",
@@ -500,7 +535,6 @@ export const mockAuditLogs: AuditLog[] = [
     },
     usuarioId: "1",
     fecha: "2024-03-17T09:15:00Z",
-    ip: "192.168.1.100",
   },
   {
     id: "4",
