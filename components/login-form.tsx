@@ -17,24 +17,22 @@ export function LoginForm() {
   const [password, setPassword] = useState("")
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
-  const { login, loading } = useAuth()
+  const { login } = useAuth()
   const { theme } = useTheme()
+  const [loading, setLoading] = useState(false)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    setError("")
-
-    const emailMap: Record<string, string> = {
-      rrhh: "rrhh@empresa.com",
-      capacitador: "capacitador@empresa.com",
-      gerente: "gerente@empresa.com",
-    }
+    setLoading(true)
 
     try {
-      const email = emailMap[username.toLowerCase()] || `${username}@empresa.com`
-      await login(email, password)
+      await login(username, password)
+      setError("")
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al iniciar sesión")
+      const errorMsg = err instanceof Error ? err.message : "Error al iniciar sesión"
+      setError(errorMsg)
+    } finally {
+      setLoading(false)
     }
   }
 

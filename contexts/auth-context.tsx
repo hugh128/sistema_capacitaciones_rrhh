@@ -3,7 +3,9 @@
 import type React from "react"
 import { createContext, useContext, useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
-import { type User, type AuthContextType, mockUsers } from "@/lib/auth"
+import { apiClient } from "@/lib/api-client"
+import axios, { AxiosError } from "axios"
+import { type User, type AuthContextType, LoginApiResponse } from "@/lib/auth"
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
@@ -21,23 +23,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setLoading(false)
   }, [])
 
-  const login = async (email: string, password: string) => {
-    setLoading(true)
-
+  const login = async (username: string, password: string) => {
     try {
-      const foundUser = mockUsers.find((u) => u.email === email)
+      const response = await apiClient.post<LoginApiResponse>('/auth/login', { 
+        username,
+        password 
+      });
 
-      if (foundUser && password === "password123") {
-        setUser(foundUser)
-        localStorage.setItem("training_user", JSON.stringify(foundUser))
-      } else {
-        throw new Error("Credenciales inválidas")
+      const loggedInUser: User = response.data.usuario.data;
+      const token: string = response.data.usuario.token;
+
+      localStorage.setItem("access_token", token);
+      localStorage.setItem("training_user", JSON.stringify(loggedInUser));
+
+      setUser(loggedInUser);
+    } catch (error: unknown) {
+      let errorMessage = 'Error de conexión con el servidor.'
+      
+      if (axios.isAxiosError(error)) {
+        const axiosError = error as AxiosError<{ message?: string | string[], error?: string }>
+
+        const responseData = axiosError.response?.data
+        if (responseData) {
+          if (responseData.message) {
+            const apiMessage = responseData.message
+            errorMessage = Array.isArray(apiMessage) ? apiMessage.join(', ') : apiMessage
+          } else if (responseData.error) {
+            errorMessage = responseData.error
+          }
+        }
       }
-    } catch (error) {
-      console.error(error)
-      throw error
-    } finally {
-      setLoading(false)
+      throw new Error(errorMessage);
     }
   }
 
@@ -48,6 +64,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     setUser(null)
     localStorage.removeItem("training_user")
+    localStorage.removeItem("access_token")
     router.push("/")
     setLoggingOut(false)
   }

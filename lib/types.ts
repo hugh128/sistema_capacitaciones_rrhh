@@ -3,6 +3,7 @@ export interface Empresa {
   nombre: string
   descripcion?: string
   direccion?: string
+  nit?: string,
   telefono?: string
   email?: string
   estado: "activa" | "inactiva"

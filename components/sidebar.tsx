@@ -164,7 +164,12 @@ export function Sidebar({ className }: SidebarProps) {
         <nav className="flex-1 p-4 pt-2 space-y-2 overflow-y-auto custom-scrollbar">
           {menuItems.map((item, index) => {
             const Icon = item.icon
-            const isActive = currentPath === item.href
+            
+            const isDashboard = item.href === '/dashboard'
+
+            const isActive = isDashboard 
+              ? currentPath === item.href
+              : currentPath === item.href || currentPath.startsWith(item.href + '/')
             
             return (
               <div key={index}>
@@ -172,9 +177,9 @@ export function Sidebar({ className }: SidebarProps) {
                   <Button
                     variant="ghost"
                     className={cn(
-                      "w-full justify-start gap-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground cursor-pointer",
+                      "w-full justify-start gap-3 text-sidebar-foreground hover:bg-accent hover:text-sidebar-accent-foreground cursor-pointer",
                       collapsed && "justify-center px-2",
-                      isActive && "bg-sidebar-accent-hover text-sidebar-accent-foreground"
+                      isActive && "bg-sidebar-foreground/12"
                     )}
                   >
                     <Icon className="w-4 h-4 flex-shrink-0" />

@@ -1,5 +1,6 @@
-export interface User {
-  id: string
+/* export interface User {
+  id: number
+  username: string,
   email: string
   nombre: string
   apellido: string
@@ -10,7 +11,7 @@ export interface User {
   departamento?: string
   roles: Role[]
   estado: "activo" | "inactivo"
-}
+} */
 
 export interface Role {
   id: string
@@ -26,10 +27,33 @@ export interface AuthContextType {
   loggingOut: boolean
 }
 
+export interface User {
+  id: number;
+  username: string;
+  email: string;
+  nombre: string;
+  apellido: string;
+  telefono: string;
+  dpi: string;
+  puesto: string;
+  departamento: string;
+  roles: Role[];
+  estado: string;
+}
+
+export interface LoginApiResponse {
+  message: string;
+  usuario: {
+    data: User;
+    token: string;
+  };
+}
+
 // Mock data for development
 export const mockUsers: User[] = [
   {
-    id: "1",
+    id: 1,
+    username: "rrhh",
     email: "rrhh@empresa.com",
     nombre: "Ana",
     apellido: "García",
@@ -47,7 +71,8 @@ export const mockUsers: User[] = [
     estado: "activo",
   },
   {
-    id: "2",
+    id: 2,
+    username: "training",
     email: "capacitador@empresa.com",
     nombre: "Carlos",
     apellido: "López",
@@ -65,7 +90,8 @@ export const mockUsers: User[] = [
     estado: "activo",
   },
   {
-    id: "3",
+    id: 3,
+    username: "manager",
     email: "gerente@empresa.com",
     nombre: "María",
     apellido: "Rodríguez",

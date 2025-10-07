@@ -1,18 +1,45 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useEffect, useState } from "react"
+import { apiClient } from "@/lib/api-client"
 import { Sidebar } from "@/components/sidebar"
 import { DataTable } from "@/components/data-table"
 import { FormModal } from "@/components/form-modal"
 import { Badge } from "@/components/ui/badge"
-import { mockEmpresas, type Empresa } from "@/lib/types"
+import { type Empresa } from "@/lib/types"
+import { transformApiToFrontend, transformFrontendToApi } from "@/lib/empresa-transformer"
 import { useAuth } from "@/contexts/auth-context"
 
 export default function EmpresasPage() {
   const { user } = useAuth()
-  const [empresas, setEmpresas] = useState<Empresa[]>(mockEmpresas)
+  const [empresas, setEmpresas] = useState<Empresa[]>([])
+  const [loading, setLoading] = useState(true)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchEmpresas = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await apiClient.get<any[]>('/empresa') 
+      
+      const transformedData = response.data.map(transformApiToFrontend)
+      setEmpresas(transformedData)
+
+    } catch (err) {
+      setError("Error al cargar las empresas. ¿Está la API encendida?")
+      console.error(err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+      if (user) {
+          fetchEmpresas()
+      }
+  }, [user, fetchEmpresas])
 
   if (!user || !user.roles.some((role) => role.nombre === "RRHH")) {
     return <div>No tienes permisos para acceder a esta página</div>
@@ -33,6 +60,7 @@ export default function EmpresasPage() {
 
   const formFields = [
     { key: "nombre", label: "Nombre", type: "text" as const, required: true },
+    { key: "nit", label: "NIT", type: "text" as const, required: true },
     { key: "descripcion", label: "Descripción", type: "textarea" as const },
     { key: "direccion", label: "Dirección", type: "text" as const },
     { key: "telefono", label: "Teléfono", type: "tel" as const },
@@ -55,28 +83,45 @@ export default function EmpresasPage() {
   }
 
   const handleEdit = (empresa: Empresa) => {
+    console.log(empresa);
     setEditingEmpresa(empresa)
     setModalOpen(true)
   }
 
-  const handleDelete = (empresa: Empresa) => {
-    setEmpresas((prev) => prev.filter((e) => e.id !== empresa.id))
+  const handleDelete = async (empresa: Empresa) => {
+    try {
+      await apiClient.delete(`/empresa/${empresa.id}`)
+
+      //fetchEmpresas()
+
+      setEmpresas((prev) => 
+         prev.map(e => e.id === empresa.id ? { ...e, estado: 'inactiva' } : e)
+      );
+      
+    } catch (err) {
+      setError("Error al eliminar la empresa.")
+      console.error(err)
+    }
   }
 
-  const handleSubmit = (data: any) => {
-    if (editingEmpresa) {
-      // Edit existing
-      setEmpresas((prev) => prev.map((e) => (e.id === editingEmpresa.id ? { ...e, ...data } : e)))
-    } else {
-      // Add new
-      const newEmpresa: Empresa = {
-        ...data,
-        id: Date.now().toString(),
-        fechaCreacion: new Date().toISOString().split("T")[0],
+  const handleSubmit = async (formData: any) => {
+    setError(null)
+    try {
+      const apiData = transformFrontendToApi(formData); 
+      
+      if (editingEmpresa) {
+        await apiClient.patch(`/empresa/${editingEmpresa.id}`, apiData) 
+      } else {
+        await apiClient.post<any>('/empresa', apiData)
       }
-      setEmpresas((prev) => [...prev, newEmpresa])
+      
+      fetchEmpresas()
+    } catch (err) {
+        setError("Error al guardar los datos de la empresa.")
+        console.error(err)
+    } finally {
+        setModalOpen(false)
     }
-    setModalOpen(false)
   }
 
   return (
