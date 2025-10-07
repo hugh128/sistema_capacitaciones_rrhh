@@ -25,21 +25,3 @@ apiClient.interceptors.request.use(
     return Promise.reject(error);
   }
 );
-
-apiClient.interceptors.response.use(
-  (response: AxiosResponse) => {
-    return response;
-  },
-  (error: AxiosError) => {
-    if (error.response?.status === 401) {
-      console.error("Token expirado o no autorizado. Redirigiendo a login...");
-      
-      localStorage.removeItem('access_token');
-      localStorage.removeItem('training_user');
-      
-      window.location.href = '/login'; 
-    }
-    
-    return Promise.reject(error);
-  }
-);

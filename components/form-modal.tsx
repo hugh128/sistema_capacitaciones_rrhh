@@ -1,7 +1,7 @@
 "use client" 
 
 import React from "react"
-import { useState, useEffect, memo } from "react" // 👈 Importamos 'memo'
+import { useState, useEffect, memo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -37,21 +37,14 @@ interface FormModalProps {
   customContent?: React.ReactNode
 }
 
-// ----------------------------------------------------------------------
-// COMPONENTE MEMORIZADO: FormFieldRenderer
-// ----------------------------------------------------------------------
-
 interface FormFieldRendererProps {
     field: FormField;
     value: any;
     updateField: (key: string, value: string) => void;
 }
 
-// Usamos memo para evitar que todos los campos se re-rendericen cuando solo
-// cambia el valor de uno solo (ya que 'field' y 'updateField' son estables).
 const FormFieldRenderer = memo(({ field, value, updateField }: FormFieldRendererProps) => {
     
-    // Función de cambio específica para este campo
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
         updateField(field.key, e.target.value);
     }
@@ -102,7 +95,7 @@ const FormFieldRenderer = memo(({ field, value, updateField }: FormFieldRenderer
     )
 })
 
-FormFieldRenderer.displayName = 'FormFieldRenderer'; // Buena práctica para la depuración
+FormFieldRenderer.displayName = 'FormFieldRenderer';
 
 export function FormModal({
   open,
@@ -118,19 +111,16 @@ export function FormModal({
   
   const [formData, setFormData] = useState<any>({}) 
 
-  // Sincronizamos el estado interno con las props (para edición/reseteo)
   useEffect(() => {
     setFormData(initialData || {});
   }, [initialData]) 
 
-  // Memorizamos la función de actualización para que sea estable y no rompa 'memo'
   const updateField = React.useCallback((key: string, value: string) => {
     setFormData((prev: any) => ({ ...prev, [key]: value }))
   }, [])
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Aseguramos que se envía el ID si estamos editando
     const dataWithId = initialData.id ? { ...formData, id: initialData.id } : formData;
     onSubmit?.(dataWithId);
   }

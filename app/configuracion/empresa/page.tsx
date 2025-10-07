@@ -37,7 +37,7 @@ export default function EmpresasPage() {
 
   useEffect(() => {
       if (user) {
-          fetchEmpresas()
+        fetchEmpresas()
       }
   }, [user, fetchEmpresas])
 
@@ -83,7 +83,6 @@ export default function EmpresasPage() {
   }
 
   const handleEdit = (empresa: Empresa) => {
-    console.log(empresa);
     setEditingEmpresa(empresa)
     setModalOpen(true)
   }

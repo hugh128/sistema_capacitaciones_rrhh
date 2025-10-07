@@ -1,18 +1,45 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Sidebar } from "@/components/sidebar"
 import { DataTable } from "@/components/data-table"
 import { FormModal } from "@/components/form-modal"
 import { Badge } from "@/components/ui/badge"
-import { mockDepartamentos, mockEmpresas, type Departamento } from "@/lib/types"
+import { mockEmpresas, type Departamento } from "@/lib/types"
 import { useAuth } from "@/contexts/auth-context"
+import { apiClient } from "@/lib/api-client"
+import { transformApiToFrontend, transformFrontendToApi } from "@/lib/departamento-transformer"
 
 export default function DepartamentosPage() {
   const { user } = useAuth()
-  const [departamentos, setDepartamentos] = useState<Departamento[]>(mockDepartamentos)
+  const [departamentos, setDepartamentos] = useState<Departamento[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [editingDepartamento, setEditingDepartamento] = useState<Departamento | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+  const fetchDepartamentos = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await apiClient.get<any[]>('/departamento')
+
+      const transformedData = response.data.map(transformApiToFrontend)
+      setDepartamentos(transformedData)
+
+    } catch (err) {
+      setError('Error al cargar los departamentos.')
+      console.error('API Error:', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (user) {
+      fetchDepartamentos()
+    }
+  }, [user, fetchDepartamentos])
 
   if (!user || !user.roles.some((role) => role.nombre === "RRHH")) {
     return <div>No tienes permisos para acceder a esta página</div>
@@ -21,14 +48,14 @@ export default function DepartamentosPage() {
   const columns = [
     { key: "nombre", label: "Nombre" },
     { key: "descripcion", label: "Descripción" },
-    {
+/*     {
       key: "empresaId",
       label: "Empresa",
       render: (value: string) => {
         const empresa = mockEmpresas.find((e) => e.id === value)
         return empresa?.nombre || "N/A"
       },
-    },
+    }, */
     {
       key: "estado",
       label: "Estado",
@@ -69,22 +96,38 @@ export default function DepartamentosPage() {
     setModalOpen(true)
   }
 
-  const handleDelete = (departamento: Departamento) => {
+  const handleDelete = async (departamento: Departamento) => {
+    try {
+      await apiClient.delete(`/departamento/${departamento.id}`)
+
+      fetchDepartamentos()
+    } catch (error) {
+      setError("Error al eliminar el departamento.")
+      console.error(err)
+    }
+
     setDepartamentos((prev) => prev.filter((d) => d.id !== departamento.id))
   }
 
-  const handleSubmit = (data: any) => {
-    if (editingDepartamento) {
-      setDepartamentos((prev) => prev.map((d) => (d.id === editingDepartamento.id ? { ...d, ...data } : d)))
-    } else {
-      const newDepartamento: Departamento = {
-        ...data,
-        id: Date.now().toString(),
-        fechaCreacion: new Date().toISOString().split("T")[0],
+  const handleSubmit = async (data: any) => {
+    setError(null);
+    try {
+      const apiData = transformFrontendToApi(data);
+      
+      if (editingDepartamento) {
+        await apiClient.patch(`/departamento/${editingDepartamento.id}`, apiData);
+      } else {
+        await apiClient.post('/departamento', apiData);
       }
-      setDepartamentos((prev) => [...prev, newDepartamento])
+      
+      fetchDepartamentos();
+    } catch (err) {
+      const msg = editingDepartamento ? "actualizar" : "crear";
+      setError(`Error al ${msg} el departamento.`);
+      console.error("Submit Error:", err);
+    } finally {
+      setModalOpen(false)
     }
-    setModalOpen(false)
   }
 
   return (
