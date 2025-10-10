@@ -29,6 +29,7 @@ export interface Puesto {
   requiereCapacitacion: boolean
   estado: "activo" | "inactivo"
   fechaCreacion: string
+  nombreDepartamento?: string;
 }
 
 export interface Persona {
@@ -42,7 +43,13 @@ export interface Persona {
   puestoId?: string
   departamentoId?: string
   estado: "activo" | "inactivo"
-  fechaCreacion: string
+  fechaCreacion?: string
+  fechaIngreso?: string
+  tipoPersona?: string
+  empresaId?: string
+
+  nombrePuesto?: string;
+  nombreDepartamento?: string;
 }
 
 export interface Usuario {
@@ -53,12 +60,15 @@ export interface Usuario {
   estado: "activo" | "inactivo"
   ultimoAcceso?: string
   fechaCreacion: string
+  nombreCompletoPersona?: string
 }
 
 export interface Role {
   id: string
   nombre: string
-  permisos: string[]
+  permisos?: string[]
+  estado?: string
+  descripcion?: string
 }
 
 export interface PlanCapacitacion {

@@ -1,19 +1,46 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Sidebar } from "@/components/sidebar"
 import { DataTable } from "@/components/data-table"
 import { FormModal } from "@/components/form-modal"
 import { Badge } from "@/components/ui/badge"
 import { mockPuestos, mockDepartamentos, type Puesto } from "@/lib/types"
 import { useAuth } from "@/contexts/auth-context"
-import { CheckCircle, XCircle } from "lucide-react"
+import { apiClient } from "@/lib/api-client"
+import { transformApiToFrontend, transformFrontendToApi, transformApiDepartamentoToSelect } from "@/lib/puesto-transformer"
 
 export default function PuestosPage() {
   const { user } = useAuth()
-  const [puestos, setPuestos] = useState<Puesto[]>(mockPuestos)
+  const [puestos, setPuestos] = useState<Puesto[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [editingPuesto, setEditingPuesto] = useState<Puesto | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+
+  const fetchPuestos = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await apiClient.get('/puesto')
+      
+      const transformedData = response.data.map(transformApiToFrontend)
+      setPuestos(transformedData)
+
+    } catch (err) {
+      setError('Error al cargar los puestos.')
+      console.error('API Error (Puestos):', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+  
+  useEffect(() => {
+    if (user) {
+      fetchPuestos()
+    }
+  }, [user, fetchPuestos])
 
   if (!user || !user.roles.some((role) => role.nombre === "RRHH")) {
     return <div>No tienes permisos para acceder a esta página</div>
@@ -31,21 +58,6 @@ export default function PuestosPage() {
       },
     },
     {
-      key: "nivel",
-      label: "Nivel",
-      render: (value: string) => <Badge variant="outline">{value}</Badge>,
-    },
-    {
-      key: "requiereCapacitacion",
-      label: "Requiere Capacitación",
-      render: (value: boolean) =>
-        value ? (
-          <CheckCircle className="h-4 w-4 text-chart-2" />
-        ) : (
-          <XCircle className="h-4 w-4 text-muted-foreground" />
-        ),
-    },
-    {
       key: "estado",
       label: "Estado",
       render: (value: string) => <Badge variant={value === "activo" ? "default" : "secondary"}>{value}</Badge>,
@@ -61,28 +73,6 @@ export default function PuestosPage() {
       type: "select" as const,
       required: true,
       options: mockDepartamentos.map((d) => ({ value: d.id, label: d.nombre })),
-    },
-    {
-      key: "nivel",
-      label: "Nivel",
-      type: "select" as const,
-      required: true,
-      options: [
-        { value: "operativo", label: "Operativo" },
-        { value: "supervisorio", label: "Supervisorio" },
-        { value: "gerencial", label: "Gerencial" },
-        { value: "ejecutivo", label: "Ejecutivo" },
-      ],
-    },
-    {
-      key: "requiereCapacitacion",
-      label: "Requiere Capacitación",
-      type: "select" as const,
-      required: true,
-      options: [
-        { value: "true", label: "Sí" },
-        { value: "false", label: "No" },
-      ],
     },
     {
       key: "estado",
@@ -106,27 +96,35 @@ export default function PuestosPage() {
     setModalOpen(true)
   }
 
-  const handleDelete = (puesto: Puesto) => {
-    setPuestos((prev) => prev.filter((p) => p.id !== puesto.id))
+  const handleDelete = async (puesto: Puesto) => {
+    try {
+      await apiClient.delete(`/puesto/${puesto.id}`);
+      
+      fetchPuestos();
+    } catch (err) {
+      setError("Error al desactivar el puesto.");
+      console.error("Delete Error:", err);
+    }
   }
 
-  const handleSubmit = (data: any) => {
-    const processedData = {
-      ...data,
-      requiereCapacitacion: data.requiereCapacitacion === "true",
-    }
-
-    if (editingPuesto) {
-      setPuestos((prev) => prev.map((p) => (p.id === editingPuesto.id ? { ...p, ...processedData } : p)))
-    } else {
-      const newPuesto: Puesto = {
-        ...processedData,
-        id: Date.now().toString(),
-        fechaCreacion: new Date().toISOString().split("T")[0],
+  const handleSubmit = async (data: any) => {
+    setError(null);
+    try {
+      const apiData = transformFrontendToApi(data);
+      
+      if (editingPuesto) {
+        await apiClient.patch(`/puesto/${editingPuesto.id}`, apiData);
+      } else {
+        await apiClient.post('/puesto', apiData);
       }
-      setPuestos((prev) => [...prev, newPuesto])
+
+      fetchPuestos();
+    } catch (err) {
+      const msg = editingPuesto ? "actualizar" : "crear";
+      setError(`Error al ${msg} el puesto. ${err}`);
+    } finally {
+      setModalOpen(false)
     }
-    setModalOpen(false)
   }
 
   return (

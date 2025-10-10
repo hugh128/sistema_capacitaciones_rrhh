@@ -103,7 +103,7 @@ export default function DepartamentosPage() {
       fetchDepartamentos()
     } catch (error) {
       setError("Error al eliminar el departamento.")
-      console.error(err)
+      console.error(error)
     }
 
     setDepartamentos((prev) => prev.filter((d) => d.id !== departamento.id))

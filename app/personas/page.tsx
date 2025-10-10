@@ -1,19 +1,47 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Sidebar } from "@/components/sidebar"
 import { DataTable } from "@/components/data-table"
 import { FormModal } from "@/components/form-modal"
 import { Badge } from "@/components/ui/badge"
 import { mockPersonas, mockPuestos, mockDepartamentos, type Persona } from "@/lib/types"
 import { useAuth } from "@/contexts/auth-context"
+import { apiClient } from "@/lib/api-client"
 import { AppHeader } from "@/components/app-header"
+import { transformApiToFrontend, transformFrontendToApi } from "@/lib/persona-transformer"
 
 export default function PersonasPage() {
   const { user } = useAuth()
-  const [personas, setPersonas] = useState<Persona[]>(mockPersonas)
+  const [personas, setPersonas] = useState<Persona[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [editingPersona, setEditingPersona] = useState<Persona | null>(null)
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+
+  const fetchPersonas = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const response = await apiClient.get('/persona')
+
+      const transformedData = response.data.map(transformApiToFrontend)
+      setPersonas(transformedData)
+
+    } catch (err) {
+      setError('Error al cargar las personas.')
+      console.error('API Error (Personas):', err)
+    } finally {
+      setLoading(false)
+    }
+  }, [])
+
+  useEffect(() => {
+    if (user) {
+      fetchPersonas()
+    }
+  }, [user, fetchPersonas])
 
   if (!user || !user.roles.some((role) => role.nombre === "RRHH")) {
     return <div>No tienes permisos para acceder a esta página</div>
@@ -55,6 +83,19 @@ export default function PersonasPage() {
     { key: "telefono", label: "Teléfono", type: "tel" as const },
     { key: "dpi", label: "DPI", type: "text" as const },
     { key: "fechaNacimiento", label: "Fecha de Nacimiento", type: "text" as const, placeholder: "YYYY-MM-DD" },
+    { key: "fechaIngreso", label: "Fecha de Ingreso", type: "text" as const, placeholder: "YYYY-MM-DD" },
+
+    {
+        key: "tipoPersona",
+        label: "Tipo Persona",
+        type: "select" as const,
+        required: true,
+        options: [
+            { value: "INTERNO", label: "Interno" },
+            { value: "EXTERNO", label: "Externo" },
+        ],
+        placeholder: "Tipo de colaborador"
+    },
     {
       key: "departamentoId",
       label: "Departamento",
@@ -93,22 +134,39 @@ export default function PersonasPage() {
     setModalOpen(true)
   }
 
-  const handleDelete = (persona: Persona) => {
-      setPersonas((prev) => prev.filter((p) => p.id !== persona.id))
+  const handleDelete = async (persona: Persona) => {
+    try {
+      await apiClient.delete(`/persona/${persona.id}`);
+      
+      fetchPersonas();
+
+    } catch (err) {
+      setError("Error al dar de baja a la persona.");
+      console.error("Delete Error:", err);
+    }
+
   }
 
-  const handleSubmit = (data: Persona) => {
-    if (editingPersona) {
-      setPersonas((prev) => prev.map((p) => (p.id === editingPersona.id ? { ...p, ...data } : p)))
-    } else {
-      const newPersona: Persona = {
-        ...data,
-        id: Date.now().toString(),
-        fechaCreacion: new Date().toISOString().split("T")[0],
+  const handleSubmit = async (data: Persona) => {
+    setError(null);
+    try {
+      const apiData = transformFrontendToApi(data);
+      
+      if (editingPersona) {
+        await apiClient.patch(`/persona/${editingPersona.id}`, apiData);
+      } else {
+        await apiClient.post('/persona', apiData);
       }
-      setPersonas((prev) => [...prev, newPersona])
+      
+      fetchPersonas();
+      
+    } catch (err) {
+      const msg = editingPersona ? "actualizar" : "crear";
+      setError(`Error al ${msg} a la persona.`);
+      console.error("Submit Error:", err);
+    } finally {      
+      setModalOpen(false);
     }
-    setModalOpen(false)
   }
 
   return (

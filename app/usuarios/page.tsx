@@ -1,19 +1,75 @@
 "use client"
 
-import { useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { Sidebar } from "@/components/sidebar"
 import { DataTable } from "@/components/data-table"
 import { FormModal } from "@/components/form-modal"
 import { Badge } from "@/components/ui/badge"
-import { mockUsuarios, mockPersonas, mockRoles, type Usuario } from "@/lib/types"
+import { mockUsuarios, mockPersonas, mockRoles, type Usuario, Persona } from "@/lib/types"
 import { useAuth } from "@/contexts/auth-context"
+import { apiClient } from "@/lib/api-client"
 import { AppHeader } from "@/components/app-header"
+import { transformApiToFrontend, transformFrontendToApi } from "@/lib/usuario-transformer"
+import { CreateUsuarioFrontendDto } from "@/lib/usuario-types"
 
 export default function UsuariosPage() {
   const { user } = useAuth()
-  const [usuarios, setUsuarios] = useState<Usuario[]>(mockUsuarios)
+  const [usuarios, setUsuarios] = useState<Usuario[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [editingUsuario, setEditingUsuario] = useState<Usuario | null>(null)
+  const [personas, setPersonas] = useState<Persona[]>([])
+  const [roles, setRoles] = useState<Role[]>([])
+  const [loading, setLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+
+
+  const fetchUsuarios = useCallback(async () => {
+      setLoading(true)
+      setError(null)
+      try {
+          const response = await apiClient.get('/usuario')
+
+          const transformedData = response.data.map(transformApiToFrontend)
+          setUsuarios(transformedData)
+      } catch (err) {
+          setError('Error al cargar los usuarios.')
+          console.error('API Error (Usuarios):', err)
+      } finally {
+          setLoading(false)
+      }
+  }, [])
+
+      const fetchDependencies = async () => {
+        try {
+            const personaResponse = await apiClient.get('/persona')
+            const availablePersonas: Persona[] = personaResponse.data.map((p: any) => ({
+                id: p.ID_PERSONA.toString(),
+                nombre: p.NOMBRE,
+                apellido: p.APELLIDO,
+                correo: p.CORREO,
+                estado: p.ESTADO ? "activo" : "inactivo",
+                tipoPersona: p.TIPO_PERSONA
+            }));
+            setPersonas(availablePersonas)
+
+        } catch (err) {
+            console.error('Error cargando dependencias (Personas/Roles):', err)
+            setPersonas(mockPersonas);
+            setRoles(mockRoles);
+        }
+    }
+
+
+    useEffect(() => {
+        if (user && user.roles.some((role) => role.nombre === "RRHH")) {
+            const loadData = async () => {
+                setLoading(true);
+                await Promise.all([fetchUsuarios(), fetchDependencies()]); 
+                setLoading(false);
+            }
+            loadData()
+        }
+    }, [user, fetchUsuarios])
 
   if (!user || !user.roles.some((role) => role.nombre === "RRHH")) {
     return <div>No tienes permisos para acceder a esta página</div>
@@ -102,29 +158,60 @@ export default function UsuariosPage() {
     setModalOpen(true)
   }
 
-  const handleDelete = (usuario: Usuario) => {
-    setUsuarios((prev) => prev.filter((u) => u.id !== usuario.id))
+  const handleDelete = async (usuario: Usuario) => {
+    try {
+        await apiClient.delete(`/usuario/${usuario.id}`);
+        
+        fetchUsuarios();
+
+    } catch (err) {
+        setError("Error al dar de baja al usuario.");
+        console.error("Delete Error:", err);
+    }
   }
 
-  const handleSubmit = (data: any) => {
-    const selectedRole = mockRoles.find((r) => r.id === data.roles)
-    const processedData = {
-      ...data,
-      roles: selectedRole ? [selectedRole] : [],
-    }
+    const handleSubmit = async (data: CreateUsuarioFrontendDto) => {
+        setError(null);
+        try {
+            const apiData = transformFrontendToApi(data);
+            
+            if (editingUsuario) {
+                const updateDto = { USERNAME: apiData.USERNAME, ESTADO: apiData.ESTADO };
+                await apiClient.patch(`/usuario/${editingUsuario.id}`, updateDto);
 
-    if (editingUsuario) {
-      setUsuarios((prev) => prev.map((u) => (u.id === editingUsuario.id ? { ...u, ...processedData } : u)))
-    } else {
-      const newUsuario: Usuario = {
-        ...processedData,
-        id: Date.now().toString(),
-        fechaCreacion: new Date().toISOString().split("T")[0],
-      }
-      setUsuarios((prev) => [...prev, newUsuario])
+                if (data.password) {
+                    await apiClient.patch(`/usuario/${editingUsuario.id}/password`, { PASSWORD: data.password });
+                }
+
+            } else {
+                if (!apiData.PASSWORD) {
+                    throw new Error("La contraseña es obligatoria para la creación.");
+                }
+                
+                await apiClient.post('/usuario', apiData);
+            }
+            
+            fetchUsuarios();
+            
+          } catch (err) {
+            const msg = editingUsuario ? "actualizar" : "crear";
+            const apiError = err as any;
+            let errorMessage = `Fallo al ${msg} el usuario.`;
+            
+            if (apiError.response?.data?.message) {
+              errorMessage = Array.isArray(apiError.response.data.message) 
+              ? apiError.response.data.message.join(' | ') 
+                    : apiError.response.data.message;
+                  } else if (err instanceof Error) {
+                    errorMessage = err.message;
+            }
+            
+            setError(errorMessage);
+            console.error("Submit Error:", err);
+          } finally {            
+            setModalOpen(false);
+        }
     }
-    setModalOpen(false)
-  }
 
   return (
     <div className="flex h-screen bg-background">
