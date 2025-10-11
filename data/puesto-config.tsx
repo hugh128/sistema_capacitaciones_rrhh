@@ -5,7 +5,7 @@ export const PUESTO_COLUMNS = [
   { key: "NOMBRE", label: "Nombre" },
   { key: "DESCRIPCION", label: "Descripción" },
   {
-    key: "departamento.NOMBRE",
+    key: "DEPARTAMENTO.NOMBRE",
     label: "Departamento",
   },
   {

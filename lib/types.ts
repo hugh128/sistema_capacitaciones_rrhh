@@ -23,7 +23,7 @@ export interface Puesto {
   DESCRIPCION: string
   ESTADO: boolean
   DEPARTAMENTO_ID?: number
-  departamento?: Departamento
+  DEPARTAMENTO?: Departamento
 }
 
 export interface Persona {
