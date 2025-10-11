@@ -36,6 +36,23 @@ interface DataTableProps {
   searchPlaceholder?: string
 }
 
+function getNestedValue(obj: any, path: string): any {
+  if (!path.includes('.')) {
+    return obj[path];
+  }
+  
+  const parts = path.split('.');
+  
+  let current = obj;
+  for (const part of parts) {
+    if (current === null || current === undefined) {
+      return undefined;
+    }
+    current = current[part];
+  }
+  return current;
+}
+
 export function DataTable({
   title,
   data,
@@ -47,7 +64,7 @@ export function DataTable({
 }: DataTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [showDialog, setShowDialog] = useState(false)
-  const [itemToDelete, setItemToDelete] = useState<any>(null) // Para almacenar el ítem a eliminar
+  const [itemToDelete, setItemToDelete] = useState<any>(null)
 
 
   const filteredData = data.filter((item) =>
@@ -115,11 +132,18 @@ export function DataTable({
               ) : (
                 filteredData.map((item, index) => (
                   <TableRow key={item.id || index}>
-                    {columns.map((column) => (
-                      <TableCell key={column.key} className="whitespace-nowrap">
-                        {column.render ? column.render(item[column.key], item) : item[column.key]}
-                      </TableCell>
-                    ))}
+                    {columns.map((column) => {
+                      const value = getNestedValue(item, column.key);
+
+                      return (
+                        <TableCell key={column.key} className="whitespace-nowrap">
+                          {column.render
+                            ? column.render(value, item) 
+                            : (value !== undefined && value !== null ? value : 'N/A')
+                          }
+                        </TableCell>
+                      )
+                    })}
                     {(onEdit || onDelete) && (
                       <TableCell>
                         <DropdownMenu>

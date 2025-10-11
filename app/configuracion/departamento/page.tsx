@@ -6,7 +6,7 @@ import { DataTable } from "@/components/data-table"
 import { FormModal, type FormData as FormValues } from "@/components/form-modal"
 import { useAuth } from "@/contexts/auth-context"
 import { apiClient } from "@/lib/api-client"
-import { DEPARTAMENTO_COLUMNS, DEPARTAMENTO_FORM_FIELDS } from "@/data/departamento-confign"
+import { DEPARTAMENTO_COLUMNS, DEPARTAMENTO_FORM_FIELDS } from "@/data/departamento-config"
 import { Toaster } from 'react-hot-toast'
 import { Departamento, Empresa } from "@/lib/types"
 import { useDepartamentos } from "@/hooks/useDepartamentos"

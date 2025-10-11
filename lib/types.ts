@@ -18,15 +18,12 @@ export interface Departamento {
 }
 
 export interface Puesto {
-  id: string
-  nombre: string
-  descripcion?: string
-  departamentoId: string
-  nivel: "operativo" | "supervisorio" | "gerencial" | "ejecutivo"
-  requiereCapacitacion: boolean
-  estado: "activo" | "inactivo"
-  fechaCreacion: string
-  nombreDepartamento?: string;
+  ID_PUESTO: number
+  NOMBRE: string
+  DESCRIPCION: string
+  ESTADO: boolean
+  DEPARTAMENTO_ID?: number
+  departamento?: Departamento
 }
 
 export interface Persona {
