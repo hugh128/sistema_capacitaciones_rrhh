@@ -26,6 +26,8 @@ export default function DepartamentosPage() {
 
       const transformedData = response.data.map(transformApiToFrontend)
       setDepartamentos(transformedData)
+      console.log(transformedData)
+      console.log(departamentos)
 
     } catch (err) {
       setError('Error al cargar los departamentos.')

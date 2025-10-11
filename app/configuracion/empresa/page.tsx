@@ -1,127 +1,52 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useState } from "react"
 import { apiClient } from "@/lib/api-client"
 import { Sidebar } from "@/components/sidebar"
 import { DataTable } from "@/components/data-table"
-import { FormModal } from "@/components/form-modal"
-import { Badge } from "@/components/ui/badge"
+import { FormModal, type FormData } from "@/components/form-modal"
 import { type Empresa } from "@/lib/types"
-import { transformApiToFrontend, transformFrontendToApi } from "@/lib/empresa-transformer"
 import { useAuth } from "@/contexts/auth-context"
+import { handleApiError } from "@/utils/error-handler"
+import toast, { Toaster } from 'react-hot-toast'
+import { EMPRESA_COLUMNS, EMPRESA_FORM_FIELDS, DEFAULT_NEW_EMPRESA_DATA } from "@/data/empresa-config"
+import { useEmpresas } from "@/hook/useEmpresas"
 
 export default function EmpresasPage() {
   const { user } = useAuth()
-  const [empresas, setEmpresas] = useState<Empresa[]>([])
-  const [loading, setLoading] = useState(true)
-  const [modalOpen, setModalOpen] = useState(false)
-  const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null)
-  const [error, setError] = useState<string | null>(null)
-
-  const fetchEmpresas = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const response = await apiClient.get<any[]>('/empresa') 
-      
-      const transformedData = response.data.map(transformApiToFrontend)
-      setEmpresas(transformedData)
-
-    } catch (err) {
-      setError("Error al cargar las empresas. ¿Está la API encendida?")
-      console.error(err)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
-
-  useEffect(() => {
-      if (user) {
-        fetchEmpresas()
-      }
-  }, [user, fetchEmpresas])
+  const { empresas, fetchEmpresas, deleteEmpresa } = useEmpresas(user);
+  const [modalOpen, setModalOpen] = useState(false);
+  const [editingEmpresa, setEditingEmpresa] = useState<Empresa | null>(null);
 
   if (!user || !user.roles.some((role) => role.nombre === "RRHH")) {
     return <div>No tienes permisos para acceder a esta página</div>
   }
 
-  const columns = [
-    { key: "nombre", label: "Nombre" },
-    { key: "descripcion", label: "Descripción" },
-    { key: "telefono", label: "Teléfono" },
-    { key: "email", label: "Email" },
-    {
-      key: "estado",
-      label: "Estado",
-      render: (value: string) => <Badge variant={value === "activa" ? "default" : "secondary"}>{value}</Badge>,
-    },
-    { key: "fechaCreacion", label: "Fecha Creación" },
-  ]
-
-  const formFields = [
-    { key: "nombre", label: "Nombre", type: "text" as const, required: true },
-    { key: "nit", label: "NIT", type: "text" as const, required: true },
-    { key: "descripcion", label: "Descripción", type: "textarea" as const },
-    { key: "direccion", label: "Dirección", type: "text" as const },
-    { key: "telefono", label: "Teléfono", type: "tel" as const },
-    { key: "email", label: "Email", type: "email" as const },
-    {
-      key: "estado",
-      label: "Estado",
-      type: "select" as const,
-      required: true,
-      options: [
-        { value: "activa", label: "Activa" },
-        { value: "inactiva", label: "Inactiva" },
-      ],
-    },
-  ]
-
   const handleAdd = () => {
-    setEditingEmpresa(null)
-    setModalOpen(true)
-  }
+    setEditingEmpresa(null);
+    setModalOpen(true);
+  };
 
   const handleEdit = (empresa: Empresa) => {
-    setEditingEmpresa(empresa)
-    setModalOpen(true)
-  }
+    setEditingEmpresa(empresa);
+    setModalOpen(true);
+  };
 
-  const handleDelete = async (empresa: Empresa) => {
+  const handleSubmit = async (formData: FormData) => {
+    const action = editingEmpresa ? "editada" : "agregada";
     try {
-      await apiClient.delete(`/empresa/${empresa.id}`)
-
-      //fetchEmpresas()
-
-      setEmpresas((prev) => 
-         prev.map(e => e.id === empresa.id ? { ...e, estado: 'inactiva' } : e)
-      );
-      
-    } catch (err) {
-      setError("Error al eliminar la empresa.")
-      console.error(err)
-    }
-  }
-
-  const handleSubmit = async (formData: any) => {
-    setError(null)
-    try {
-      const apiData = transformFrontendToApi(formData); 
-      
       if (editingEmpresa) {
-        await apiClient.patch(`/empresa/${editingEmpresa.id}`, apiData) 
+        await apiClient.patch(`/empresa/${editingEmpresa.ID_EMPRESA}`, formData);
       } else {
-        await apiClient.post<any>('/empresa', apiData)
+        await apiClient.post("/empresa", formData);
       }
-      
-      fetchEmpresas()
+      toast.success(`Empresa ${action} con éxito.`);
+      setModalOpen(false);
+      fetchEmpresas();
     } catch (err) {
-        setError("Error al guardar los datos de la empresa.")
-        console.error(err)
-    } finally {
-        setModalOpen(false)
+      handleApiError(err, `Error al guardar la empresa.`);
     }
-  }
+  };
 
   return (
     <div className="flex h-screen bg-background">
@@ -136,14 +61,15 @@ export default function EmpresasPage() {
         </header>
 
         <main className="flex-1 overflow-auto p-6">
+          <Toaster />
           <div className="max-w-7xl mx-auto">
             <DataTable
               title="Empresas"
               data={empresas}
-              columns={columns}
+              columns={EMPRESA_COLUMNS}
               onAdd={handleAdd}
               onEdit={handleEdit}
-              onDelete={handleDelete}
+              onDelete={deleteEmpresa}
               searchPlaceholder="Buscar empresas..."
             />
           </div>
@@ -155,8 +81,8 @@ export default function EmpresasPage() {
         onOpenChange={setModalOpen}
         title={editingEmpresa ? "Editar Empresa" : "Nueva Empresa"}
         description={editingEmpresa ? "Modifica los datos de la empresa" : "Agrega una nueva empresa al sistema"}
-        fields={formFields}
-        initialData={editingEmpresa || {}}
+        fields={EMPRESA_FORM_FIELDS}
+        initialData={(editingEmpresa || DEFAULT_NEW_EMPRESA_DATA) as FormData}
         onSubmit={handleSubmit}
       />
     </div>

@@ -138,7 +138,7 @@ export function DataTable({
                             {onDelete && (
                               <DropdownMenuItem onClick={() => handleDeleteClick(item)} className="text-destructive">
                                 <Trash2 className="h-4 w-4 mr-2" />
-                                Eliminar
+                                Inactivar
                               </DropdownMenuItem>
                             )}
                           </DropdownMenuContent>
@@ -157,15 +157,15 @@ export function DataTable({
       <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar eliminación</AlertDialogTitle>
+            <AlertDialogTitle>Confirmar inactivacion</AlertDialogTitle>
             <AlertDialogDescription>
-              ¿Estás seguro de que deseas eliminar este registro? Esta acción no se puede deshacer.
+              ¿Estás seguro de que deseas inactivar este registro? Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete} className="">
-              Eliminar
+            <AlertDialogCancel className="cursor-pointer">Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive hover:bg-destructive cursor-pointer">
+              Inactivar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,13 +1,12 @@
 export interface Empresa {
-  id: string
-  nombre: string
-  descripcion?: string
-  direccion?: string
-  nit?: string,
-  telefono?: string
-  email?: string
-  estado: "activa" | "inactiva"
-  fechaCreacion: string
+  ID_EMPRESA: number
+  NOMBRE: string,
+  DIRECCION: string,
+  NIT: string,
+  TELEFONO: string,
+  CORREO: string,
+  ESTADO: boolean,
+  FECHA_CREACION: string
 }
 
 export interface Departamento {
