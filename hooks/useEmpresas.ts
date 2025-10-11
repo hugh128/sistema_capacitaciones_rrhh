@@ -17,7 +17,9 @@ export function useEmpresas(user: User | null) {
       const { data } = await apiClient.get<Empresa[]>("/empresa");
       setEmpresas(data);
     } catch (err) {
-      setError("Error al cargar las empresas.");
+      const baseMessage = "Error al cargar las empresas.";
+      setError(baseMessage);
+      handleApiError(err, baseMessage)
       console.error(err);
     } finally {
       setLoading(false);
@@ -25,7 +27,8 @@ export function useEmpresas(user: User | null) {
   }, []);
 
   const deleteEmpresa = async (empresa: Empresa) => {
-    const toastId = toast.loading("Eliminando empresa...");
+    setError(null);
+    const toastId = toast.loading("Inactivando empresa...");
     try {
       await apiClient.delete(`/empresa/${empresa.ID_EMPRESA}`);
       toast.success("Empresa inactivada con éxito.", { id: toastId });

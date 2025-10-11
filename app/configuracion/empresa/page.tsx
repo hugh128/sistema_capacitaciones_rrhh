@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/auth-context"
 import { handleApiError } from "@/utils/error-handler"
 import toast, { Toaster } from 'react-hot-toast'
 import { EMPRESA_COLUMNS, EMPRESA_FORM_FIELDS, DEFAULT_NEW_EMPRESA_DATA } from "@/data/empresa-config"
-import { useEmpresas } from "@/hook/useEmpresas"
+import { useEmpresas } from "@/hooks/useEmpresas"
 
 export default function EmpresasPage() {
   const { user } = useAuth()

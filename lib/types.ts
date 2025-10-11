@@ -1,22 +1,20 @@
 export interface Empresa {
   ID_EMPRESA: number
-  NOMBRE: string,
-  DIRECCION: string,
-  NIT: string,
-  TELEFONO: string,
-  CORREO: string,
-  ESTADO: boolean,
+  NOMBRE: string
+  DIRECCION: string
+  NIT: string
+  TELEFONO: string
+  CORREO: string
+  ESTADO: boolean
   FECHA_CREACION: string
 }
 
 export interface Departamento {
-  id: string
-  nombre: string
-  descripcion?: string
-  empresaId: string
-  encargadoId?: string
-  estado: "activo" | "inactivo"
-  fechaCreacion: string
+  ID_DEPARTAMENTO: number
+  NOMBRE: string
+  DESCRIPCION: string
+  ESTADO: boolean
+  FECHA_CREACION: string
 }
 
 export interface Puesto {

@@ -1,92 +1,66 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { Sidebar } from "@/components/sidebar"
 import { DataTable } from "@/components/data-table"
-import { FormModal } from "@/components/form-modal"
-import { Badge } from "@/components/ui/badge"
-import { mockEmpresas, type Departamento } from "@/lib/types"
+import { FormModal, type FormData as FormValues } from "@/components/form-modal"
 import { useAuth } from "@/contexts/auth-context"
 import { apiClient } from "@/lib/api-client"
-import { transformApiToFrontend, transformFrontendToApi } from "@/lib/departamento-transformer"
+import { DEPARTAMENTO_COLUMNS, DEPARTAMENTO_FORM_FIELDS } from "@/data/departamento-confign"
+import { Toaster } from 'react-hot-toast'
+import { Departamento, Empresa } from "@/lib/types"
+import { useDepartamentos } from "@/hooks/useDepartamentos"
+
+const getEmpresasList = async () => {
+  try {
+    const { data } = await apiClient.get<Empresa[]>('/empresa'); 
+    return data;
+  } catch (err) {
+    console.error("Error al cargar lista de empresas para select:", err);
+    return [];
+  }
+}
 
 export default function DepartamentosPage() {
   const { user } = useAuth()
-  const [departamentos, setDepartamentos] = useState<Departamento[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [editingDepartamento, setEditingDepartamento] = useState<Departamento | null>(null)
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [empresasList, setEmpresasList] = useState<Empresa[]>([]);
 
-  const fetchDepartamentos = useCallback(async () => {
-    setLoading(true)
-    setError(null)
-    try {
-      const response = await apiClient.get<any[]>('/departamento')
-
-      const transformedData = response.data.map(transformApiToFrontend)
-      setDepartamentos(transformedData)
-      console.log(transformedData)
-      console.log(departamentos)
-
-    } catch (err) {
-      setError('Error al cargar los departamentos.')
-      console.error('API Error:', err)
-    } finally {
-      setLoading(false)
-    }
-  }, [])
+  const { 
+    departamentos,
+    deleteDepartamento,
+    saveDepartamento
+  } = useDepartamentos(user);
 
   useEffect(() => {
     if (user) {
-      fetchDepartamentos()
+      getEmpresasList().then(setEmpresasList);
     }
-  }, [user, fetchDepartamentos])
+  }, [user]);
+
 
   if (!user || !user.roles.some((role) => role.nombre === "RRHH")) {
     return <div>No tienes permisos para acceder a esta página</div>
   }
 
-  const columns = [
-    { key: "nombre", label: "Nombre" },
-    { key: "descripcion", label: "Descripción" },
-/*     {
-      key: "empresaId",
-      label: "Empresa",
-      render: (value: string) => {
-        const empresa = mockEmpresas.find((e) => e.id === value)
-        return empresa?.nombre || "N/A"
-      },
-    }, */
-    {
-      key: "estado",
-      label: "Estado",
-      render: (value: string) => <Badge variant={value === "activo" ? "default" : "secondary"}>{value}</Badge>,
-    },
-    { key: "fechaCreacion", label: "Fecha Creación" },
-  ]
+  const empresaOptions = empresasList.map((empresa) => ({
+    value: empresa.ID_EMPRESA.toString(),
+    label: empresa.NOMBRE,
+  }));
+  
+  const formFields = DEPARTAMENTO_FORM_FIELDS.map(field => {
+    if (field.key === 'empresaId') {
+        return { ...field, options: empresaOptions };
+    }
+    return field;
+  });
 
-  const formFields = [
-    { key: "nombre", label: "Nombre", type: "text" as const, required: true },
-    { key: "descripcion", label: "Descripción", type: "textarea" as const },
-    {
-      key: "empresaId",
-      label: "Empresa",
-      type: "select" as const,
-      required: true,
-      options: mockEmpresas.map((e) => ({ value: e.id, label: e.nombre })),
-    },
-    {
-      key: "estado",
-      label: "Estado",
-      type: "select" as const,
-      required: true,
-      options: [
-        { value: "activo", label: "Activo" },
-        { value: "inactivo", label: "Inactivo" },
-      ],
-    },
-  ]
+  //const firstEmpresa = empresasList[0];
+  const DEFAULT_NEW_DATA = {
+    ESTADO: true,
+    //empresaId: firstEmpresa ? firstEmpresa.ID_EMPRESA.toString() : '', 
+  };
 
   const handleAdd = () => {
     setEditingDepartamento(null)
@@ -99,36 +73,14 @@ export default function DepartamentosPage() {
   }
 
   const handleDelete = async (departamento: Departamento) => {
-    try {
-      await apiClient.delete(`/departamento/${departamento.id}`)
-
-      fetchDepartamentos()
-    } catch (error) {
-      setError("Error al eliminar el departamento.")
-      console.error(error)
-    }
-
-    setDepartamentos((prev) => prev.filter((d) => d.id !== departamento.id))
+    await deleteDepartamento(departamento);
   }
 
-  const handleSubmit = async (data: any) => {
-    setError(null);
-    try {
-      const apiData = transformFrontendToApi(data);
-      
-      if (editingDepartamento) {
-        await apiClient.patch(`/departamento/${editingDepartamento.id}`, apiData);
-      } else {
-        await apiClient.post('/departamento', apiData);
-      }
-      
-      fetchDepartamentos();
-    } catch (err) {
-      const msg = editingDepartamento ? "actualizar" : "crear";
-      setError(`Error al ${msg} el departamento.`);
-      console.error("Submit Error:", err);
-    } finally {
-      setModalOpen(false)
+  const handleSubmit = async (formData: FormValues) => {
+    const success = await saveDepartamento(formData, editingDepartamento);
+    
+    if (success) {
+      setModalOpen(false);
     }
   }
 
@@ -145,11 +97,13 @@ export default function DepartamentosPage() {
         </header>
 
         <main className="flex-1 overflow-auto p-6">
+          <Toaster />
+
           <div className="max-w-7xl mx-auto">
             <DataTable
               title="Departamentos"
               data={departamentos}
-              columns={columns}
+              columns={DEPARTAMENTO_COLUMNS}
               onAdd={handleAdd}
               onEdit={handleEdit}
               onDelete={handleDelete}
@@ -163,11 +117,9 @@ export default function DepartamentosPage() {
         open={modalOpen}
         onOpenChange={setModalOpen}
         title={editingDepartamento ? "Editar Departamento" : "Nuevo Departamento"}
-        description={
-          editingDepartamento ? "Modifica los datos del departamento" : "Agrega un nuevo departamento al sistema"
-        }
+        description={editingDepartamento ? "Modifica los datos del departamento" : "Agrega un nuevo departamento al sistema"}
         fields={formFields}
-        initialData={editingDepartamento || {}}
+        initialData={(editingDepartamento || DEFAULT_NEW_DATA) as FormValues}
         onSubmit={handleSubmit}
       />
     </div>
