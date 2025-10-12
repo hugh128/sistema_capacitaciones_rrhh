@@ -27,23 +27,22 @@ export interface Puesto {
 }
 
 export interface Persona {
-  id: string
-  nombre: string
-  apellido: string
-  correo: string
-  telefono?: string
-  dpi?: string
-  fechaNacimiento?: string
-  puestoId?: string
-  departamentoId?: string
-  estado: "activo" | "inactivo"
-  fechaCreacion?: string
-  fechaIngreso?: string
-  tipoPersona?: string
-  empresaId?: string
-
-  nombrePuesto?: string;
-  nombreDepartamento?: string;
+  ID_PERSONA: number
+  NOMBRE: string
+  APELLIDO: string
+  CORREO: string
+  TELEFONO: string
+  DPI: string
+  FECHA_NACIMIENTO: string
+  TIPO_PERSONA: 'INTERNO' | 'EXTERNO'
+  FECHA_INGRESO: string
+  EMPRESA_ID: number
+  DEPARTAMENTO_ID: number
+  PUESTO_ID: number
+  ESTADO: boolean
+  EMPRESA: Empresa
+  DEPARTAMENTO: Departamento
+  PUESTO: Puesto
 }
 
 export interface Usuario {

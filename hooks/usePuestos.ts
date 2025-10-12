@@ -18,7 +18,7 @@ export function usePuestos(user: User | null) {
       const { data } = await apiClient.get<Puesto[]>('/puesto');
       setPuestos(data);
     } catch (err) {
-      const baseMessage = "Error al cargar los puetos.";
+      const baseMessage = "Error al cargar los puestos.";
       setError(baseMessage);
       handleApiError(err, baseMessage)
     } finally {
