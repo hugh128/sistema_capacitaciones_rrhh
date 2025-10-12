@@ -5,25 +5,39 @@ export const PERSONA_COLUMNS = [
   { key: "NOMBRE", label: "Nombre" },
   { key: "APELLIDO", label: "Apellido" },
   { key: "CORREO", label: "Correo" },
-  { key: "TELEFONO", label: "Teléfono" },
-  { key: "DPI", label: "DPI" },
-  { key: "TIPO_PERSONA", label: "Tipo persona" },
+/*   { key: "TELEFONO", label: "Teléfono" },
+  { key: "DPI", label: "DPI" }, */
+  {
+    key: "TIPO_PERSONA",
+    label: "Tipo persona",
+    render: (value: string) => (
+      <Badge
+        className={
+          value === 'INTERNO'
+            ? 'bg-blue-100 text-blue-700 dark:bg-transparent dark:border-2 dark:text-foreground dark:border-primary'
+            : 'bg-green-100 text-green-700 dark:bg-transparent dark:border-2 dark:text-foreground dark:border-green-800'
+        }
+      >
+        {value === 'INTERNO' ? 'Colaborador' : 'Persona Externa'}
+      </Badge>
+    ),
+  },
   {
     key: "PUESTO.NOMBRE",
     label: "Puesto",
-  },
-  {
-    key: "EMPRESA.NOMBRE",
-    label: "Empresa",
   },
   {
     key: "DEPARTAMENTO.NOMBRE",
     label: "Departamento",
   },
   {
+    key: "EMPRESA.NOMBRE",
+    label: "Empresa",
+  },
+/*   {
     key: "FECHA_NACIMIENTO",
     label: "Fecha Nacimiento"
-  },
+  }, */
   {
     key: "FECHA_INGRESO",
     label: "Fecha Ingreso"

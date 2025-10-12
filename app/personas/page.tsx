@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { Sidebar } from "@/components/sidebar"
-import { DataTable } from "@/components/data-table"
 import { type FormData as FormValues } from "@/components/form-modal"
 import { PersonaFormModal } from "@/components/persona-form-modal"
 import { type Persona, Departamento, Empresa, Puesto } from "@/lib/types"
@@ -12,6 +11,8 @@ import { AppHeader } from "@/components/app-header"
 import { usePersonas } from "@/hooks/usePersonas"
 import { Toaster } from 'react-hot-toast'
 import { PERSONA_FORM_FIELDS, PERSONA_COLUMNS, DEFAULT_NEW_DATA } from "@/data/persona-config"
+import { PersonaDataTable } from "@/components/persona-data-table"
+import { PersonaDetailModal } from "@/components/persona-detail-modal"
 
 const getDepartamentosList = async () => {
   try {
@@ -61,6 +62,8 @@ const mapToOptions = <T extends { NOMBRE: string }>(
 export default function PersonasPage() {
   const { user } = useAuth()
   const [modalOpen, setModalOpen] = useState(false)
+  const [detailModalOpen, setDetailModalOpen] = useState(false)
+  const [viewingPersona, setViewingPersona] = useState<Persona | null>(null)
   const [editingPersona, setEditingPersona] = useState<Persona | null>(null)
   const [empresasList, setEmpresasList] = useState<Empresa[]>([])
   const [departamentosList, setDepartamentosList] = useState<Departamento[]>([])
@@ -117,6 +120,12 @@ export default function PersonasPage() {
     setModalOpen(true)
   }
 
+  const handleViewDetail = (persona: Persona) => {
+    setViewingPersona(persona);
+    setDetailModalOpen(true);
+  }
+
+
   const handleDelete = async (persona: Persona) => {
     await deletePersona(persona)
   }
@@ -140,13 +149,14 @@ export default function PersonasPage() {
           <Toaster />
 
           <div className="max-w-7xl mx-auto">
-            <DataTable
+            <PersonaDataTable
               title="Personas"
               data={personas}
               columns={PERSONA_COLUMNS}
               onAdd={handleAdd}
               onEdit={handleEdit}
               onDelete={handleDelete}
+              onViewDetail={handleViewDetail}
               searchPlaceholder="Buscar personas..."
             />
           </div>
@@ -163,6 +173,11 @@ export default function PersonasPage() {
         onSubmit={handleSubmit}
         initialPersonaData={editingPersona}
         loading={false} 
+      />
+      <PersonaDetailModal // <-- 5. Renderizamos el modal de detalle
+        open={detailModalOpen}
+        onOpenChange={setDetailModalOpen}
+        persona={viewingPersona} // Pasamos la persona seleccionada
       />
     </div>
   )
