@@ -109,7 +109,6 @@ export default function PersonasPage() {
     return field;
   });
 
-
   const handleAdd = () => {
     setEditingPersona(null)
     setModalOpen(true)
@@ -124,7 +123,6 @@ export default function PersonasPage() {
     setViewingPersona(persona);
     setDetailModalOpen(true);
   }
-
 
   const handleDelete = async (persona: Persona) => {
     await deletePersona(persona)
@@ -174,10 +172,10 @@ export default function PersonasPage() {
         initialPersonaData={editingPersona}
         loading={false} 
       />
-      <PersonaDetailModal // <-- 5. Renderizamos el modal de detalle
+      <PersonaDetailModal
         open={detailModalOpen}
         onOpenChange={setDetailModalOpen}
-        persona={viewingPersona} // Pasamos la persona seleccionada
+        persona={viewingPersona}
       />
     </div>
   )

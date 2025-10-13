@@ -131,17 +131,6 @@ export function LoginForm() {
                     {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
                   </Button>
                 </form>
-
-                <div className="pt-6 border-t border-border/30">
-                  <p className="text-xs text-muted-foreground text-center mb-3">
-                    Cuentas de prueba: <span className="font-mono bg-muted px-2 py-1 rounded">rrhh</span>,{" "}
-                    <span className="font-mono bg-muted px-2 py-1 rounded">capacitador</span>,{" "}
-                    <span className="font-mono bg-muted px-2 py-1 rounded">gerente</span>
-                  </p>
-                  <p className="text-xs text-muted-foreground text-center">
-                    Contraseña: <code className="bg-muted px-2 py-1 rounded text-xs font-mono">password123</code>
-                  </p>
-                </div>
               </CardContent>
             </Card>
 

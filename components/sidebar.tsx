@@ -17,10 +17,6 @@ import {
   BarChart3,
   Shield,
   LogOut,
-  ChevronLeft,
-  Building2,
-  Briefcase,
-  UserCog,
   Moon,
   Sun,
   Menu,
@@ -28,10 +24,32 @@ import {
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
+import { hasAnyPermission } from "@/lib/permissions"
 
 interface SidebarProps {
   className?: string
 }
+
+interface MenuItem {
+  icon: React.ElementType;
+  label: string;
+  href: string;
+  requiredPermissions: string[]; 
+}
+
+const MAIN_MENU_CONFIG: MenuItem[] = [
+  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", requiredPermissions: [] },
+  { icon: Users, label: "Personas", href: "/personas", requiredPermissions: ["manage_users", "view_team"] },
+  { icon: UserCheck, label: "Usuarios", href: "/usuarios", requiredPermissions: ["manage_users"] },
+  { icon: Shield, label: "Roles y Permisos", href: "/roles", requiredPermissions: ["manage_users"] },
+  { icon: Calendar, label: "Planes", href: "/planes", requiredPermissions: ["manage_trainings", "view_trainings"] },
+  { icon: BookOpen, label: "Capacitaciones", href: "/capacitaciones", requiredPermissions: ["manage_trainings", "view_trainings"] },
+  { icon: Users, label: "Participantes", href: "/participantes", requiredPermissions: ["view_participants"] },
+  { icon: FileText, label: "Documentos", href: "/documentos", requiredPermissions: ["upload_documents", "view_documents"] },
+  { icon: BarChart3, label: "Reportes", href: "/reportes", requiredPermissions: ["view_reports"] },
+  { icon: Shield, label: "Auditoría", href: "/auditoria", requiredPermissions: ["view_audit"] },
+  { icon: Settings, label: "Configuración", href: "/configuracion", requiredPermissions: ["manage_config"] },
+];
 
 export function Sidebar({ className }: SidebarProps) {
   const { user, logout, loggingOut } = useAuth()
@@ -41,52 +59,19 @@ export function Sidebar({ className }: SidebarProps) {
   const currentPath = usePathname()
 
   const getMenuItems = () => {
-    const baseItems = [{ icon: LayoutDashboard, label: "Dashboard", href: "/dashboard" }]
-
-    if (user?.roles.some((role) => role.nombre === "RRHH")) {
-      return [
-        ...baseItems,
-        { icon: Users, label: "Personas", href: "/personas" },
-        { icon: UserCheck, label: "Usuarios", href: "/usuarios" },
-        { icon: Shield, label: "Roles", href: "/roles" },
-        { icon: Calendar, label: "Planes", href: "/planes" },
-        { icon: BookOpen, label: "Capacitaciones", href: "/capacitaciones" },
-        { icon: Users, label: "Participantes", href: "/participantes" },
-        { icon: FileText, label: "Documentos", href: "/documentos" },
-        { icon: BarChart3, label: "Reportes", href: "/reportes" },
-        { icon: Shield, label: "Auditoría", href: "/auditoria" },
-        {
-          icon: Settings,
-          label: "Configuración",
-          href: "/configuracion",
-          /* children: [
-            { icon: Building2, label: "Empresas", href: "/configuracion/empresa" },
-            { icon: Briefcase, label: "Departamentos", href: "/configuracion/departamento" },
-            { icon: UserCog, label: "Puestos", href: "/configuracion/puesto" },
-          ], */
-        },
-      ]
+    if (!user) {
+      return MAIN_MENU_CONFIG.filter(item => item.requiredPermissions.length === 0);
     }
 
-    if (user?.roles.some((role) => role.nombre === "Capacitador")) {
-      return [
-        ...baseItems,
-        { icon: BookOpen, label: "Mis Capacitaciones", href: "/capacitaciones" },
-        { icon: Users, label: "Participantes", href: "/participantes" },
-        { icon: FileText, label: "Documentos", href: "/documentos" },
-      ]
-    }
+    const accessibleItems = MAIN_MENU_CONFIG.filter((item) => {
+      if (item.requiredPermissions.length === 0) {
+        return true; 
+      }
 
-    if (user?.roles.some((role) => ["Gerente", "Jefe"].includes(role.nombre))) {
-      return [
-        ...baseItems,
-        { icon: Users, label: "Mi Equipo", href: "/equipo" },
-        { icon: BarChart3, label: "Reportes", href: "/reportes" },
-        { icon: FileText, label: "Expedientes", href: "/expedientes" },
-      ]
-    }
+      return hasAnyPermission(user, item.requiredPermissions);
+    });
 
-    return baseItems
+    return accessibleItems;
   }
 
   const menuItems = getMenuItems()
@@ -186,27 +171,6 @@ export function Sidebar({ className }: SidebarProps) {
                     {!collapsed && <span className="truncate">{item.label}</span>}
                   </Button>
                 </Link>
-
-                {/* Submenu for Configuration */}
-                {/* {item.children && !collapsed && (
-                  <div className="ml-6 mt-1 space-y-1">
-                    {item.children.map((child, childIndex) => {
-                      const ChildIcon = child.icon
-                      return (
-                        <Link key={childIndex} href={child.href} onClick={() => setMobileMenuOpen(false)}>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            className="w-full justify-start gap-2 text-sidebar-foreground/80 hover:bg-sidebar-accent hover:text-sidebar-accent-foreground"
-                          >
-                            <ChildIcon className="w-3 h-3" />
-                            <span className="truncate">{child.label}</span>
-                          </Button>
-                        </Link>
-                      )
-                    })}
-                  </div>
-                )} */}
               </div>
             )
           })}
@@ -237,7 +201,6 @@ export function Sidebar({ className }: SidebarProps) {
               {theme === "light" ? "Modo Oscuro" : "Modo Claro"}
             </span>
           </Button>
-
           <Button
             variant="ghost"
             onClick={logout}
@@ -285,7 +248,6 @@ export function Sidebar({ className }: SidebarProps) {
               </>
             )}
           </Button>
-
         </div>
       </div>
     </>

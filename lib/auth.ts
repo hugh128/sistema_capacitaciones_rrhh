@@ -15,8 +15,25 @@
 
 export interface Role {
   id: string
-  nombre: "RRHH" | "Capacitador" | "Gerente" | "Jefe"
+/*   nombre: "RRHH" | "Capacitador" | "Gerente" | "Jefe" */
+  nombre: string
   permisos: string[]
+}
+
+export interface CategoriaPermiso {
+  ID_CATEGORIA: number
+  CLAVE: string
+  NOMBRE: string
+  DESCRIPCION: string
+  PERMISOS?: Permiso[]
+}
+
+export interface Permiso {
+  ID_PERMISO: number
+  CLAVE: string
+  NOMBRE: string
+  DESCRIPCION: string
+  CATEGORIA_ID?: number
 }
 
 export interface AuthContextType {
