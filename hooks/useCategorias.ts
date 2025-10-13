@@ -52,8 +52,8 @@ export function useCategorias(user: User | null) {
       const method = isEditing ? 'patch' : 'post';
       await apiClient[method](endpoint, data);
       
-      toast.success(`Categoría ${isEditing ? 'actualizada' : 'creada'} con éxito.`);
       refreshCategorias();
+      toast.success(`Categoría ${isEditing ? 'actualizada' : 'creada'} con éxito.`);
       return true;
     } catch (err) {
       handleApiError(err, `Error al ${isEditing ? 'actualizar' : 'crear'} la categoría.`);

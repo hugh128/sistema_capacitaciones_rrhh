@@ -108,6 +108,9 @@ export function PermissionsTab() {
 
   return (
     <div className="space-y-6">
+
+      <Toaster />
+      
       <div className="flex flex-wrap gap-3">
         <Button onClick={() => setPermissionModalOpen(true)}>
           <Plus className="w-4 h-4 mr-2" />
@@ -125,8 +128,6 @@ export function PermissionsTab() {
 
         return (
           <Card key={category.CLAVE}>
-            <Toaster />
-
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">

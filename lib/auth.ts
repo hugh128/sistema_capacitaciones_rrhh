@@ -1,23 +1,9 @@
-/* export interface User {
-  id: number
-  username: string,
-  email: string
-  nombre: string
-  apellido: string
-  telefono?: string
-  dpi?: string
-  fechaNacimiento?: string
-  puesto?: string
-  departamento?: string
-  roles: Role[]
-  estado: "activo" | "inactivo"
-} */
-
-export interface Role {
-  id: string
-/*   nombre: "RRHH" | "Capacitador" | "Gerente" | "Jefe" */
-  nombre: string
-  permisos: string[]
+export interface Rol {
+  ID_ROL: number
+  NOMBRE: string
+  DESCRIPCION: string
+  ESTADO: boolean
+  ROL_PERMISOS: Permiso[]
 }
 
 export interface CategoriaPermiso {
@@ -34,6 +20,14 @@ export interface Permiso {
   NOMBRE: string
   DESCRIPCION: string
   CATEGORIA_ID?: number
+  CATEGORIA?: CategoriaPermiso
+}
+
+export interface RolPayload {
+  NOMBRE: string
+  DESCRIPCION: string
+  ESTADO: boolean
+  ID_PERMISOS: number[]
 }
 
 export interface AuthContextType {

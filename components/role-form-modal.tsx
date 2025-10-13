@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-
-import { useState, useEffect } from "react"
+import { useState, useEffect, useMemo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -17,49 +16,76 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { ScrollArea } from "@/components/ui/scroll-area"
-import { getPermissions, getPermissionCategories } from "@/lib/permissions"
 import { Badge } from "@/components/ui/badge"
-import type { Role } from "@/lib/types"
+import type { Permiso, CategoriaPermiso, Rol, RolPayload } from "@/lib/auth"
 
 interface RoleFormModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
-  initialData?: Role | null
-  onSubmit: (data: Partial<Role>) => void
+  initialData?: Rol | null
+  onSubmit: (data: RolPayload) => void
   loading?: boolean
+  permisosDisponibles: Permiso[]
+  categoriasDisponibles: CategoriaPermiso[]
 }
 
-export function RoleFormModal({ open, onOpenChange, initialData, onSubmit, loading = false }: RoleFormModalProps) {
+export function RoleFormModal({
+  open,
+  onOpenChange,
+  initialData,
+  onSubmit,
+  loading = false,
+  permisosDisponibles,
+  categoriasDisponibles,
+}: RoleFormModalProps) {
   const [nombre, setNombre] = useState("")
   const [descripcion, setDescripcion] = useState("")
-  const [selectedPermissions, setSelectedPermissions] = useState<string[]>([])
-  const [permissions, setPermissions] = useState(getPermissions())
-  const [categories, setCategories] = useState(getPermissionCategories())
+  const [estado, setEstado] = useState(true)
+  const [selectedPermissions, setSelectedPermissions] = useState<number[]>([])
+
+  const permissionsByCategoryId = useMemo(() => {
+    return permisosDisponibles.reduce((acc, permiso) => {
+      const categoryId = permiso.CATEGORIA_ID ?? 0
+      if (!acc[categoryId]) {
+        acc[categoryId] = []
+      }
+      acc[categoryId].push(permiso)
+      return acc
+    }, {} as Record<number, Permiso[]>)
+  }, [permisosDisponibles])
+
+  const orderedCategories = useMemo(() => {
+    return categoriasDisponibles.sort((a, b) => a.ID_CATEGORIA - b.ID_CATEGORIA)
+  }, [categoriasDisponibles])
 
   useEffect(() => {
     if (initialData) {
-      setNombre(initialData.nombre)
-      setDescripcion(initialData.descripcion || "")
-      setSelectedPermissions(initialData.permisos)
+      setNombre(initialData.NOMBRE)
+      setDescripcion(initialData.DESCRIPCION || "")
+      setEstado(initialData.ESTADO)
+      setSelectedPermissions(initialData.ROL_PERMISOS.map((p) => p.ID_PERMISO))
     } else {
       setNombre("")
       setDescripcion("")
+      setEstado(true)
       setSelectedPermissions([])
     }
-    setPermissions(getPermissions())
-    setCategories(getPermissionCategories())
   }, [initialData, open])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    onSubmit({
-      nombre,
-      descripcion,
-      permisos: selectedPermissions,
-    })
+
+    const payload: RolPayload = {
+      NOMBRE: nombre,
+      DESCRIPCION: descripcion,
+      ESTADO: estado,
+      ID_PERMISOS: selectedPermissions,
+    }
+
+    onSubmit(payload)
   }
 
-  const togglePermission = (permissionId: string) => {
+  const togglePermission = (permissionId: number) => {
     setSelectedPermissions((prev) => {
       if (prev.includes(permissionId)) {
         return prev.filter((p) => p !== permissionId)
@@ -69,29 +95,34 @@ export function RoleFormModal({ open, onOpenChange, initialData, onSubmit, loadi
     })
   }
 
-  const toggleCategory = (categoryId: string) => {
-    const categoryPermissions = permissions.filter((p) => p.categoria === categoryId).map((p) => p.id)
-    const allSelected = categoryPermissions.every((p) => selectedPermissions.includes(p))
+  const toggleCategory = (categoryId: number) => {
+    const categoryPermissions = permissionsByCategoryId[categoryId] || []
+    const permissionIds = categoryPermissions.map((p) => p.ID_PERMISO)
+    const allSelected = permissionIds.every((id) => selectedPermissions.includes(id))
 
     if (allSelected) {
-      setSelectedPermissions((prev) => prev.filter((p) => !categoryPermissions.includes(p)))
+      setSelectedPermissions((prev) => prev.filter((id) => !permissionIds.includes(id)))
     } else {
       setSelectedPermissions((prev) => {
-        const newPermissions = new Set([...prev, ...categoryPermissions])
+        const newPermissions = new Set([...prev, ...permissionIds])
         return Array.from(newPermissions)
       })
     }
   }
 
-  const isCategorySelected = (categoryId: string) => {
-    const categoryPermissions = permissions.filter((p) => p.categoria === categoryId).map((p) => p.id)
-    return categoryPermissions.every((p) => selectedPermissions.includes(p))
+  const isCategorySelected = (categoryId: number) => {
+    const categoryPermissions = permissionsByCategoryId[categoryId] || []
+    const permissionIds = categoryPermissions.map((p) => p.ID_PERMISO)
+    if (permissionIds.length === 0) return false
+    return permissionIds.every((id) => selectedPermissions.includes(id))
   }
 
-  const isCategoryPartiallySelected = (categoryId: string) => {
-    const categoryPermissions = permissions.filter((p) => p.categoria === categoryId).map((p) => p.id)
-    const selectedCount = categoryPermissions.filter((p) => selectedPermissions.includes(p)).length
-    return selectedCount > 0 && selectedCount < categoryPermissions.length
+  const isCategoryPartiallySelected = (categoryId: number) => {
+    const categoryPermissions = permissionsByCategoryId[categoryId] || []
+    const permissionIds = categoryPermissions.map((p) => p.ID_PERMISO)
+    if (permissionIds.length === 0) return false
+    const selectedCount = permissionIds.filter((id) => selectedPermissions.includes(id)).length
+    return selectedCount > 0 && selectedCount < permissionIds.length
   }
 
   return (
@@ -130,6 +161,20 @@ export function RoleFormModal({ open, onOpenChange, initialData, onSubmit, loadi
           </div>
 
           <div className="space-y-2">
+            <Label htmlFor="estado">Estado</Label>
+            <div className="flex items-center space-x-2 p-3">
+              <Checkbox
+                id="estado"
+                checked={estado}
+                onCheckedChange={(checked) => setEstado(!!checked)} 
+              />
+              <Label htmlFor="estado" className="flex-1 cursor-pointer font-normal">
+                {estado ? "Activo" : "Inactivo"}
+              </Label>
+            </div>
+          </div>
+
+          <div className="space-y-2">
             <Label>
               Permisos <span className="text-destructive">*</span>
             </Label>
@@ -139,43 +184,46 @@ export function RoleFormModal({ open, onOpenChange, initialData, onSubmit, loadi
 
             <ScrollArea className="h-[300px] rounded-md border border-border p-4">
               <div className="space-y-4">
-                {categories.map((category) => {
-                  const categoryPermissions = permissions.filter((p) => p.categoria === category.id)
-                  const isSelected = isCategorySelected(category.id)
-                  const isPartial = isCategoryPartiallySelected(category.id)
+                {orderedCategories.map((category) => {
+                  const categoryPermissions = permissionsByCategoryId[category.ID_CATEGORIA] || []
+                  const isSelected = isCategorySelected(category.ID_CATEGORIA)
+                  const isPartial = isCategoryPartiallySelected(category.ID_CATEGORIA)
 
                   return (
-                    <div key={category.id} className="space-y-3">
+                    <div key={category.ID_CATEGORIA} className="space-y-3">
                       <div className="flex items-center gap-2 pb-2 border-b border-border">
                         <Checkbox
-                          id={`category-${category.id}`}
+                          id={`category-${category.ID_CATEGORIA}`}
                           checked={isSelected}
-                          onCheckedChange={() => toggleCategory(category.id)}
+                          onCheckedChange={() => toggleCategory(category.ID_CATEGORIA)}
                           className={isPartial ? "data-[state=checked]:bg-primary/50" : ""}
                         />
-                        <Label htmlFor={`category-${category.id}`} className="font-semibold cursor-pointer flex-1">
-                          {category.nombre}
+                        <Label
+                          htmlFor={`category-${category.ID_CATEGORIA}`}
+                          className="font-semibold cursor-pointer flex-1"
+                        >
+                          {category.NOMBRE}
                         </Label>
                         <Badge variant="outline" className="text-xs">
-                          {categoryPermissions.filter((p) => selectedPermissions.includes(p.id)).length}/
+                          {categoryPermissions.filter((p) => selectedPermissions.includes(p.ID_PERMISO)).length}/
                           {categoryPermissions.length}
                         </Badge>
                       </div>
 
                       <div className="ml-6 space-y-2">
                         {categoryPermissions.map((permission) => (
-                          <div key={permission.id} className="flex items-start gap-2">
+                          <div key={permission.ID_PERMISO} className="flex items-start gap-2">
                             <Checkbox
-                              id={permission.id}
-                              checked={selectedPermissions.includes(permission.id)}
-                              onCheckedChange={() => togglePermission(permission.id)}
+                              id={`permission-${permission.ID_PERMISO}`}
+                              checked={selectedPermissions.includes(permission.ID_PERMISO)}
+                              onCheckedChange={() => togglePermission(permission.ID_PERMISO)}
                               className="mt-1"
                             />
                             <div className="flex-1">
-                              <Label htmlFor={permission.id} className="cursor-pointer font-normal">
-                                {permission.nombre}
+                              <Label htmlFor={`permission-${permission.ID_PERMISO}`} className="cursor-pointer font-normal">
+                                {permission.NOMBRE}
                               </Label>
-                              <p className="text-xs text-muted-foreground">{permission.descripcion}</p>
+                              <p className="text-xs text-muted-foreground">{permission.DESCRIPCION}</p>
                             </div>
                           </div>
                         ))}

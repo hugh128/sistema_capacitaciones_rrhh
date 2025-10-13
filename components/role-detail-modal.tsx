@@ -4,35 +4,32 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Separator } from "@/components/ui/separator"
-import type { Role } from "@/lib/types"
-import { getPermissions, getPermissionCategories } from "@/lib/permissions"
 import { Shield, Info } from "lucide-react"
+import type { CategoriaPermiso, Permiso, Rol } from "@/lib/auth"
 
 interface RoleDetailModalProps {
-  role: Role | null
+  role: Rol | null
   open: boolean
+  permisosDisponibles: Permiso[]
+  categoriasDisponigles: CategoriaPermiso[]
   onOpenChange: (open: boolean) => void
 }
 
-export function RoleDetailModal({ role, open, onOpenChange }: RoleDetailModalProps) {
+export function RoleDetailModal({ role, open, permisosDisponibles, categoriasDisponigles, onOpenChange }: RoleDetailModalProps) {
   if (!role) return null
 
-  const permissions = getPermissions()
-  const categories = getPermissionCategories()
-
-  // Group permissions by category
-  const permissionsByCategory = role.permisos.reduce(
+  const permissionsByCategory = role.ROL_PERMISOS.reduce(
     (acc, permissionId) => {
-      const permission = permissions.find((p) => p.id === permissionId)
+      const permission = permisosDisponibles.find((p) => p.ID_PERMISO === permissionId.ID_PERMISO)
       if (permission) {
-        if (!acc[permission.categoria]) {
-          acc[permission.categoria] = []
+        if (!acc[permission.CATEGORIA?.NOMBRE || "Sin nombre"]) {
+          acc[permission.CATEGORIA?.NOMBRE || "Sin nombre"] = []
         }
-        acc[permission.categoria].push(permission)
+        acc[permission.CATEGORIA?.NOMBRE || "Sin nombre"].push(permission)
       }
       return acc
     },
-    {} as Record<string, typeof permissions>,
+    {} as Record<string, typeof permisosDisponibles>,
   )
 
   return (
@@ -44,8 +41,14 @@ export function RoleDetailModal({ role, open, onOpenChange }: RoleDetailModalPro
               <Shield className="w-5 h-5 text-primary" />
             </div>
             <div>
-              <DialogTitle className="text-xl">{role.nombre}</DialogTitle>
-              <p className="text-sm text-muted-foreground mt-1">{role.descripcion || "Sin descripción"}</p>
+              <DialogTitle className="text-xl">{role.NOMBRE}</DialogTitle>
+              <p className="text-sm text-muted-foreground mt-1">{role.DESCRIPCION || "Sin descripción"}</p>
+              <Badge
+                variant={role.ESTADO ? "default" : "destructive"} 
+                className="mt-2 text-xs font-semibold"
+              >
+                {role.ESTADO ? "Activo" : "Inactivo"}
+              </Badge>
             </div>
           </div>
         </DialogHeader>
@@ -60,7 +63,7 @@ export function RoleDetailModal({ role, open, onOpenChange }: RoleDetailModalPro
                 <CardTitle className="text-sm font-medium">Total de Permisos</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-2xl font-bold">{role.permisos.length}</p>
+                <p className="text-2xl font-bold">{role.ROL_PERMISOS.length}</p>
               </CardContent>
             </Card>
             <Card>
@@ -88,27 +91,27 @@ export function RoleDetailModal({ role, open, onOpenChange }: RoleDetailModalPro
               </Card>
             ) : (
               Object.entries(permissionsByCategory).map(([categoryId, categoryPermissions]) => {
-                const category = categories.find((c) => c.id === categoryId)
+                const category = categoriasDisponigles.find((c) => c.NOMBRE === categoryId)
                 return (
                   <Card key={categoryId}>
                     <CardHeader className="pb-3">
-                      <CardTitle className="text-base">{category?.nombre || categoryId}</CardTitle>
-                      <CardDescription>{category?.descripcion}</CardDescription>
+                      <CardTitle className="text-base">{category?.NOMBRE || categoryId}</CardTitle>
+                      <CardDescription>{category?.DESCRIPCION}</CardDescription>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-2">
                         {categoryPermissions.map((permission) => (
                           <div
-                            key={permission.id}
+                            key={permission.ID_PERMISO}
                             className="flex items-start gap-3 p-2 rounded-lg hover:bg-muted/50 transition-colors"
                           >
                             <div className="w-2 h-2 rounded-full bg-primary mt-1.5 flex-shrink-0" />
                             <div className="flex-1 min-w-0">
-                              <p className="text-sm font-medium">{permission.nombre}</p>
-                              <p className="text-xs text-muted-foreground mt-0.5">{permission.descripcion}</p>
+                              <p className="text-sm font-medium">{permission.NOMBRE}</p>
+                              <p className="text-xs text-muted-foreground mt-0.5">{permission.DESCRIPCION}</p>
                             </div>
                             <Badge variant="outline" className="text-xs flex-shrink-0">
-                              {permission.id}
+                              {permission.CLAVE}
                             </Badge>
                           </div>
                         ))}

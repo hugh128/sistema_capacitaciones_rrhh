@@ -283,24 +283,29 @@ export const mockRoles: Role[] = [
   {
     id: "1",
     nombre: "RRHH",
+    descripcion: "Administrador de recursos humanos con acceso total",
     permisos: ["all", "manage_users", "manage_trainings", "view_reports", "manage_config", "view_audit"],
   },
   {
     id: "2",
     nombre: "Capacitador",
+    descripcion: "Instructor de capacitaciones",
     permisos: ["view_trainings", "edit_attendance", "upload_documents", "view_participants"],
   },
   {
     id: "3",
     nombre: "Gerente",
+    descripcion: "Gerente con acceso a reportes y equipo",
     permisos: ["view_reports", "view_team", "view_records", "approve_trainings"],
   },
   {
     id: "4",
     nombre: "Jefe",
+    descripcion: "Jefe de departamento",
     permisos: ["view_reports", "view_team", "view_records"],
   },
 ]
+
 
 export const mockUsuarios: Usuario[] = [
   {
