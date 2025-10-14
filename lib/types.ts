@@ -1,3 +1,5 @@
+import { Rol } from "./auth"
+
 export interface Empresa {
   ID_EMPRESA: number
   NOMBRE: string
@@ -46,14 +48,28 @@ export interface Persona {
 }
 
 export interface Usuario {
-  id: string
-  personaId: string
-  email: string
-  roles: Role[]
-  estado: "activo" | "inactivo"
-  ultimoAcceso?: string
-  fechaCreacion: string
-  nombreCompletoPersona?: string
+  ID_USUARIO: number
+  PERSONA_ID: number
+  USERNAME: string
+  PASSWORD?: string
+  ESTADO: true
+  ULTIMO_ACCESO: string
+  FECHA_CREACION: string
+  PERSONA?: Persona
+  USUARIO_ROLES?: Rol[]
+}
+
+export interface usuarioPayload {
+  USERNAME: string
+  PASSWORD?: string
+  ESTADO: boolean
+  ID_ROLES: number[]
+  PERSONA_ID?: number
+}
+
+export interface usuarioCreatePayload extends usuarioPayload {
+  PERSONA_ID: number;
+  PASSWORD: string;
 }
 
 export interface Role {

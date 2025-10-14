@@ -1,151 +1,118 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState, useMemo } from "react"
 import { Sidebar } from "@/components/sidebar"
-import { DataTable } from "@/components/data-table"
-import { FormModal } from "@/components/form-modal"
-import { Badge } from "@/components/ui/badge"
-import { mockUsuarios, mockPersonas, mockRoles, type Usuario, Persona } from "@/lib/types"
 import { useAuth } from "@/contexts/auth-context"
 import { apiClient } from "@/lib/api-client"
 import { AppHeader } from "@/components/app-header"
-import { transformApiToFrontend, transformFrontendToApi } from "@/lib/usuario-transformer"
-import { CreateUsuarioFrontendDto } from "@/lib/usuario-types"
+import type { Rol } from "@/lib/auth"
+import { useUsuarios } from "@/hooks/useUsuarios"
+import { Toaster } from "react-hot-toast"
+import type { Persona, Usuario, usuarioPayload, usuarioCreatePayload } from "@/lib/types"
+import { UsuarioDataTable } from "@/components/usuario-data-table"
+import { ChangePasswordModal } from "@/components/change-password-modal"
+import { getUsuarioColumns, getUsuarioFormFields, type UsuarioFormFields } from "@/data/usuario-config"
+import { FormModal, type FormData as FormValues } from "@/components/form-modal" 
+import { RequirePermission } from "@/components/RequirePermission"
+
+
+const getRolesList = async () => {
+  try {
+    const { data } = await apiClient.get<Rol[]>('/rol');
+    return data;
+  } catch (error) {
+    console.error("Error al cargar lista roles ", error);
+    return [];
+  }
+}
+
+const getPersonasList = async () => {
+  try {
+    const { data } = await apiClient.get<Persona[]>('/persona');
+    return data;
+  } catch (error) {
+    console.error("Error al cargar lista personas ", error);
+    return [];
+  }
+}
+
+const transformFrontendToApi = (data: UsuarioFormFields, isEditing: boolean): usuarioPayload | usuarioCreatePayload => {
+  const frontendRoles = data.ID_ROLES;
+  
+  const rolIdsNumbers = Array.isArray(frontendRoles) 
+    ? frontendRoles.map(id => parseInt(id, 10)).filter(id => !isNaN(id))
+    : [];
+
+  const estadoBoolean = data.ESTADO === "true";
+  
+  const updatePayload: usuarioPayload = {
+    USERNAME: data.USERNAME,
+    ESTADO: estadoBoolean,
+    ID_ROLES: rolIdsNumbers, 
+  };
+  
+  if (isEditing) {
+    return updatePayload;
+  }
+  
+  const createPayload: usuarioCreatePayload = {
+    ...updatePayload,
+    PERSONA_ID: parseInt(data.PERSONA_ID, 10),
+    PASSWORD: data.PASSWORD!,
+  };
+  
+  return createPayload;
+};
 
 export default function UsuariosPage() {
   const { user } = useAuth()
-  const [usuarios, setUsuarios] = useState<Usuario[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [editingUsuario, setEditingUsuario] = useState<Usuario | null>(null)
-  const [personas, setPersonas] = useState<Persona[]>([])
-  const [roles, setRoles] = useState<Role[]>([])
-  const [loading, setLoading] = useState(false)
-  const [error, setError] = useState<string | null>(null)
+  const [personasList, setPersonasList] = useState<Persona[]>([])
+  const [rolesList, setRolesList] = useState<Rol[]>([])
 
+  const [passwordModalOpen, setPasswordModalOpen] = useState(false);
+  const [userToChangePassword, setUserToChangePassword] = useState<Usuario | null>(null);
 
-  const fetchUsuarios = useCallback(async () => {
-      setLoading(true)
-      setError(null)
-      try {
-          const response = await apiClient.get('/usuario')
+  const {
+    usuarios,
+    isMutating,
+    saveUsuario,
+    deleteUsuario,
+    updatePassword,
+  } = useUsuarios(user);
 
-          const transformedData = response.data.map(transformApiToFrontend)
-          setUsuarios(transformedData)
-      } catch (err) {
-          setError('Error al cargar los usuarios.')
-          console.error('API Error (Usuarios):', err)
-      } finally {
-          setLoading(false)
-      }
-  }, [])
+  useEffect(() => {
+    if (user) {
+      getRolesList().then(setRolesList);
+      getPersonasList().then(setPersonasList);
+    }
+  }, [user])
 
-      const fetchDependencies = async () => {
-        try {
-            const personaResponse = await apiClient.get('/persona')
-            const availablePersonas: Persona[] = personaResponse.data.map((p: any) => ({
-                id: p.ID_PERSONA.toString(),
-                nombre: p.NOMBRE,
-                apellido: p.APELLIDO,
-                correo: p.CORREO,
-                estado: p.ESTADO ? "activo" : "inactivo",
-                tipoPersona: p.TIPO_PERSONA
-            }));
-            setPersonas(availablePersonas)
+  const columns = useMemo(() => getUsuarioColumns(), []);
 
-        } catch (err) {
-            console.error('Error cargando dependencias (Personas/Roles):', err)
-            setPersonas(mockPersonas);
-            setRoles(mockRoles);
-        }
+  const formFields = useMemo(() => 
+    getUsuarioFormFields(personasList, rolesList, !!editingUsuario), 
+    [personasList, rolesList, editingUsuario]
+  );
+  
+  const initialData = useMemo(() => {
+    if (!editingUsuario) {
+      return {
+        ESTADO: "true", 
+        ID_ROLES: [], 
+      };
     }
 
-
-    useEffect(() => {
-        if (user && user.roles.some((role) => role.nombre === "RRHH")) {
-            const loadData = async () => {
-                setLoading(true);
-                await Promise.all([fetchUsuarios(), fetchDependencies()]); 
-                setLoading(false);
-            }
-            loadData()
-        }
-    }, [user, fetchUsuarios])
-
-  if (!user || !user.roles.some((role) => role.nombre === "RRHH")) {
-    return <div>No tienes permisos para acceder a esta página</div>
-  }
-
-  const columns = [
-    {
-      key: "personaId",
-      label: "Persona",
-      render: (value: string) => {
-        const persona = mockPersonas.find((p) => p.id === value)
-        return persona ? `${persona.nombre} ${persona.apellido}` : "N/A"
-      },
-    },
-    { key: "email", label: "Email" },
-    {
-      key: "roles",
-      label: "Roles",
-      render: (value: any[]) => (
-        <div className="flex gap-1 flex-wrap">
-          {value.map((role) => (
-            <Badge key={role.id} variant="outline" className="text-xs">
-              {role.nombre}
-            </Badge>
-          ))}
-        </div>
-      ),
-    },
-    {
-      key: "estado",
-      label: "Estado",
-      render: (value: string) => <Badge variant={value === "activo" ? "default" : "secondary"}>{value}</Badge>,
-    },
-    {
-      key: "ultimoAcceso",
-      label: "Último Acceso",
-      render: (value: string) => {
-        if (!value) return "Nunca"
-        return new Date(value).toLocaleDateString()
-      },
-    },
-    { key: "fechaCreacion", label: "Fecha Creación" },
-  ]
-
-  const formFields = [
-    {
-      key: "personaId",
-      label: "Persona",
-      type: "select" as const,
-      required: true,
-      options: mockPersonas.map((p) => ({ value: p.id, label: `${p.nombre} ${p.apellido}` })),
-    },
-    {
-      key: "email", label: "Email", type: "email" as const, required: true
-    },
-    {
-      key: "password", label: "Password", type: "password" as const, required: true
-    },
-    {
-      key: "roles",
-      label: "Roles",
-      type: "select" as const,
-      required: true,
-      options: mockRoles.map((r) => ({ value: r.id, label: r.nombre })),
-    },
-    {
-      key: "estado",
-      label: "Estado",
-      type: "select" as const,
-      required: true,
-      options: [
-        { value: "activo", label: "Activo" },
-        { value: "inactivo", label: "Inactivo" },
-      ],
-    },
-  ]
+    return {
+      PERSONA_ID: editingUsuario.PERSONA_ID.toString(),
+      USERNAME: editingUsuario.USERNAME,
+      ID_ROLES: editingUsuario.USUARIO_ROLES 
+        ? editingUsuario.USUARIO_ROLES.map(ur => ur.ID_ROL.toString()) 
+        : [],
+      ESTADO: editingUsuario.ESTADO ? "true" : "false", 
+    };
+  }, [editingUsuario]);
 
   const handleAdd = () => {
     setEditingUsuario(null)
@@ -153,104 +120,102 @@ export default function UsuariosPage() {
   }
 
   const handleEdit = (usuario: Usuario) => {
-    console.log("Click en editar usuario")
     setEditingUsuario(usuario)
     setModalOpen(true)
   }
 
   const handleDelete = async (usuario: Usuario) => {
     try {
-        await apiClient.delete(`/usuario/${usuario.id}`);
-        
-        fetchUsuarios();
-
+      await deleteUsuario(usuario.ID_USUARIO);
     } catch (err) {
-        setError("Error al dar de baja al usuario.");
-        console.error("Delete Error:", err);
+      console.error("Delete Error:", err);
     }
   }
 
-    const handleSubmit = async (data: CreateUsuarioFrontendDto) => {
-        setError(null);
-        try {
-            const apiData = transformFrontendToApi(data);
-            
-            if (editingUsuario) {
-                const updateDto = { USERNAME: apiData.USERNAME, ESTADO: apiData.ESTADO };
-                await apiClient.patch(`/usuario/${editingUsuario.id}`, updateDto);
+  const handleChangePasswordClick = (usuario: Usuario) => {
+    setUserToChangePassword(usuario);
+    setPasswordModalOpen(true);
+  };
 
-                if (data.password) {
-                    await apiClient.patch(`/usuario/${editingUsuario.id}/password`, { PASSWORD: data.password });
-                }
+  const handlePasswordSubmit = async (newPassword: string) => {
+    if (!userToChangePassword) return;
 
-            } else {
-                if (!apiData.PASSWORD) {
-                    throw new Error("La contraseña es obligatoria para la creación.");
-                }
-                
-                await apiClient.post('/usuario', apiData);
-            }
-            
-            fetchUsuarios();
-            
-          } catch (err) {
-            const msg = editingUsuario ? "actualizar" : "crear";
-            const apiError = err as any;
-            let errorMessage = `Fallo al ${msg} el usuario.`;
-            
-            if (apiError.response?.data?.message) {
-              errorMessage = Array.isArray(apiError.response.data.message) 
-              ? apiError.response.data.message.join(' | ') 
-                    : apiError.response.data.message;
-                  } else if (err instanceof Error) {
-                    errorMessage = err.message;
-            }
-            
-            setError(errorMessage);
-            console.error("Submit Error:", err);
-          } finally {            
-            setModalOpen(false);
-        }
+    try {
+        await updatePassword(userToChangePassword.ID_USUARIO, newPassword);
+        setPasswordModalOpen(false);
+        setUserToChangePassword(null);
+    } catch (error) {
+      console.log(error);
     }
+  };
+
+  const handleSubmit = async (data: FormValues) => {
+    try {
+      const formData = data as unknown as UsuarioFormFields; 
+      
+      const isEditing = !!editingUsuario;
+      const apiPayload = transformFrontendToApi(formData, isEditing);
+      const idToEdit = editingUsuario?.ID_USUARIO;
+
+      await saveUsuario(apiPayload, idToEdit); 
+      setModalOpen(false);
+        
+    } catch (err) {
+      console.error("Submit Error:", err);
+    }
+  }
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar />
+    <RequirePermission requiredPermissions={["manage_users"]}>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <AppHeader title="Gestión de Usuarios" subtitle="Administra los usuarios del sistema y sus permisos" />
+      <div className="flex h-screen bg-background">
+        <Sidebar />
 
-        <main className="flex-1 overflow-auto p-6 custom-scrollbar">
-          <div className="max-w-7xl mx-auto">
-            <DataTable
-              title="Usuarios"
-              data={usuarios}
-              columns={columns}
-              onAdd={handleAdd}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              searchPlaceholder="Buscar usuarios..."
-            />
-          </div>
-        </main>
+        <div className="flex-1 flex flex-col overflow-hidden">
+
+          <AppHeader title="Gestión de Usuarios" subtitle="Administra los usuarios del sistema y sus permisos" />
+
+          <main className="flex-1 overflow-auto p-6 custom-scrollbar">
+
+            <Toaster />
+
+            <div className="max-w-7xl mx-auto">
+              <UsuarioDataTable
+                title="Usuarios"
+                data={usuarios}
+                columns={columns}
+                onAdd={handleAdd}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onPasswordChange={handleChangePasswordClick}
+                searchPlaceholder="Buscar usuarios..."
+              />
+            </div>
+          </main>
+        </div>
+
+        <FormModal
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          title={editingUsuario ? "Editar Usuario" : "Nuevo Usuario"}
+          description={editingUsuario ? "Modifica los datos del usuario" : "Agrega un nuevo usuario al sistema"}
+          fields={formFields}
+          initialData={initialData}
+          onSubmit={handleSubmit}
+          loading={isMutating}
+        />
+
+        {userToChangePassword && (
+          <ChangePasswordModal
+              open={passwordModalOpen}
+              onOpenChange={setPasswordModalOpen}
+              onSubmit={handlePasswordSubmit}
+              loading={isMutating}
+              username={userToChangePassword.USERNAME}
+          />
+        )}
       </div>
 
-      <FormModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        title={editingUsuario ? "Editar Usuario" : "Nuevo Usuario"}
-        description={editingUsuario ? "Modifica los datos del usuario" : "Agrega un nuevo usuario al sistema"}
-        fields={formFields}
-        initialData={
-          editingUsuario
-            ? {
-                ...editingUsuario,
-                roles: editingUsuario.roles[0]?.id || "",
-              }
-            : {}
-        }
-        onSubmit={handleSubmit}
-      />
-    </div>
+    </RequirePermission>
   )
 }
