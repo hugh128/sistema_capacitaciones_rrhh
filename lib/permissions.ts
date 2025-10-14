@@ -46,8 +46,6 @@ export function getUserPermissions(user: UsuarioLogin | null): string[] {
 
   const allPermissions = new Set<string>()
 
-  console.log("User Roles:", user.ROLES)
-
   user.ROLES.forEach((role) => {
     role.PERMISOS.forEach((permiso) => {
       allPermissions.add(permiso.CLAVE)
