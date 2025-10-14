@@ -31,32 +31,44 @@ export interface RolPayload {
 }
 
 export interface AuthContextType {
-  user: User | null
+  user: UsuarioLogin | null
   login: (email: string, password: string) => Promise<void>
   logout: () => void
   loading: boolean
   loggingOut: boolean
 }
 
-export interface User {
-  id: number;
-  username: string;
-  email: string;
-  nombre: string;
-  apellido: string;
-  telefono: string;
-  dpi: string;
-  puesto: string;
-  departamento: string;
-  roles: Role[];
-  estado: string;
+export interface PermisoLoginProyectado {
+  ID: number;
+  NOMBRE: string;
+  CLAVE: string;
+}
+
+export interface RolLoginProyectado {
+  ID: number;
+  NOMBRE: string;
+  PERMISOS: PermisoLoginProyectado[];
+}
+
+export interface UsuarioLogin {
+  ID_USUARIO: number;
+  USERNAME: string;
+  ESTADO: boolean;
+  NOMBRE: string;
+  APELLIDO: string;
+  CORREO: string;
+  TELEFONO: string;
+  DPI: string;
+  PUESTO_NOMBRE: string;
+  DEPARTAMENTO_NOMBRE: string;
+  ROLES: RolLoginProyectado[];
 }
 
 export interface LoginApiResponse {
-  message: string;
-  usuario: {
-    data: User;
-    token: string;
+  MESSAGE: string;
+  USUARIO: {
+    DATA: UsuarioLogin;
+    TOKEN: string;
   };
 }
 

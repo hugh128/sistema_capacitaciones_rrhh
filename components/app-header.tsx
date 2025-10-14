@@ -45,7 +45,7 @@ export function AppHeader({ title, subtitle, showActions = true }: AppHeaderProp
                 <Bell className="h-4 w-4" />
               </Button>
 
-              {user.roles.some((role) => ["RRHH", "Capacitador"].includes(role.nombre)) && (
+              {user.ROLES.some((role) => ["RRHH", "Capacitador"].includes(role.NOMBRE)) && (
                 <Link href="/capacitaciones">
                   <Button size="sm">
                     <Plus className="h-4 w-4 mr-2" />
@@ -61,15 +61,15 @@ export function AppHeader({ title, subtitle, showActions = true }: AppHeaderProp
               <Button variant="ghost" className="flex items-center gap-2 px-3">
                 <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
                   <span className="text-sm font-medium text-primary-foreground">
-                    {user.nombre.charAt(0)}
-                    {user.apellido.charAt(0)}
+                    {user.NOMBRE.charAt(0)}
+                    {user.APELLIDO.charAt(0)}
                   </span>
                 </div>
                 <div className="text-left">
                   <p className="text-sm font-medium">
-                    {user.nombre} {user.apellido}
+                    {user.NOMBRE} {user.APELLIDO}
                   </p>
-                  <p className="text-xs text-muted-foreground">{user.roles[0]?.nombre}</p>
+                  <p className="text-xs text-muted-foreground">{user.ROLES[0]?.NOMBRE}</p>
                 </div>
               </Button>
             </DropdownMenuTrigger>

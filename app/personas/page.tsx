@@ -13,6 +13,7 @@ import { Toaster } from 'react-hot-toast'
 import { PERSONA_FORM_FIELDS, PERSONA_COLUMNS, DEFAULT_NEW_DATA } from "@/data/persona-config"
 import { PersonaDataTable } from "@/components/persona-data-table"
 import { PersonaDetailModal } from "@/components/persona-detail-modal"
+import { RequirePermission } from "@/components/RequirePermission"
 
 const getDepartamentosList = async () => {
   try {
@@ -83,10 +84,6 @@ export default function PersonasPage() {
     }
   }, [user]);
 
-  if (!user || !user.roles.some((role) => role.nombre === "RRHH")) {
-    return <div>No tienes permisos para acceder a esta página</div>
-  }
-
   const empresasOptions = mapToOptions(empresasList, 'ID_EMPRESA');
   const departamentosOptions = mapToOptions(departamentosList, 'ID_DEPARTAMENTO');
   const puestosOptions = mapToOptions(puestosList, 'ID_PUESTO');
@@ -137,46 +134,50 @@ export default function PersonasPage() {
   }
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar />
+    <RequirePermission requiredPermissions={["manage_users", "view_team"]}>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <AppHeader title="Gestión de Personas" subtitle="Administra la información personal de los colaboradores" />
+      <div className="flex h-screen bg-background">
+        <Sidebar />
 
-        <main className="flex-1 overflow-auto p-6 custom-scrollbar">
-          <Toaster />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <AppHeader title="Gestión de Personas" subtitle="Administra la información personal de los colaboradores" />
 
-          <div className="max-w-7xl mx-auto">
-            <PersonaDataTable
-              title="Personas"
-              data={personas}
-              columns={PERSONA_COLUMNS}
-              onAdd={handleAdd}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              onViewDetail={handleViewDetail}
-              searchPlaceholder="Buscar personas..."
-            />
-          </div>
-        </main>
+          <main className="flex-1 overflow-auto p-6 custom-scrollbar">
+            <Toaster />
+
+            <div className="max-w-7xl mx-auto">
+              <PersonaDataTable
+                title="Personas"
+                data={personas}
+                columns={PERSONA_COLUMNS}
+                onAdd={handleAdd}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                onViewDetail={handleViewDetail}
+                searchPlaceholder="Buscar personas..."
+              />
+            </div>
+          </main>
+        </div>
+
+        <PersonaFormModal
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          title={editingPersona ? "Editar Persona" : "Nueva Persona"}
+          description={editingPersona ? "Modifica los datos de la persona" : "Agrega una nueva persona al sistema"}
+          allFields={formFields} 
+          initialFormData={(editingPersona || DEFAULT_NEW_DATA || {}) as FormValues}
+          onSubmit={handleSubmit}
+          initialPersonaData={editingPersona}
+          loading={false} 
+        />
+        <PersonaDetailModal
+          open={detailModalOpen}
+          onOpenChange={setDetailModalOpen}
+          persona={viewingPersona}
+        />
       </div>
 
-      <PersonaFormModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        title={editingPersona ? "Editar Persona" : "Nueva Persona"}
-        description={editingPersona ? "Modifica los datos de la persona" : "Agrega una nueva persona al sistema"}
-        allFields={formFields} 
-        initialFormData={(editingPersona || DEFAULT_NEW_DATA || {}) as FormValues}
-        onSubmit={handleSubmit}
-        initialPersonaData={editingPersona}
-        loading={false} 
-      />
-      <PersonaDetailModal
-        open={detailModalOpen}
-        onOpenChange={setDetailModalOpen}
-        persona={viewingPersona}
-      />
-    </div>
+    </RequirePermission>
   )
 }

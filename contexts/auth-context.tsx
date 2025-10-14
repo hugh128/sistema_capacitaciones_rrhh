@@ -5,12 +5,12 @@ import { createContext, useContext, useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { apiClient } from "@/lib/api-client"
 import axios, { AxiosError } from "axios"
-import { type User, type AuthContextType, LoginApiResponse } from "@/lib/auth"
+import { type UsuarioLogin, type AuthContextType, LoginApiResponse } from "@/lib/auth"
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const [user, setUser] = useState<UsuarioLogin | null>(null)
   const [loading, setLoading] = useState(true)
   const [loggingOut, setLoggingOut] = useState(false)
   const router = useRouter()
@@ -27,11 +27,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       const response = await apiClient.post<LoginApiResponse>('/auth/login', { 
         username,
-        password 
+        password
       });
 
-      const loggedInUser: User = response.data.usuario.data;
-      const token: string = response.data.usuario.token;
+      const loggedInUser: UsuarioLogin = response.data.USUARIO.DATA;
+      const token: string = response.data.USUARIO.TOKEN;
 
       localStorage.setItem("access_token", token);
       localStorage.setItem("training_user", JSON.stringify(loggedInUser));

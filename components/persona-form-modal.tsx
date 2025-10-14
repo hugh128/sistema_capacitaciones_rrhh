@@ -16,10 +16,8 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Persona } from "@/lib/types"
+import { FormData } from "./form-modal"
 
-export type FormData = {
-  [key: string]: string | number | boolean | Date | null | undefined;
-}
 type OnSubmit = (data: FormData) => void;
 
 interface Option { value: string | boolean; label: string }

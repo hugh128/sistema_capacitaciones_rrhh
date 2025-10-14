@@ -7,19 +7,14 @@ import { FormModal } from "@/components/form-modal"
 import { Badge } from "@/components/ui/badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { mockPlanes, mockDepartamentos, type PlanCapacitacion } from "@/lib/types"
-import { useAuth } from "@/contexts/auth-context"
 import { Calendar, BookOpen, Users, CheckCircle } from "lucide-react"
 import { AppHeader } from "@/components/app-header"
+import { RequirePermission } from "@/components/RequirePermission"
 
 export default function PlanesPage() {
-  const { user } = useAuth()
   const [planes, setPlanes] = useState<PlanCapacitacion[]>(mockPlanes)
   const [modalOpen, setModalOpen] = useState(false)
   const [editingPlan, setEditingPlan] = useState<PlanCapacitacion | null>(null)
-
-  if (!user || !user.roles.some((role) => role.nombre === "RRHH")) {
-    return <div>No tienes permisos para acceder a esta página</div>
-  }
 
   const columns = [
     { key: "nombre", label: "Nombre del Plan" },
@@ -122,87 +117,91 @@ export default function PlanesPage() {
   }
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar />
+    <RequirePermission requiredPermissions={["manage_trainings", "view_trainings"]}>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <AppHeader title="Planes de Capacitación" subtitle="Gestiona los planes de capacitación por departamento" />
+      <div className="flex h-screen bg-background">
+        <Sidebar />
 
-        <main className="flex-1 overflow-auto p-6">
-          <div className="max-w-7xl mx-auto space-y-6">
-            {/* Plan Cards */}
-            <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-              {planes.map((plan) => (
-                <Card key={plan.id}>
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg">{plan.nombre}</CardTitle>
-                      <Badge variant={plan.estado === "activo" ? "default" : "secondary"}>{plan.estado}</Badge>
-                    </div>
-                    <CardDescription>{plan.descripcion}</CardDescription>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex items-center gap-2 text-sm">
-                        <BookOpen className="w-4 h-4 text-muted-foreground" />
-                        <span>{plan.capacitaciones.length} capacitaciones</span>
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <AppHeader title="Planes de Capacitación" subtitle="Gestiona los planes de capacitación por departamento" />
+
+          <main className="flex-1 overflow-auto p-6">
+            <div className="max-w-7xl mx-auto space-y-6">
+              {/* Plan Cards */}
+              <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+                {planes.map((plan) => (
+                  <Card key={plan.id}>
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <CardTitle className="text-lg">{plan.nombre}</CardTitle>
+                        <Badge variant={plan.estado === "activo" ? "default" : "secondary"}>{plan.estado}</Badge>
                       </div>
-
-                      {plan.departamentoId && (
+                      <CardDescription>{plan.descripcion}</CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
                         <div className="flex items-center gap-2 text-sm">
-                          <Users className="w-4 h-4 text-muted-foreground" />
-                          <span>{mockDepartamentos.find((d) => d.id === plan.departamentoId)?.nombre}</span>
+                          <BookOpen className="w-4 h-4 text-muted-foreground" />
+                          <span>{plan.capacitaciones.length} capacitaciones</span>
                         </div>
-                      )}
 
-                      {plan.fechaInicio && plan.fechaFin && (
-                        <div className="flex items-center gap-2 text-sm">
-                          <Calendar className="w-4 h-4 text-muted-foreground" />
-                          <span>
-                            {plan.fechaInicio} - {plan.fechaFin}
-                          </span>
-                        </div>
-                      )}
+                        {plan.departamentoId && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Users className="w-4 h-4 text-muted-foreground" />
+                            <span>{mockDepartamentos.find((d) => d.id === plan.departamentoId)?.nombre}</span>
+                          </div>
+                        )}
 
-                      {plan.estado === "completado" && (
-                        <div className="flex items-center gap-2 text-sm text-chart-2">
-                          <CheckCircle className="w-4 h-4" />
-                          <span>Plan completado</span>
-                        </div>
-                      )}
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+                        {plan.fechaInicio && plan.fechaFin && (
+                          <div className="flex items-center gap-2 text-sm">
+                            <Calendar className="w-4 h-4 text-muted-foreground" />
+                            <span>
+                              {plan.fechaInicio} - {plan.fechaFin}
+                            </span>
+                          </div>
+                        )}
+
+                        {plan.estado === "completado" && (
+                          <div className="flex items-center gap-2 text-sm text-chart-2">
+                            <CheckCircle className="w-4 h-4" />
+                            <span>Plan completado</span>
+                          </div>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+
+              {/* Data Table */}
+              <DataTable
+                title="Todos los Planes"
+                data={planes}
+                columns={columns}
+                onAdd={handleAdd}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                searchPlaceholder="Buscar planes..."
+              />
             </div>
+          </main>
+        </div>
 
-            {/* Data Table */}
-            <DataTable
-              title="Todos los Planes"
-              data={planes}
-              columns={columns}
-              onAdd={handleAdd}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              searchPlaceholder="Buscar planes..."
-            />
-          </div>
-        </main>
+        <FormModal
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          title={editingPlan ? "Editar Plan" : "Nuevo Plan"}
+          description={editingPlan ? "Modifica el plan de capacitación" : "Crea un nuevo plan de capacitación"}
+          fields={formFields}
+          initialData={
+            editingPlan
+              ? { ...editingPlan, departamentoId: editingPlan.departamentoId || "all" }
+              : { departamentoId: "all" }
+          }
+          onSubmit={handleSubmit}
+        />
       </div>
 
-      <FormModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        title={editingPlan ? "Editar Plan" : "Nuevo Plan"}
-        description={editingPlan ? "Modifica el plan de capacitación" : "Crea un nuevo plan de capacitación"}
-        fields={formFields}
-        initialData={
-          editingPlan
-            ? { ...editingPlan, departamentoId: editingPlan.departamentoId || "all" }
-            : { departamentoId: "all" }
-        }
-        onSubmit={handleSubmit}
-      />
-    </div>
+    </RequirePermission>
   )
 }

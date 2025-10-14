@@ -19,7 +19,7 @@ export default function DashboardPage() {
       <Sidebar />
 
       <div className="flex-1 flex flex-col min-h-0">
-        <AppHeader title="Dashboard" subtitle={`Bienvenido, ${user.nombre} ${user.apellido}`} />
+        <AppHeader title="Dashboard" subtitle={`Bienvenido, ${user.NOMBRE} ${user.APELLIDO}`} />
 
         {/* Main Content */}
         <main className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar">
@@ -32,7 +32,7 @@ export default function DashboardPage() {
                   Administra y da seguimiento a todas las capacitaciones de tu organización
                 </p>
                 <div className="flex flex-wrap gap-2">
-                  {user.roles[0]?.nombre === "RRHH" && (
+                  {user.ROLES[0]?.NOMBRE === "RRHH" && (
                     <>
                       <Link href="/reportes">
                         <Button variant="default" size="sm" className="cursor-pointer">
@@ -47,7 +47,7 @@ export default function DashboardPage() {
                       </Link>
                     </>
                   )}
-                  {user.roles[0]?.nombre === "Capacitador" && (
+                  {user.ROLES[0]?.NOMBRE === "Capacitador" && (
                     <>
                       <Button variant="default" size="sm">
                         Mis Capacitaciones
@@ -57,7 +57,7 @@ export default function DashboardPage() {
                       </Button>
                     </>
                   )}
-                  {["Gerente", "Jefe"].includes(user.roles[0]?.nombre) && (
+                  {["Gerente", "Jefe"].includes(user.ROLES[0]?.NOMBRE) && (
                     <>
                       <Button variant="default" size="sm">
                         Ver Mi Equipo

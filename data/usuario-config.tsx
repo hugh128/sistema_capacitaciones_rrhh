@@ -49,7 +49,8 @@ export const getUsuarioColumns = () => [
       label: "Último Acceso",
       render: (value: string | null) => {
         if (!value) return "Nunca"
-        return new Date(value).toLocaleDateString()
+        const date = new Date(value);
+        return date.toISOString().substring(0, 10);
       },
     },
     {
@@ -57,7 +58,8 @@ export const getUsuarioColumns = () => [
       label: "Fecha Creación",
       render: (value: string | null) => {
         if (!value) return "Nunca"
-        return new Date(value).toLocaleDateString()
+        const date = new Date(value);
+        return date.toISOString().substring(0, 10);
       },
     },
 ];
