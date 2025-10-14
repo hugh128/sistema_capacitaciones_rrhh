@@ -10,6 +10,7 @@ import { DEPARTAMENTO_COLUMNS, DEPARTAMENTO_FORM_FIELDS } from "@/data/departame
 import { Toaster } from 'react-hot-toast'
 import { Departamento, Empresa } from "@/lib/types"
 import { useDepartamentos } from "@/hooks/useDepartamentos"
+import { RequirePermission } from "@/components/RequirePermission"
 
 const getEmpresasList = async () => {
   try {
@@ -38,11 +39,6 @@ export default function DepartamentosPage() {
       getEmpresasList().then(setEmpresasList);
     }
   }, [user]);
-
-
-  if (!user || !user.roles.some((role) => role.nombre === "RRHH")) {
-    return <div>No tienes permisos para acceder a esta página</div>
-  }
 
   const empresaOptions = empresasList.map((empresa) => ({
     value: empresa.ID_EMPRESA.toString(),
@@ -85,6 +81,8 @@ export default function DepartamentosPage() {
   }
 
   return (
+    <RequirePermission requiredPermissions={["manage_config"]}>
+
     <div className="flex h-screen bg-background">
       <Sidebar />
 
@@ -123,5 +121,7 @@ export default function DepartamentosPage() {
         onSubmit={handleSubmit}
       />
     </div>
+
+    </RequirePermission>
   )
 }

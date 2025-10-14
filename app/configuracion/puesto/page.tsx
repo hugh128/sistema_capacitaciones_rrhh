@@ -10,6 +10,7 @@ import { apiClient } from "@/lib/api-client"
 import { PUESTO_COLUMNS, PUESTO_FORM_FIELDS, DEFAULT_NEW_DATA } from "@/data/puesto-config"
 import { usePuestos } from "@/hooks/usePuestos"
 import { Toaster } from 'react-hot-toast'
+import { RequirePermission } from "@/components/RequirePermission"
 
 const getDepartamentosList = async () => {
   try {
@@ -38,10 +39,6 @@ export default function PuestosPage() {
       getDepartamentosList().then(setDepartamentosList);
     }
   }, [user]);
-
-  if (!user || !user.roles.some((role) => role.nombre === "RRHH")) {
-    return <div>No tienes permisos para acceder a esta página</div>
-  }
 
   const departamentosOptions = departamentosList.map((departamento) => ({
     value: departamento.ID_DEPARTAMENTO.toString(),
@@ -78,43 +75,47 @@ export default function PuestosPage() {
   }
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar />
+    <RequirePermission requiredPermissions={["manage_config"]}>
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="border-b border-border bg-card px-6 py-4">
-          <div>
-            <h1 className="text-2xl font-bold text-card-foreground">Configuración - Puestos</h1>
-            <p className="text-sm text-muted-foreground">Gestiona los puestos de trabajo por departamento</p>
-          </div>
-        </header>
+      <div className="flex h-screen bg-background">
+        <Sidebar />
 
-        <main className="flex-1 overflow-auto p-6">
-          <Toaster />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <header className="border-b border-border bg-card px-6 py-4">
+            <div>
+              <h1 className="text-2xl font-bold text-card-foreground">Configuración - Puestos</h1>
+              <p className="text-sm text-muted-foreground">Gestiona los puestos de trabajo por departamento</p>
+            </div>
+          </header>
 
-          <div className="max-w-7xl mx-auto">
-            <DataTable
-              title="Puestos"
-              data={puestos}
-              columns={PUESTO_COLUMNS}
-              onAdd={handleAdd}
-              onEdit={handleEdit}
-              onDelete={handleDelete}
-              searchPlaceholder="Buscar puestos..."
-            />
-          </div>
-        </main>
+          <main className="flex-1 overflow-auto p-6">
+            <Toaster />
+
+            <div className="max-w-7xl mx-auto">
+              <DataTable
+                title="Puestos"
+                data={puestos}
+                columns={PUESTO_COLUMNS}
+                onAdd={handleAdd}
+                onEdit={handleEdit}
+                onDelete={handleDelete}
+                searchPlaceholder="Buscar puestos..."
+              />
+            </div>
+          </main>
+        </div>
+
+        <FormModal
+          open={modalOpen}
+          onOpenChange={setModalOpen}
+          title={editingPuesto ? "Editar Puesto" : "Nuevo Puesto"}
+          description={editingPuesto ? "Modifica los datos del puesto" : "Agrega un nuevo puesto al sistema"}
+          fields={formFields}
+          initialData={(editingPuesto || DEFAULT_NEW_DATA) as FormValues}
+          onSubmit={handleSubmit}
+        />
       </div>
 
-      <FormModal
-        open={modalOpen}
-        onOpenChange={setModalOpen}
-        title={editingPuesto ? "Editar Puesto" : "Nuevo Puesto"}
-        description={editingPuesto ? "Modifica los datos del puesto" : "Agrega un nuevo puesto al sistema"}
-        fields={formFields}
-        initialData={(editingPuesto || DEFAULT_NEW_DATA) as FormValues}
-        onSubmit={handleSubmit}
-      />
-    </div>
+    </RequirePermission>
   )
 }
