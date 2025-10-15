@@ -1,11 +1,11 @@
 import { apiClient } from "@/lib/api-client";
-import type { User } from "@/lib/auth";
+import type { UsuarioLogin } from "@/lib/auth";
 import { handleApiError } from "@/utils/error-handler";
 import { useCallback, useEffect, useState } from "react";
 import type { Usuario, usuarioPayload } from "@/lib/types";
 import toast from "react-hot-toast";
 
-export function useUsuarios(user: User | null) {
+export function useUsuarios(user: UsuarioLogin | null) {
   const [usuarios, setUsurios] = useState<Usuario[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

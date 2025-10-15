@@ -2,11 +2,11 @@ import { useCallback, useEffect, useState } from "react";
 import { apiClient } from "@/lib/api-client";
 import { handleApiError } from "@/utils/error-handler";
 import toast from "react-hot-toast";
-import { User } from "@/lib/auth";
+import { UsuarioLogin } from "@/lib/auth";
 import { Departamento } from "@/lib/types";
 import { type FormData as FormValues } from "@/components/form-modal";
 
-export function useDepartamentos(user: User | null) {
+export function useDepartamentos(user: UsuarioLogin | null) {
   const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

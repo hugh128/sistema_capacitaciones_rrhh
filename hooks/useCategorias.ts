@@ -1,5 +1,5 @@
 import { apiClient } from "@/lib/api-client";
-import { CategoriaPermiso, User } from "@/lib/auth";
+import { CategoriaPermiso, UsuarioLogin } from "@/lib/auth";
 import { handleApiError } from "@/utils/error-handler";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -17,7 +17,7 @@ export interface PermisoPayload {
   CATEGORIA_ID: number;
 }
 
-export function useCategorias(user: User | null) {
+export function useCategorias(user: UsuarioLogin | null) {
   const [categorias, setCategorias] = useState<CategoriaPermiso[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

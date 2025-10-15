@@ -1,12 +1,12 @@
 import { apiClient } from "@/lib/api-client";
-import { User } from "@/lib/auth";
+import { UsuarioLogin } from "@/lib/auth";
 import { Puesto } from "@/lib/types";
 import { handleApiError } from "@/utils/error-handler";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { type FormData as FormValues } from "@/components/form-modal";
 
-export function usePuestos(user: User | null) {
+export function usePuestos(user: UsuarioLogin | null) {
   const [puestos, setPuestos] = useState<Puesto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

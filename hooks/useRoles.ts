@@ -1,10 +1,10 @@
 import { apiClient } from "@/lib/api-client";
-import type { Rol, RolPayload, User } from "@/lib/auth";
+import type { Rol, RolPayload, UsuarioLogin } from "@/lib/auth";
 import { handleApiError } from "@/utils/error-handler";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
 
-export function useRoles(user: User | null) {
+export function useRoles(user: UsuarioLogin | null) {
   const [roles, setRoles] = useState<Rol[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);

@@ -21,6 +21,7 @@ import {
   Sun,
   Menu,
   X,
+  Code2,
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -47,6 +48,9 @@ const MAIN_MENU_CONFIG: MenuItem[] = [
   { icon: Users, label: "Participantes", href: "/participantes", requiredPermissions: ["view_participants"] },
   { icon: FileText, label: "Documentos", href: "/documentos", requiredPermissions: ["upload_documents", "view_documents"] },
   { icon: BarChart3, label: "Reportes", href: "/reportes", requiredPermissions: ["view_reports"] },
+
+  { icon: Code2, label: "Codigos", href: "/codigos", requiredPermissions: ["codes"] },  
+
   { icon: Shield, label: "Auditoría", href: "/auditoria", requiredPermissions: ["view_audit"] },
   { icon: Settings, label: "Configuración", href: "/configuracion", requiredPermissions: ["manage_config"] },
 ];

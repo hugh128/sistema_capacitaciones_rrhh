@@ -3,9 +3,9 @@ import { apiClient } from "@/lib/api-client";
 import { handleApiError } from "@/utils/error-handler";
 import { Empresa } from "@/lib/types";
 import toast from "react-hot-toast";
-import { User } from "@/lib/auth";
+import { UsuarioLogin } from "@/lib/auth";
 
-export function useEmpresas(user: User | null) {
+export function useEmpresas(user: UsuarioLogin | null) {
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
