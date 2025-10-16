@@ -13,6 +13,7 @@ export interface Empresa {
 
 export interface Departamento {
   ID_DEPARTAMENTO: number
+  CODIGO: string
   NOMBRE: string
   DESCRIPCION: string
   ESTADO: boolean

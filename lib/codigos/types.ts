@@ -1,22 +1,11 @@
-export interface NewParentData {
-  codigo_padre: string
-  tipo_documento: string
-  documento: string
-  fecha_aprobacion: string
-  estatus: "vigente" | "inactivo"
-}
-
-export interface NewChildData {
-  dato_asociado: string
-  nombre_documento_asociado: string
-}
-
 export interface NuevoCodigoPadre {
   CODIGO: string
   TIPO_DOCUMENTO: string
   NOMBRE_DOCUMENTO: string
   APROBACION: string
   ESTATUS: boolean
+  VERSION: number
+  DEPARTAMENTO_CODIGO: string
 }
 
 export interface NuevoCodigoHijo {
@@ -24,6 +13,7 @@ export interface NuevoCodigoHijo {
   NOMBRE_DOCUMENTO: string
   DOCUMENTO_ID?: number
   ESTATUS: boolean
+  VERSION: number
 }
 
 export interface CodigoPadre {
@@ -33,6 +23,8 @@ export interface CodigoPadre {
   NOMBRE_DOCUMENTO: string
   APROBACION: string
   ESTATUS: boolean
+  DEPARTAMENTO_CODIGO?: string
+  VERSION?: number
   DOCUMENTOS_ASOCIADOS: CodigoHijo[]
 }
 
@@ -41,5 +33,6 @@ export interface CodigoHijo {
   CODIGO: string
   NOMBRE_DOCUMENTO: string
   ESTATUS: boolean
+  VERSION?: number
   DOCUMENTO_ID?: number
 }

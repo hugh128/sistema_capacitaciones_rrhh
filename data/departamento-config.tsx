@@ -3,6 +3,7 @@ import { Departamento } from "@/lib/types";
 
 export const DEPARTAMENTO_COLUMNS = [
   { key: "NOMBRE", label: "Nombre" },
+  { key: "CODIGO", label: "Codigo" },
   { key: "DESCRIPCION", label: "Descripción" },
   {
     key: "ESTADO",
@@ -23,6 +24,7 @@ export const DEPARTAMENTO_COLUMNS = [
 ]
 
 export const DEPARTAMENTO_FORM_FIELDS = [
+  { key: "CODIGO", label: "Codigo", type: "text" as const, required: true },
   { key: "NOMBRE", label: "Nombre", type: "text" as const, required: true },
   { key: "DESCRIPCION", label: "Descripción", type: "textarea" as const },
 /*   {
