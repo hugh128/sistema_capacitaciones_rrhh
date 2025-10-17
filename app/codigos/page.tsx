@@ -74,7 +74,7 @@ export default function CodigosAsociadosPage() {
   const paginatedCodigos = useCodigosPagination(filteredCodigos, currentPage, itemsPerPage)
   const totalPages = Math.ceil(filteredCodigos.length / itemsPerPage)
 
-  useEffect(() => {
+/*   useEffect(() => {
     if (editParent) {
       const updatedParent = codigos.find(c => c.ID_DOCUMENTO === editParent.ID_DOCUMENTO);
       
@@ -84,7 +84,20 @@ export default function CodigosAsociadosPage() {
         setEditParent(null);
       }
     }
+  }, [codigos, editParent]); */
+
+
+  useEffect(() => {
+    if (editParent) {
+      const updatedParent = codigos.find(c => c.ID_DOCUMENTO === editParent.ID_DOCUMENTO);
+      if (updatedParent && updatedParent !== editParent) {
+        setEditParent(updatedParent);
+      } else if (!updatedParent) {
+        setEditParent(null);
+      }
+    }
   }, [codigos, editParent]);
+
 
   const handleAddParent = async () => {
     if (
@@ -107,7 +120,7 @@ export default function CodigosAsociadosPage() {
         CODIGO: "",
         TIPO_DOCUMENTO: "",
         NOMBRE_DOCUMENTO: "",
-        VERSION: 0,
+        VERSION: 1,
         APROBACION: "",
         ESTATUS: "VIGENTE",
         DEPARTAMENTO_CODIGO: ""

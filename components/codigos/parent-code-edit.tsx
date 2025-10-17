@@ -68,6 +68,12 @@ export function ParentCodeEdit({
     }
   }, [parent, initialFormData, parent?.DOCUMENTOS_ASOCIADOS])
 
+  useEffect(() => {
+    if (!open) {
+      setIsEditing(false);
+    }
+  }, [open]);
+
   const handleEdit = () => {
     setEditFormData(initialFormData)
     setIsEditing(true)

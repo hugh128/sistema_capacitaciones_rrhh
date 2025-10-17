@@ -122,7 +122,20 @@ export function ChildCodesList({ children, onAdd, onEdit, onDelete }: ChildCodes
         <h4 className="text-sm font-medium">
           Códigos Hijo ({searchQuery ? `${filteredChildren.length} de ${children.length}` : children.length})
         </h4>
-        <Button size="sm" variant="outline" onClick={() => setIsAddOpen(true)}>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={() => {
+            setFormData({
+              CODIGO: "",
+              NOMBRE_DOCUMENTO: "",
+              FECHA_APROBACION: "",
+              VERSION: 1,
+              ESTATUS: "VIGENTE",
+            });
+            setIsAddOpen(true);
+          }}
+        >
           <Plus className="h-4 w-4 mr-2" />
           Agregar Hijo
         </Button>
@@ -221,7 +234,21 @@ export function ChildCodesList({ children, onAdd, onEdit, onDelete }: ChildCodes
         </>
       )}
 
-      <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+      <Dialog
+        open={isAddOpen}
+        onOpenChange={(open) => {
+          setIsAddOpen(open);
+          if (!open) {
+            setFormData({
+              CODIGO: "",
+              NOMBRE_DOCUMENTO: "",
+              FECHA_APROBACION: "",
+              VERSION: 1,
+              ESTATUS: "VIGENTE",
+            });
+          }
+        }}
+      >
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Agregar Código Hijo</DialogTitle>
