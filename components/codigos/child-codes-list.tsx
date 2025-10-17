@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { ChildCodeForm } from "./child-code-form"
 import type { CodigoHijo, NuevoCodigoHijo } from "@/lib/codigos/types"
 import { Badge } from "../ui/badge"
+import { getEstatusBadgeVariant } from "./codes-table"
 
 interface ChildCodesListProps {
   parentID: number
@@ -27,7 +28,9 @@ export function ChildCodesList({ children, onAdd, onEdit, onDelete }: ChildCodes
   const [formData, setFormData] = useState<NuevoCodigoHijo>({
     CODIGO: "",
     NOMBRE_DOCUMENTO: "",
-    ESTATUS: true,
+    FECHA_APROBACION: "",
+    VERSION: 1,
+    ESTATUS: "VIGENTE",
   })
 
   const { filteredChildren, totalPages, visibleChildren } = useMemo(() => {
@@ -52,15 +55,30 @@ export function ChildCodesList({ children, onAdd, onEdit, onDelete }: ChildCodes
   }
 
   const handleAdd = () => {
-    if (!formData.CODIGO || !formData.NOMBRE_DOCUMENTO) return
+    if (
+      !formData.CODIGO ||
+      !formData.NOMBRE_DOCUMENTO ||
+      !formData.VERSION ||
+      !formData.ESTATUS
+    ) return
 
     onAdd({
         CODIGO: formData.CODIGO,
         NOMBRE_DOCUMENTO: formData.NOMBRE_DOCUMENTO,
+        FECHA_APROBACION: formData.FECHA_APROBACION,
+        VERSION: formData.VERSION,
         ESTATUS: formData.ESTATUS,
     } as NuevoCodigoHijo)
     
-    setFormData({ CODIGO: "", NOMBRE_DOCUMENTO: "", ESTATUS: true })
+    setFormData(
+      {
+        CODIGO: "",
+        NOMBRE_DOCUMENTO: "",
+        FECHA_APROBACION: "",
+        VERSION: 1,
+        ESTATUS: "VIGENTE"
+      }
+    )
     setIsAddOpen(false)
   }
 
@@ -70,10 +88,20 @@ export function ChildCodesList({ children, onAdd, onEdit, onDelete }: ChildCodes
     onEdit(editingChild.ID_DOC_ASOCIADO, {
         CODIGO: formData.CODIGO,
         NOMBRE_DOCUMENTO: formData.NOMBRE_DOCUMENTO,
+        FECHA_APROBACION: formData.FECHA_APROBACION,
+        VERSION: formData.VERSION,
         ESTATUS: formData.ESTATUS,
     }) 
     
-    setFormData({ CODIGO: "", NOMBRE_DOCUMENTO: "", ESTATUS: true })
+    setFormData(
+      {
+        CODIGO: "",
+        NOMBRE_DOCUMENTO: "",
+        FECHA_APROBACION: "",
+        VERSION: 1,
+        ESTATUS: "VIGENTE"
+      }
+    )
     setEditingChild(null)
   }
 
@@ -82,6 +110,8 @@ export function ChildCodesList({ children, onAdd, onEdit, onDelete }: ChildCodes
     setFormData({
       CODIGO: child.CODIGO,
       NOMBRE_DOCUMENTO: child.NOMBRE_DOCUMENTO,
+      FECHA_APROBACION: child.FECHA_APROBACION,
+      VERSION: child.VERSION,
       ESTATUS: child.ESTATUS,
     })
   }
@@ -120,8 +150,8 @@ export function ChildCodesList({ children, onAdd, onEdit, onDelete }: ChildCodes
         <>
           <div className="space-y-2">
             {visibleChildren.map((child) => (
-              <div key={child.ID_DOC_ASOCIADO} className="flex items-center gap-3 p-3 bg-muted/50 rounded-lg">
-                <div className="flex-1 grid grid-cols-2 gap-3">
+              <div key={child.ID_DOC_ASOCIADO} className="p-3 bg-muted/50 rounded-lg">
+                <div className="grid grid-cols-[0.9fr_2.4fr_0.5fr_0.5fr] gap-3 items-center">
                   <div>
                     <p className="text-xs text-muted-foreground">Dato Asociado</p>
                     <p className="text-sm font-medium">{child.CODIGO}</p>
@@ -130,27 +160,29 @@ export function ChildCodesList({ children, onAdd, onEdit, onDelete }: ChildCodes
                     <p className="text-xs text-muted-foreground">Nombre de Documento</p>
                     <p className="text-sm">{child.NOMBRE_DOCUMENTO}</p>
                   </div>
+
+                  <div className="">
+                      <Badge variant={getEstatusBadgeVariant(child.ESTATUS)} className="font-normal whitespace-nowrap">
+                        {child.ESTATUS}
+                      </Badge>
+                  </div>
+
+                  <div className="">
+                    <Button variant="ghost" size="icon" onClick={() => openEditDialog(child)} className="h-8 w-8">
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onDelete(child.ID_DOC_ASOCIADO)}
+                      className="h-8 w-8 text-destructive hover:text-destructive"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
                 </div>
 
-                <div className="ml-auto">
-                    <Badge variant={child.ESTATUS ? "default" : "secondary"}>
-                      {child.ESTATUS ? "Vigente" : "Inactivo"}
-                    </Badge>
-                </div>
 
-                <div className="flex gap-1">
-                  <Button variant="ghost" size="icon" onClick={() => openEditDialog(child)} className="h-8 w-8">
-                    <Pencil className="h-4 w-4" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onDelete(child.ID_DOC_ASOCIADO)}
-                    className="h-8 w-8 text-destructive hover:text-destructive"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
               </div>
             ))}
           </div>

@@ -31,7 +31,7 @@ export const handleApiError = (
       ? data.message.join('; ') 
       : data.message;
         
-    detailedMessage = `${baseMessage}\n\nDetalle: ${apiMessage || 'Error desconocido del servidor.'}`;
+    detailedMessage = `${baseMessage} Detalle: ${apiMessage || 'Error desconocido del servidor.'}`;
     consoleOutput = data;
   } 
   else if (err instanceof Error) {

@@ -65,7 +65,9 @@ export default function CodigosAsociadosPage() {
     TIPO_DOCUMENTO: "",
     NOMBRE_DOCUMENTO: "",
     APROBACION: "",
-    ESTATUS: true,
+    VERSION: 0,
+    ESTATUS: "VIGENTE",
+    DEPARTAMENTO_CODIGO: ""
   })
 
   const filteredCodigos = useCodigosFilter(codigos, searchQuery)
@@ -89,7 +91,9 @@ export default function CodigosAsociadosPage() {
       !newParentData.CODIGO ||
       !newParentData.TIPO_DOCUMENTO ||
       !newParentData.NOMBRE_DOCUMENTO ||
-      !newParentData.APROBACION
+      !newParentData.APROBACION ||
+      !newParentData.VERSION ||
+      !newParentData.DEPARTAMENTO_CODIGO
     ) {
       toast.error("Por favor complete todos los campos obligatorios")
       return
@@ -103,8 +107,10 @@ export default function CodigosAsociadosPage() {
         CODIGO: "",
         TIPO_DOCUMENTO: "",
         NOMBRE_DOCUMENTO: "",
+        VERSION: 0,
         APROBACION: "",
-        ESTATUS: true,
+        ESTATUS: "VIGENTE",
+        DEPARTAMENTO_CODIGO: ""
       })
       setIsAddParentOpen(false)
 
@@ -120,7 +126,9 @@ export default function CodigosAsociadosPage() {
         TIPO_DOCUMENTO: data.TIPO_DOCUMENTO,
         NOMBRE_DOCUMENTO: data.NOMBRE_DOCUMENTO,
         APROBACION: data.APROBACION,
+        VERSION: data.VERSION,
         ESTATUS: data.ESTATUS,
+        DEPARTAMENTO_CODIGO: data.DEPARTAMENTO_CODIGO
       }
 
       await updateParent(id, updatedParentData)
@@ -201,7 +209,6 @@ export default function CodigosAsociadosPage() {
     }
   }
 
-
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
@@ -234,6 +241,20 @@ export default function CodigosAsociadosPage() {
     }
   };
 
+  const downloadErrorLog = (errors: string[], filename = "errores_importacion.txt") => {
+    const blob = new Blob([errors.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    document.body.appendChild(a);
+    a.click();
+
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
   const handleConfirmImport = async () => {
     const codesToImport = importConfirmation.codigosAImportar;
     if (!codesToImport || codesToImport.length === 0) return;
@@ -252,7 +273,9 @@ export default function CodigosAsociadosPage() {
             TIPO_DOCUMENTO: parent.TIPO_DOCUMENTO,
             NOMBRE_DOCUMENTO: parent.NOMBRE_DOCUMENTO,
             APROBACION: parent.APROBACION,
+            VERSION: parent.VERSION,
             ESTATUS: parent.ESTATUS,
+            DEPARTAMENTO_CODIGO: parent.DEPARTAMENTO_CODIGO
           };
 
           const existingParent = codigos.find(c => c.CODIGO === parent.CODIGO);
@@ -266,6 +289,7 @@ export default function CodigosAsociadosPage() {
               const response = await createParent(parentData);
               newParentId = response[0].ID_DOCUMENTO;
             } catch (e) {
+              console.log(`Errores en cada iteracio: ${e}`)
               const errorMsg = e instanceof Error ? e.message : "Error desconocido";
               errorMessages.push(`Falló al crear Padre ${parent.CODIGO}: ${errorMsg}`);
               continue;
@@ -283,6 +307,8 @@ export default function CodigosAsociadosPage() {
                   const childData = {
                     CODIGO: child.CODIGO,
                     NOMBRE_DOCUMENTO: child.NOMBRE_DOCUMENTO,
+                    FECHA_APROBACION: child.FECHA_APROBACION,
+                    VERSION: child.VERSION,
                     ESTATUS: child.ESTATUS,
                     DOCUMENTO_ID: newParentId,
                   };
@@ -290,7 +316,7 @@ export default function CodigosAsociadosPage() {
                   childrenSuccess++;
                 } catch (e) {
                   const errorMsg = e instanceof Error ? e.message : "Error desconocido";
-                  errorMessages.push(`Falló al añadir Hijo ${child.CODIGO} al Padre ${parent.CODIGO}: ${errorMsg}`);
+                  errorMessages.push(`Falló al asociar Hijo ${child.CODIGO} al Padre ${parent.CODIGO}: ${errorMsg}`);
                 }
               }
             }
@@ -302,11 +328,11 @@ export default function CodigosAsociadosPage() {
 
         } catch (error) {
           console.error(`Error inesperado al procesar ${parent.CODIGO}:`, error);
-          errorMessages.push(`Error inesperado al procesar ${parent.CODIGO}.`);
+          errorMessages.push(`Error inesperado al procesar ${parent.CODIGO}. ${error}`);
         }
       }
 
-      await refreshCodigos();
+      //await refreshCodigos();
 
       const totalProcessed = codesToImport.length;
       const failCount = totalProcessed - successCount;
@@ -318,6 +344,8 @@ export default function CodigosAsociadosPage() {
         console.group("DETALLES DE ERRORES DE IMPORTACIÓN");
         errorMessages.forEach(msg => console.error(msg));
         console.groupEnd();
+
+        downloadErrorLog(errorMessages)
 
       } else if (successCount > 0) {
         toast.success(`Importación completada: ${successCount} códigos procesados.`, { duration: 5000 });
@@ -331,6 +359,7 @@ export default function CodigosAsociadosPage() {
     } finally {
       setIsImporting(false);
       handleCancelImport();
+      await refreshCodigos();
     }
   };
 
@@ -510,7 +539,11 @@ export default function CodigosAsociadosPage() {
       <ParentCodeView
         parent={viewParent}
         open={!!viewParent}
-        onClose={() => setViewParent(null)}
+        onClose={() => {
+          setTimeout(() => {
+            setViewParent(null)
+          }, 0);
+        }}
       />
 
       <ParentCodeEdit

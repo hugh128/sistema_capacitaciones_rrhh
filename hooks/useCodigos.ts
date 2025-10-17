@@ -42,8 +42,8 @@ export function useCodigos(user: UsuarioLogin | null) {
         return data;
       } catch (err) {
         const baseMessage = "Error al crear el código padre.";
-        handleApiError(err, baseMessage);
-        throw err;
+        const errorCreateParent = handleApiError(err, baseMessage);
+        throw new Error(errorCreateParent)
       } finally {
         setIsMutating(false);
       }
@@ -99,8 +99,8 @@ export function useCodigos(user: UsuarioLogin | null) {
         refreshCodigos();
       } catch (err) {
         const baseMessage = "Error al agregar código hijo.";
-        handleApiError(err, baseMessage);
-        throw err;
+        const errorCreateChild = handleApiError(err, baseMessage);
+        throw new Error(errorCreateChild);
       } finally {
         setIsMutating(false);
       }

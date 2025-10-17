@@ -15,29 +15,23 @@ interface ParentCodeFormProps {
 }
 
 export function ParentCodeForm({ data, onChange, onSubmit, onCancel, isEditing = false }: ParentCodeFormProps) {
-  const handleStatusChange = (value: "true" | "false") => {
-    const isVigente = value === "true";
-    onChange({ ...data, ESTATUS: isVigente });
-  };
-
-
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="codigo">Código *</Label>
+          <Label htmlFor="codigo">Código <span className="text-destructive">*</span></Label>
           <Input
             id="codigo"
-            value={data.CODIGO}
+            value={data.CODIGO ?? ""}
             onChange={(e) => onChange({ ...data, CODIGO: e.target.value })}
             placeholder="VAL-PMV-001"
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="tipo">Tipo de Documento *</Label>
+          <Label htmlFor="tipo">Tipo de Documento <span className="text-destructive">*</span></Label>
           <Input
             id="tipo"
-            value={data.TIPO_DOCUMENTO}
+            value={data.TIPO_DOCUMENTO ?? ""}
             onChange={(e) => onChange({ ...data, TIPO_DOCUMENTO: e.target.value })}
             placeholder="PMV"
           />
@@ -45,37 +39,60 @@ export function ParentCodeForm({ data, onChange, onSubmit, onCancel, isEditing =
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="documento">Documento *</Label>
+        <Label htmlFor="documento">Documento <span className="text-destructive">*</span></Label>
         <Input
           id="documento"
-          value={data.NOMBRE_DOCUMENTO}
+          value={data.NOMBRE_DOCUMENTO ?? ""}
           onChange={(e) => onChange({ ...data, NOMBRE_DOCUMENTO: e.target.value })}
           placeholder="Plan maestro de validaciones"
         />
       </div>
-
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="fecha">Fecha de Aprobación *</Label>
+          <Label htmlFor="fecha">Fecha de Aprobación <span className="text-destructive">*</span></Label>
           <Input
             id="fecha"
             type="date"
-            value={data.APROBACION}
+            value={data.APROBACION ?? ""}
             onChange={(e) => onChange({ ...data, APROBACION: e.target.value })}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="estatus">Estatus *</Label>
+          <Label htmlFor="codigo-departamento">Código Departamento <span className="text-destructive">*</span></Label>
+          <Input
+            id="codigo-departamento"
+            value={data.DEPARTAMENTO_CODIGO ?? ""}
+            onChange={(e) => onChange({ ...data, DEPARTAMENTO_CODIGO: e.target.value })}
+            placeholder="RRHH"
+          />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
+        <div className="space-y-2">
+          <Label htmlFor="version">Version <span className="text-destructive">*</span></Label>
+          <Input
+            id="version"
+            type="number"
+            value={data.VERSION ?? 1}
+            onChange={(e) => onChange({ ...data, VERSION: Number(e.target.value) })}
+            placeholder="1"
+          />
+        </div>
+        <div className="space-y-2">
+          <Label htmlFor="estatus">Estatus <span className="text-destructive">*</span></Label>
           <Select
-            value={data.ESTATUS ? "true" : "false"}
-            onValueChange={handleStatusChange}
+            value={data.ESTATUS ?? ""}
+            onValueChange={(value) => onChange({ ...data, ESTATUS: value })}
           >
             <SelectTrigger id="estatus">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="true">Vigente</SelectItem>
-              <SelectItem value="false">Inactivo</SelectItem>
+              <SelectItem value="VIGENTE">VIGENTE</SelectItem>
+              <SelectItem value="PROCESO">PROCESO</SelectItem>
+              <SelectItem value="OBSOLETO">OBSOLETO</SelectItem>
+              <SelectItem value="VENCIDO">VENCIDO</SelectItem>
             </SelectContent>
           </Select>
         </div>

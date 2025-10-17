@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { useState, useMemo } from "react"
 import type { CodigoPadre } from "@/lib/codigos/types"
+import { getEstatusBadgeVariant } from "./codes-table"
 
 interface ParentCodeViewProps {
   parent: CodigoPadre | null
@@ -46,8 +47,7 @@ export function ParentCodeView({ parent, open, onClose }: ParentCodeViewProps) {
 
   if (!parent) return null
 
-  const childrenCount = parent.DOCUMENTOS_ASOCIADOS.length; 
-  const isVigente = parent.ESTATUS === true; 
+  const childrenCount = parent.DOCUMENTOS_ASOCIADOS.length;
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -92,9 +92,19 @@ export function ParentCodeView({ parent, open, onClose }: ParentCodeViewProps) {
                       <p className="text-base">{parent.APROBACION}</p>
                     </div>
                     <div>
+                      <p className="text-sm text-muted-foreground">Codigo Departamento</p>
+                      <p className="text-base">{parent.DEPARTAMENTO_CODIGO ?? "Sin codigo de departamento"}</p>
+                    </div>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-muted-foreground">Version</p>
+                      <p className="text-base">{parent.VERSION}</p>
+                    </div>
+                    <div>
                       <p className="text-sm text-muted-foreground">Estatus</p>
-                      <Badge variant={isVigente ? "default" : "secondary"}>
-                        {isVigente ? "Vigente" : "Inactivo"}
+                      <Badge variant={getEstatusBadgeVariant(parent.ESTATUS)}>
+                        {parent.ESTATUS}
                       </Badge>
                     </div>
                   </div>
@@ -136,7 +146,7 @@ export function ParentCodeView({ parent, open, onClose }: ParentCodeViewProps) {
                       <div className="space-y-2">
                         {visibleChildren.map((child) => (
                           <div key={child.ID_DOC_ASOCIADO} className="p-3 bg-muted/50 rounded-lg">
-                            <div className="grid grid-cols-[1fr_2fr_0.5fr] gap-3 items-center">
+                            <div className="grid grid-cols-[1.2fr_2fr_1fr_1fr_0.5fr] gap-3 items-center">
                               <div>
                                 <p className="text-xs text-muted-foreground">Dato Asociado</p>
                                 <p className="text-sm font-medium truncate">{child.CODIGO}</p>
@@ -145,11 +155,20 @@ export function ParentCodeView({ parent, open, onClose }: ParentCodeViewProps) {
                                 <p className="text-xs text-muted-foreground">Nombre de Documento</p>
                                 <p className="text-sm break-words">{child.NOMBRE_DOCUMENTO}</p> 
                               </div>
-                              <div className="text-right">
-                                <p className="text-xs text-muted-foreground invisible">Estatus</p>
-                                <Badge variant={child.ESTATUS ? "default" : "secondary"} className="font-normal whitespace-nowrap">
-                                  {child.ESTATUS ? "Vigente" : "Inactivo"}
+
+                              <div>
+                                <p className="text-xs text-muted-foreground">Aprobacion</p>
+                                <p className="text-sm break-words">{child.FECHA_APROBACION}</p> 
+                              </div>
+
+                              <div className="text-center">
+                                <Badge variant={getEstatusBadgeVariant(child.ESTATUS)} className="font-normal whitespace-nowrap">
+                                  {child.ESTATUS}
                                 </Badge>
+                              </div>
+                              <div className="text-center">
+                                <p className="text-xs text-muted-foreground">Ver.</p>
+                                <p className="text-sm break-words">{child.VERSION}</p> 
                               </div>
                             </div>
                           </div>

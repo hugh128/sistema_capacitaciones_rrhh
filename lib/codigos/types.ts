@@ -3,17 +3,18 @@ export interface NuevoCodigoPadre {
   TIPO_DOCUMENTO: string
   NOMBRE_DOCUMENTO: string
   APROBACION: string
-  ESTATUS: boolean
   VERSION: number
+  ESTATUS: string
   DEPARTAMENTO_CODIGO: string
 }
 
 export interface NuevoCodigoHijo {
   CODIGO: string
   NOMBRE_DOCUMENTO: string
+  FECHA_APROBACION: string
   DOCUMENTO_ID?: number
-  ESTATUS: boolean
   VERSION: number
+  ESTATUS: string
 }
 
 export interface CodigoPadre {
@@ -22,9 +23,9 @@ export interface CodigoPadre {
   TIPO_DOCUMENTO: string
   NOMBRE_DOCUMENTO: string
   APROBACION: string
-  ESTATUS: boolean
-  DEPARTAMENTO_CODIGO?: string
-  VERSION?: number
+  VERSION: number
+  ESTATUS: string
+  DEPARTAMENTO_CODIGO: string
   DOCUMENTOS_ASOCIADOS: CodigoHijo[]
 }
 
@@ -32,7 +33,8 @@ export interface CodigoHijo {
   ID_DOC_ASOCIADO: number
   CODIGO: string
   NOMBRE_DOCUMENTO: string
-  ESTATUS: boolean
-  VERSION?: number
-  DOCUMENTO_ID?: number
+  FECHA_APROBACION: string
+  VERSION: number
+  ESTATUS: string
+  DOCUMENTO_ID: number
 }

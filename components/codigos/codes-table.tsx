@@ -22,6 +22,23 @@ interface CodesTableProps {
   onDelete: (id: number) => void
 }
 
+type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
+
+export const getEstatusBadgeVariant = (estatus: string): BadgeVariant => {
+  switch (estatus) {
+    case "VIGENTE":
+      return "default"; 
+    case "PROCESO":
+      return "secondary";
+    case "OBSOLETO":
+      return "destructive"; 
+    case "VENCIDO":
+      return "outline";
+    default:
+      return "secondary";
+  }
+};
+
 export function CodesTable({ codigos, onView, onEdit, onDelete }: CodesTableProps) {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [parentToDelete, setParentToDelete] = useState<CodigoPadre | null>(null)
@@ -55,6 +72,7 @@ export function CodesTable({ codigos, onView, onEdit, onDelete }: CodesTableProp
               <TableHead className="font-semibold">Documento</TableHead>
               <TableHead className="font-semibold">Fecha Aprobación</TableHead>
               <TableHead className="font-semibold">Estatus</TableHead>
+              <TableHead className="text-center font-semibold">Version</TableHead>
               <TableHead className="text-center font-semibold">Códigos Hijo</TableHead>
               <TableHead className="w-[70px]">Acciones</TableHead>
             </TableRow>
@@ -79,10 +97,11 @@ export function CodesTable({ codigos, onView, onEdit, onDelete }: CodesTableProp
                   </TableCell>
                   <TableCell className="text-sm">{parent.APROBACION}</TableCell>
                   <TableCell>
-                    <Badge variant={parent.ESTATUS ? "default" : "destructive"} className="font-normal">
-                      {parent.ESTATUS ? "Vigente" : "Inactivo"}
+                    <Badge variant={getEstatusBadgeVariant(parent.ESTATUS)} className="font-normal">
+                      {parent.ESTATUS}
                     </Badge>
                   </TableCell>
+                  <TableCell className="text-sm text-center">{parent.VERSION}</TableCell>
                   <TableCell className="text-center">
                     <Badge variant="outline" className="font-mono">
                       {parent.DOCUMENTOS_ASOCIADOS.length}

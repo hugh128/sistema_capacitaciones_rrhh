@@ -11,6 +11,7 @@ import { ParentCodeForm } from "./parent-code-form"
 import { ChildCodesList } from "./child-codes-list"
 import { DeleteConfirmationDialog } from "./delete-confirmation-dialog"
 import type { CodigoPadre, NuevoCodigoPadre, NuevoCodigoHijo } from "@/lib/codigos/types"
+import { getEstatusBadgeVariant } from "./codes-table"
 
 interface ParentCodeEditProps {
   parent: CodigoPadre | null
@@ -43,7 +44,9 @@ export function ParentCodeEdit({
         TIPO_DOCUMENTO: "",
         NOMBRE_DOCUMENTO: "",
         APROBACION: "",
-        ESTATUS: true,
+        VERSION: 1,
+        ESTATUS: "VIGENTE",
+        DEPARTAMENTO_CODIGO: ""
       }
     }
     return {
@@ -51,7 +54,9 @@ export function ParentCodeEdit({
       TIPO_DOCUMENTO: parent.TIPO_DOCUMENTO,
       NOMBRE_DOCUMENTO: parent.NOMBRE_DOCUMENTO,
       APROBACION: parent.APROBACION,
+      VERSION: parent.VERSION,
       ESTATUS: parent.ESTATUS,
+      DEPARTAMENTO_CODIGO: parent.DEPARTAMENTO_CODIGO
     }
   }, [parent])
 
@@ -84,7 +89,6 @@ export function ParentCodeEdit({
   if (!parent) return null
 
   const childrenCount = parent.DOCUMENTOS_ASOCIADOS.length;
-  const isVigente = parent.ESTATUS === true;
 
   return (
     <>
@@ -145,15 +149,27 @@ export function ParentCodeEdit({
                           <p className="text-sm text-muted-foreground">Documento</p>
                           <p className="text-base">{parent.NOMBRE_DOCUMENTO}</p>
                         </div>
+
                         <div className="grid grid-cols-2 gap-4">
                           <div>
                             <p className="text-sm text-muted-foreground">Fecha de Aprobación</p>
                             <p className="text-base">{parent.APROBACION}</p>
                           </div>
+
+                          <div>
+                            <p className="text-sm text-muted-foreground">Codigo Departamento</p>
+                            <p className="text-base">{parent.DEPARTAMENTO_CODIGO ?? "Sin codigo de departamento"}</p>
+                          </div>
+                        </div>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div>
+                            <p className="text-sm text-muted-foreground">Version</p>
+                            <p className="text-base">{parent.VERSION}</p>
+                          </div>
                           <div>
                             <p className="text-sm text-muted-foreground">Estatus</p>
-                            <Badge variant={isVigente ? "default" : "secondary"}>
-                              {isVigente ? "Vigente" : "Inactivo"}
+                            <Badge variant={getEstatusBadgeVariant(parent.ESTATUS)}>
+                              {parent.ESTATUS}
                             </Badge>
                           </div>
                         </div>

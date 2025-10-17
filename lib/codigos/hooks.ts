@@ -23,18 +23,13 @@ export function useCodigosFilter(codigos: CodigoPadre[], searchQuery: string) {
     if (!searchQuery.trim()) return codigos
 
     const query = searchQuery.toLowerCase().trim()
-    
-    const statusMap = {
-      true: "vigente",
-      false: "inactivo",
-    }
-    
+
     return codigos.filter((codigo) => {
       const parentFields = [
         codigo.CODIGO,
         codigo.TIPO_DOCUMENTO,
         codigo.NOMBRE_DOCUMENTO,
-        statusMap[codigo.ESTATUS ? 'true' : 'false'], 
+        codigo.ESTATUS,
       ].join(' ').toLowerCase()
 
       if (parentFields.includes(query)) {
