@@ -16,7 +16,6 @@ import { Departamento, Puesto } from "@/lib/types"
 import { CodigoPadre } from "@/lib/codigos/types"
 
 type ViewType = "list" | "create" | "details" | "edit" | "import"
-type planesCapacitacionPayload = Partial<PlanCapacitacion>
 
 const getDepartamentosList = async () => {
   try {
@@ -93,9 +92,9 @@ export default function PlansModule() {
     setCurrentView("list");
   };
 
-  const handleUpdatePlan = (updatedPlan: PlanCapacitacion) => {
-    setSelectedPlan(updatedPlan)
-    setCurrentView("details")
+  const handleUpdatePlan = async (updatedPlan: Partial<PlanCapacitacion>, idPlan: number) => {
+    await savePlanesCapacitacion(updatedPlan, idPlan);
+    setCurrentView("list")
   }
 
   const handleImportPlans = () => {
@@ -131,7 +130,7 @@ export default function PlansModule() {
         <EditPlan
           plan={selectedPlan}
           onBack={handleBackToList}
-          onSave={handleUpdatePlan}
+          onUpdate={handleUpdatePlan}
           departamentosDisponibles={departamentosList}
           documentosList={documentosList}
           puestosDisponibles={puestosList}

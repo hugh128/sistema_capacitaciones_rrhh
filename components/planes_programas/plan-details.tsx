@@ -147,7 +147,6 @@ export default function PlanDetails({ plan, onBack, onEdit }: PlanDetailsProps) 
                 <td className="px-6 py-4">
                   <p className="text-sm mt-1">{documento.NOMBRE_DOCUMENTO}</p>
                 </td>
-                {/* <td className="px-6 py-4 text-sm text-foreground">{training.trainer || "-"}</td> */}
                 <td className="px-6 py-4">
                   <span className={`px-2 py-1 rounded text-xs ${getEstatusDocumentoVariant(documento.ESTATUS.toLowerCase())}`}>
                     {documento.ESTATUS}
