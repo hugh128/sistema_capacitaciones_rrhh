@@ -44,6 +44,7 @@ const MAIN_MENU_CONFIG: MenuItem[] = [
   { icon: UserCheck, label: "Usuarios", href: "/usuarios", requiredPermissions: ["manage_users"] },
   { icon: Shield, label: "Roles y Permisos", href: "/roles", requiredPermissions: ["manage_users"] },
   { icon: Calendar, label: "Planes", href: "/planes", requiredPermissions: ["manage_trainings", "view_trainings"] },
+  { icon: Calendar, label: "Planes y Programas", href: "/planes_programas", requiredPermissions: ["manage_trainings", "view_trainings"] },
   { icon: BookOpen, label: "Capacitaciones", href: "/capacitaciones", requiredPermissions: ["manage_trainings", "view_trainings"] },
   { icon: Users, label: "Participantes", href: "/participantes", requiredPermissions: ["view_participants"] },
   { icon: FileText, label: "Documentos", href: "/documentos", requiredPermissions: ["upload_documents", "view_documents"] },
