@@ -69,6 +69,12 @@ export default function PlansListView({ plans, onCreatePlan, onViewDetails, onIm
 
   return (
     <div className="h-full flex flex-col">
+
+      <div className="my-6">
+        <h1 className="text-3xl font-bold text-foreground">Planes de Capacitación</h1>
+        <p className="text-muted-foreground mt-1">Gestiona los planes de capacitación de tu organización</p>
+      </div>
+
       {/* Featured Plans Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
         {featuredPlans.map((plan) => (
