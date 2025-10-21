@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChevronLeft, ChevronRight, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import type { CodigoPadre } from "@/lib/codigos/types"
 import { getEstatusBadgeVariant } from "./codes-table"
 
@@ -21,6 +21,16 @@ export function ParentCodeView({ parent, open, onClose }: ParentCodeViewProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
   const itemsPerPage = 10
+
+  useEffect(() => {
+    if (!open) {
+      const timer = setTimeout(() => {
+        setCurrentPage(1)
+        setSearchQuery("")
+      }, 150)
+      return () => clearTimeout(timer)
+    }
+  }, [open])
 
   const { totalPages, visibleChildren, filteredCount } = useMemo(() => {
     if (!parent) return { totalPages: 0, visibleChildren: [], filteredCount: 0 }
@@ -45,12 +55,16 @@ export function ParentCodeView({ parent, open, onClose }: ParentCodeViewProps) {
     setCurrentPage(1)
   }
 
+  const handleClose = () => {
+    onClose()
+  }
+
   if (!parent) return null
 
   const childrenCount = parent.DOCUMENTOS_ASOCIADOS.length;
 
   return (
-    <Dialog open={open} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto md:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Detalles del Código</DialogTitle>

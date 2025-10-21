@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useRef, useEffect } from "react"
+import { useState, useRef, useEffect, useMemo, useTransition, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -51,6 +51,7 @@ export default function CodigosAsociadosPage() {
     codigosAImportar: null,
   });
   const [isImporting, setIsImporting] = useState(false);
+  const [isPending, startTransition] = useTransition()
 
   const [searchQuery, setSearchQuery] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
@@ -72,20 +73,10 @@ export default function CodigosAsociadosPage() {
 
   const filteredCodigos = useCodigosFilter(codigos, searchQuery)
   const paginatedCodigos = useCodigosPagination(filteredCodigos, currentPage, itemsPerPage)
-  const totalPages = Math.ceil(filteredCodigos.length / itemsPerPage)
-
-/*   useEffect(() => {
-    if (editParent) {
-      const updatedParent = codigos.find(c => c.ID_DOCUMENTO === editParent.ID_DOCUMENTO);
-      
-      if (updatedParent) {
-        setEditParent(updatedParent);
-      } else {
-        setEditParent(null);
-      }
-    }
-  }, [codigos, editParent]); */
-
+  const totalPages = useMemo(
+    () => Math.ceil(filteredCodigos.length / itemsPerPage),
+    [filteredCodigos.length, itemsPerPage],
+  )
 
   useEffect(() => {
     if (editParent) {
@@ -186,13 +177,17 @@ export default function CodigosAsociadosPage() {
     }
   }
 
-  const handleView = (parent: CodigoPadre) => {
-    setViewParent(parent)
-  }
+  const handleView = useCallback((parent: CodigoPadre) => {
+    startTransition(() => {
+      setViewParent(parent)
+    })
+  }, [])
 
-  const handleEdit = (parent: CodigoPadre) => {
-    setEditParent(parent)
-  }
+  const handleEdit = useCallback((parent: CodigoPadre) => {
+    startTransition(() => {
+      setEditParent(parent)
+    })
+  }, [])
 
   const handleSearchChange = (value: string) => {
     setSearchQuery(value)
@@ -553,16 +548,20 @@ export default function CodigosAsociadosPage() {
         parent={viewParent}
         open={!!viewParent}
         onClose={() => {
-          setTimeout(() => {
+          startTransition(() => {
             setViewParent(null)
-          }, 0);
+          })
         }}
       />
 
       <ParentCodeEdit
         parent={editParent}
         open={!!editParent}
-        onClose={() => setEditParent(null)}
+        onClose={() => {
+          startTransition(() => {
+            setEditParent(null)
+          })
+        }}
         onUpdate={(id: number, data) => handleUpdateParent(id, data)}
         onDelete={(id: number) => handleDeleteParent(id)}
         onAddChild={(parentId: number, child) => handleAddChild(parentId, child)}
