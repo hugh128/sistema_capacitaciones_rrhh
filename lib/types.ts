@@ -369,3 +369,70 @@ export const mockReportes: Reporte[] = [
     ],
   },
 ]
+
+export interface AuditLog {
+  id: string
+  accion: "crear" | "editar" | "eliminar"
+  tabla: string
+  registroId: string
+  valoresAntiguos?: Record<string, any>
+  valoresNuevos?: Record<string, any>
+  usuarioId: string
+  fecha: string
+  ip?: string
+}
+
+export const mockPersonas: Persona[] = [
+  {
+    id: "1",
+    nombre: "Ana",
+    apellido: "García",
+    correo: "ana.garcia@empresa.com",
+    telefono: "555-0001",
+    dpi: "1234567890101",
+    fechaNacimiento: "1985-03-15",
+    puestoId: "1",
+    departamentoId: "1",
+    estado: "activo",
+    fechaCreacion: "2024-01-15",
+  },
+  {
+    id: "2",
+    nombre: "Carlos",
+    apellido: "López",
+    correo: "carlos.lopez@empresa.com",
+    telefono: "555-0002",
+    dpi: "1234567890102",
+    fechaNacimiento: "1990-07-22",
+    puestoId: "2",
+    departamentoId: "2",
+    estado: "activo",
+    fechaCreacion: "2024-01-20",
+  },
+  {
+    id: "3",
+    nombre: "María",
+    apellido: "Rodríguez",
+    correo: "maria.rodriguez@empresa.com",
+    telefono: "555-0003",
+    dpi: "1234567890103",
+    fechaNacimiento: "1988-11-08",
+    puestoId: "3",
+    departamentoId: "3",
+    estado: "activo",
+    fechaCreacion: "2024-01-25",
+  },
+  {
+    id: "4",
+    nombre: "Luis",
+    apellido: "Martínez",
+    correo: "luis.martinez@empresa.com",
+    telefono: "555-0004",
+    dpi: "1234567890104",
+    fechaNacimiento: "1992-05-12",
+    puestoId: "2",
+    departamentoId: "2",
+    estado: "activo",
+    fechaCreacion: "2024-02-01",
+  },
+]
