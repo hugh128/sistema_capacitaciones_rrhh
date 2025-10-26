@@ -13,33 +13,58 @@ import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
 import { ArrowLeft, Plus, Trash2 } from "lucide-react"
 import type { ProgramaCapacitacionForm, ProgramaDetalleForm } from "@/lib/programas_capacitacion/types"
-import type { Departamento } from "@/lib/types"
+import type { Departamento, Puesto } from "@/lib/types"
 
 interface CreateProgramaProps {
   departamentos: Departamento[]
+  puestos: Puesto[]
   onSave: (programa: ProgramaCapacitacionForm) => void
   onCancel: () => void
 }
 
-export function CreatePrograma({ departamentos, onSave, onCancel }: CreateProgramaProps) {
+interface PuestosFiltradosProps {
+  newTraining: ProgramaDetalleForm;
+  setNewTraining: React.Dispatch<React.SetStateAction<ProgramaDetalleForm>>;
+  puestos: Puesto[];
+}
+
+const INITIAL_TRAINING_STATE: ProgramaDetalleForm = {
+  NOMBRE: "",
+  CATEGORIA_CAPACITACION: "GENERAL",
+  TIPO_CAPACITACION: "INTERNA",
+  APLICA_TODOS_COLABORADORES: true,
+  APLICA_DIPLOMA: false,
+  MES_PROGRAMADO: 1,
+  ESTADO: "ACTIVO",
+  DEPARTAMENTO_RELACIONES: [],
+  PUESTO_RELACIONES: [],
+};
+
+export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: CreateProgramaProps) {
   const [nombre, setNombre] = useState("")
   const [descripcion, setDescripcion] = useState("")
-  const [tipo, setTipo] = useState("PROGRAMA")
+  const [tipo, setTipo] = useState("ANUAL")
   const [periodo, setPeriodo] = useState(new Date().getFullYear())
   const [estado, setEstado] = useState("ACTIVO")
   const [detalles, setDetalles] = useState<ProgramaDetalleForm[]>([])
 
   const [showAddTraining, setShowAddTraining] = useState(false)
-  const [newTraining, setNewTraining] = useState<ProgramaDetalleForm>({
-    NOMBRE: "",
-    CATEGORIA_CAPACITACION: "GENERAL",
-    TIPO_CAPACITACION: "INTERNA",
-    APLICA_TODOS_DEPARTAMENTOS: true,
-    APLICA_DIPLOMA: false,
-    FECHA_PROGRAMADA: "",
-    ESTADO: "ACTIVO",
-    DEPARTAMENTO_RELACIONES: [],
-  })
+  const [newTraining, setNewTraining] = useState<ProgramaDetalleForm>(INITIAL_TRAINING_STATE)
+
+  const isTrainingValid = () => {
+    if (!newTraining.NOMBRE || !newTraining.MES_PROGRAMADO) {
+      return false
+    }
+
+    if (!newTraining.APLICA_TODOS_COLABORADORES) {
+      return (
+        newTraining.DEPARTAMENTO_RELACIONES.length > 0 &&
+        newTraining.PUESTO_RELACIONES.length > 0
+      )
+    }
+
+    return true
+  }
 
   useEffect(() => {
     if (showAddTraining) {
@@ -54,18 +79,9 @@ export function CreatePrograma({ departamentos, onSave, onCancel }: CreateProgra
   }, [showAddTraining])
 
   const handleAddTraining = () => {
-    if (newTraining.NOMBRE && newTraining.FECHA_PROGRAMADA) {
+    if (newTraining.NOMBRE && newTraining.MES_PROGRAMADO) {
       setDetalles((prev) => [...prev, newTraining])
-      setNewTraining({
-        NOMBRE: "",
-        CATEGORIA_CAPACITACION: "GENERAL",
-        TIPO_CAPACITACION: "INTERNA",
-        APLICA_TODOS_DEPARTAMENTOS: true,
-        APLICA_DIPLOMA: false,
-        FECHA_PROGRAMADA: "",
-        ESTADO: "ACTIVO",
-        DEPARTAMENTO_RELACIONES: [],
-      })
+      setNewTraining(INITIAL_TRAINING_STATE)
       setShowAddTraining(false)
     }
   }
@@ -102,9 +118,13 @@ export function CreatePrograma({ departamentos, onSave, onCancel }: CreateProgra
       ESTADO: estado,
       PROGRAMA_DETALLES: detalles.map((detalle) => ({
         ...detalle,
-        DEPARTAMENTOS_IDS: detalle.APLICA_TODOS_DEPARTAMENTOS
+        DEPARTAMENTOS_IDS: detalle.APLICA_TODOS_COLABORADORES
           ? []
           : detalle.DEPARTAMENTO_RELACIONES.map((d) => d.ID_DEPARTAMENTO),
+
+      PUESTOS_IDS: detalle.APLICA_TODOS_COLABORADORES
+        ? []
+        : detalle.PUESTO_RELACIONES.map((p) => p.ID_PUESTO),
       })),
     }
 
@@ -133,32 +153,31 @@ export function CreatePrograma({ departamentos, onSave, onCancel }: CreateProgra
           <CardContent className="pt-6 space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="nombre">Nombre del Programa *</Label>
+                <Label htmlFor="nombre">Nombre del Programa <span className="text-destructive">*</span></Label>
                 <Input
                   id="nombre"
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
-                  placeholder="Ej: Programa de Formación 2025"
+                  placeholder={`Ej: Programa de Formación ${new Date().getFullYear()}`}
                   required
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="tipo">Tipo *</Label>
+                <Label htmlFor="tipo">Tipo <span className="text-destructive">*</span></Label>
                 <Select value={tipo} onValueChange={setTipo}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="PROGRAMA">PROGRAMA</SelectItem>
                     <SelectItem value="ANUAL">ANUAL</SelectItem>
-                    <SelectItem value="TRIMESTRAL">TRIMESTRAL</SelectItem>
+                    <SelectItem value="PROGRAMA">PROGRAMA</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="periodo">Periodo (Año) *</Label>
+                <Label htmlFor="periodo">Periodo (Año) <span className="text-destructive">*</span></Label>
                 <Input
                   id="periodo"
                   type="number"
@@ -171,9 +190,9 @@ export function CreatePrograma({ departamentos, onSave, onCancel }: CreateProgra
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="estado">Estado *</Label>
+                <Label htmlFor="estado">Estado <span className="text-destructive">*</span></Label>
                 <Select value={estado} onValueChange={setEstado}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -186,7 +205,7 @@ export function CreatePrograma({ departamentos, onSave, onCancel }: CreateProgra
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="descripcion">Descripción *</Label>
+              <Label htmlFor="descripcion">Descripción <span className="text-destructive">*</span></Label>
               <Textarea
                 id="descripcion"
                 value={descripcion}
@@ -209,7 +228,7 @@ export function CreatePrograma({ departamentos, onSave, onCancel }: CreateProgra
                 variant="outline"
                 size="sm"
                 onClick={() => setShowAddTraining(true)}
-                className="border-primary text-primary hover:bg-primary/10"
+                className="border-primary text-primary hover:bg-primary/10 dark:border-blue-700 dark:text-foreground cursor-pointer"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Agregar Capacitación
@@ -245,14 +264,21 @@ export function CreatePrograma({ departamentos, onSave, onCancel }: CreateProgra
                         <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/20">
                           {detalle.TIPO_CAPACITACION}
                         </Badge>
-                        <Badge variant="outline">📅 {detalle.FECHA_PROGRAMADA}</Badge>
+                        <Badge variant="outline">📅 {detalle.MES_PROGRAMADO}</Badge>
                         {detalle.APLICA_DIPLOMA && <Badge variant="outline">🎓 Diploma</Badge>}
                       </div>
                       <div className="text-sm text-muted-foreground">
-                        {detalle.APLICA_TODOS_DEPARTAMENTOS ? (
-                          <span>Aplica a todos los departamentos</span>
+                        {detalle.APLICA_TODOS_COLABORADORES ? (
+                          <span>👥 Aplica a todos los colaboradores</span>
                         ) : (
-                          <span>Departamentos: {detalle.DEPARTAMENTO_RELACIONES.map((d) => d.NOMBRE).join(", ")}</span>
+                          <>
+                            <span className="block">
+                              Departamentos: {detalle.DEPARTAMENTO_RELACIONES.map((d) => d.NOMBRE).join(", ")}
+                            </span>
+                            <span className="block">
+                              Puestos: {detalle.PUESTO_RELACIONES.map((p) => p.NOMBRE).join(", ")}
+                            </span>
+                          </>
                         )}
                       </div>
                     </div>
@@ -266,7 +292,7 @@ export function CreatePrograma({ departamentos, onSave, onCancel }: CreateProgra
         {/* Add Training Form */}
         {showAddTraining && (
           <Card className="border-primary shadow-lg">
-            <CardHeader className="border-b border-border bg-primary/5">
+            <CardHeader className="py-4 bg-primary/5">
               <CardTitle>Nueva Capacitación</CardTitle>
             </CardHeader>
             <CardContent className="pt-6 space-y-4">
@@ -289,7 +315,7 @@ export function CreatePrograma({ departamentos, onSave, onCancel }: CreateProgra
                       setNewTraining({ ...newTraining, CATEGORIA_CAPACITACION: value })
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -308,7 +334,7 @@ export function CreatePrograma({ departamentos, onSave, onCancel }: CreateProgra
                       setNewTraining({ ...newTraining, TIPO_CAPACITACION: value })
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -319,12 +345,13 @@ export function CreatePrograma({ departamentos, onSave, onCancel }: CreateProgra
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="training-fecha">Fecha Programada *</Label>
+                  <Label htmlFor="training-mes">Mes Programado *</Label>
                   <Input
-                    id="training-fecha"
-                    type="date"
-                    value={newTraining.FECHA_PROGRAMADA}
-                    onChange={(e) => setNewTraining({ ...newTraining, FECHA_PROGRAMADA: e.target.value })}
+                    id="training-mes"
+                    type="number"
+                    value={newTraining.MES_PROGRAMADO}
+                    min={1} max={12}
+                    onChange={(e) => setNewTraining({ ...newTraining, MES_PROGRAMADO: +e.target.value })}
                   />
                 </div>
 
@@ -334,7 +361,7 @@ export function CreatePrograma({ departamentos, onSave, onCancel }: CreateProgra
                     value={newTraining.ESTADO}
                     onValueChange={(value) => setNewTraining({ ...newTraining, ESTADO: value })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -359,49 +386,58 @@ export function CreatePrograma({ departamentos, onSave, onCancel }: CreateProgra
               <div className="space-y-3">
                 <div className="flex items-center space-x-2">
                   <Checkbox
-                    id="training-todos-dept"
-                    checked={newTraining.APLICA_TODOS_DEPARTAMENTOS}
+                    id="training-todos-colab"
+                    checked={newTraining.APLICA_TODOS_COLABORADORES}
                     onCheckedChange={(checked) =>
                       setNewTraining({
                         ...newTraining,
-                        APLICA_TODOS_DEPARTAMENTOS: checked as boolean,
+                        APLICA_TODOS_COLABORADORES: checked as boolean,
                         DEPARTAMENTO_RELACIONES: checked ? [] : newTraining.DEPARTAMENTO_RELACIONES,
+                        PUESTO_RELACIONES: checked ? [] : newTraining.PUESTO_RELACIONES,
                       })
                     }
                   />
-                  <Label htmlFor="training-todos-dept" className="cursor-pointer">
-                    Aplica a todos los departamentos
+                  <Label htmlFor="training-todos-colab" className="cursor-pointer">
+                    Aplica a todos los colaboradores
                   </Label>
                 </div>
 
-                {!newTraining.APLICA_TODOS_DEPARTAMENTOS && (
-                  <div className="space-y-2 pl-6">
-                    <Label>Seleccionar Departamentos *</Label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {departamentos.map((dept) => (
-                        <div key={dept.ID_DEPARTAMENTO} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`dept-${dept.ID_DEPARTAMENTO}`}
-                            checked={newTraining.DEPARTAMENTO_RELACIONES.some(
-                              (d) => d.ID_DEPARTAMENTO === dept.ID_DEPARTAMENTO,
-                            )}
-                            onCheckedChange={() => handleToggleDepartamento(dept)}
-                          />
-                          <Label htmlFor={`dept-${dept.ID_DEPARTAMENTO}`} className="cursor-pointer font-normal">
-                            {dept.NOMBRE}
-                          </Label>
+                  {!newTraining.APLICA_TODOS_COLABORADORES && (
+                    <>
+                      <div className="space-y-2 pl-6">
+                        <Label>Seleccionar Departamentos *</Label>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          {departamentos.map((dept) => (
+                            <div key={dept.ID_DEPARTAMENTO} className="flex items-center space-x-2">
+                              <Checkbox
+                                id={`dept-${dept.ID_DEPARTAMENTO}`}
+                                checked={newTraining.DEPARTAMENTO_RELACIONES.some(
+                                  (d) => d.ID_DEPARTAMENTO === dept.ID_DEPARTAMENTO,
+                                )}
+                                onCheckedChange={() => handleToggleDepartamento(dept)}
+                              />
+                              <Label htmlFor={`dept-${dept.ID_DEPARTAMENTO}`} className="cursor-pointer font-normal">
+                                {dept.NOMBRE}
+                              </Label>
+                            </div>
+                          ))}
                         </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                      </div>
+                      
+                      <PuestosFiltrados
+                        newTraining={newTraining}
+                        setNewTraining={setNewTraining}
+                        puestos={puestos}
+                      />
+                    </>
+                  )}
               </div>
 
               <div className="flex gap-2 pt-4">
                 <Button
                   type="button"
                   onClick={handleAddTraining}
-                  disabled={!newTraining.NOMBRE || !newTraining.FECHA_PROGRAMADA}
+                  disabled={!isTrainingValid()}
                   className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   Agregar
@@ -436,3 +472,60 @@ export function CreatePrograma({ departamentos, onSave, onCancel }: CreateProgra
     </div>
   )
 }
+
+const PuestosFiltrados = ({ newTraining, setNewTraining, puestos }: PuestosFiltradosProps) => {
+  const handleTogglePuesto = (puesto: Puesto) => {
+    setNewTraining((prev) => {
+      const isSelected = prev.PUESTO_RELACIONES.some((p) => p.ID_PUESTO === puesto.ID_PUESTO);
+      
+      const newPuestoRelaciones = isSelected
+        ? prev.PUESTO_RELACIONES.filter((p) => p.ID_PUESTO !== puesto.ID_PUESTO)
+        : [...prev.PUESTO_RELACIONES, puesto];
+
+      return {
+        ...prev,
+        PUESTO_RELACIONES: newPuestoRelaciones,
+      };
+    });
+  };
+
+  const selectedDeptIds = newTraining.DEPARTAMENTO_RELACIONES.map((d) => d.ID_DEPARTAMENTO);
+  
+  const puestosFiltrados = puestos.filter((puesto) => 
+    puesto.DEPARTAMENTO_ID && selectedDeptIds.includes(puesto.DEPARTAMENTO_ID)
+  );
+
+  if (selectedDeptIds.length === 0) {
+    return null;
+  }
+  
+  if (puestosFiltrados.length === 0) {
+    return (
+      <div className="space-y-2 pl-6 pt-2 text-sm text-muted-foreground border-t border-border mt-3">
+        No se encontraron puestos relacionados con los departamentos seleccionados.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2 pl-6 pt-4 border-t border-border mt-4">
+      <Label>Seleccionar Puestos *</Label>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        {puestosFiltrados.map((puesto) => (
+          <div key={puesto.ID_PUESTO} className="flex items-center space-x-2">
+            <Checkbox
+              id={`puesto-${puesto.ID_PUESTO}`}
+              checked={newTraining.PUESTO_RELACIONES.some(
+                (p) => p.ID_PUESTO === puesto.ID_PUESTO,
+              )}
+              onCheckedChange={() => handleTogglePuesto(puesto)}
+            />
+            <Label htmlFor={`puesto-${puesto.ID_PUESTO}`} className="cursor-pointer font-normal">
+              {puesto.NOMBRE}
+            </Label>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};

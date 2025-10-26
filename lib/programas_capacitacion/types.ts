@@ -1,4 +1,4 @@
-import { Departamento } from "../types"
+import { Departamento, Puesto } from "../types"
 
 export interface ProgramaCapacitacion {
   ID_PROGRAMA: number
@@ -16,12 +16,13 @@ export interface ProgramaDetalle {
   NOMBRE: string
   CATEGORIA_CAPACITACION: string
   TIPO_CAPACITACION: string
-  APLICA_TODOS_DEPARTAMENTOS: boolean
+  APLICA_TODOS_COLABORADORES: boolean
   APLICA_DIPLOMA: boolean
-  FECHA_PROGRAMADA: string
+  MES_PROGRAMADO: number
   ESTADO: string
   PROGRAMA_ID: number
   DEPARTAMENTO_RELACIONES: Departamento[]
+  PUESTO_RELACIONES: Puesto[]
 }
 
 export type ProgramaCapacitacionForm = Partial<
@@ -31,18 +32,23 @@ export type ProgramaCapacitacionForm = Partial<
 }
 
 export type ProgramaDetalleForm = Omit<ProgramaDetalle, "ID_DETALLE" | "PROGRAMA_ID"> & {
-  DEPARTAMENTOS_IDS?: number[]
+  DEPARTAMENTOS_IDS?: number[],
+  PUESTOS_IDS?: number[]
 }
 
 export interface CreateProgramaDetalleDto {
-  PROGRAMA_ID: number
   NOMBRE: string
   CATEGORIA_CAPACITACION: string
   TIPO_CAPACITACION: string
-  APLICA_TODOS_DEPARTAMENTOS: boolean
+  APLICA_TODOS_COLABORADORES: boolean
   APLICA_DIPLOMA: boolean
-  FECHA_PROGRAMADA: string
+  MES_PROGRAMADO: number
   ESTADO: string
+  PROGRAMA_ID?: number
   DEPARTAMENTOS_IDS: number[]
+  PUESTOS_IDS: number[]
 }
 
+export type ProgramaDetalleBase = Omit<ProgramaDetalleForm, 
+    "DEPARTAMENTOS_IDS" | "PUESTOS_IDS"
+>;

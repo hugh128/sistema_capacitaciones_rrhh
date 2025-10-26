@@ -11,22 +11,42 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Plus, Trash2 } from "lucide-react"
+import { ArrowLeft, Plus, Trash2, Users } from "lucide-react"
 import type {
   ProgramaCapacitacion,
   ProgramaDetalle,
+  ProgramaDetalleBase,
   ProgramaDetalleForm
 } from "@/lib/programas_capacitacion/types"
-import type { Departamento } from "@/lib/types"
+import type { Departamento, Puesto } from "@/lib/types"
 
 interface EditProgramaProps {
   programa: ProgramaCapacitacion
   departamentos: Departamento[]
+  puestos: Puesto[]
   onSave: (programa: ProgramaCapacitacion, idPrograma: number) => void
   onCancel: () => void
 }
 
-export function EditPrograma({ programa, departamentos, onSave, onCancel }: EditProgramaProps) {
+interface PuestosFiltradosProps {
+  newTraining: ProgramaDetalleForm;
+  setNewTraining: React.Dispatch<React.SetStateAction<ProgramaDetalleForm>>;
+  puestos: Puesto[];
+}
+
+const INITIAL_TRAINING_STATE: ProgramaDetalleForm = {
+  NOMBRE: "",
+  CATEGORIA_CAPACITACION: "GENERAL",
+  TIPO_CAPACITACION: "INTERNA",
+  APLICA_TODOS_COLABORADORES: true,
+  APLICA_DIPLOMA: false,
+  MES_PROGRAMADO: 1,
+  ESTADO: "ACTIVO",
+  DEPARTAMENTO_RELACIONES: [],
+  PUESTO_RELACIONES: [],
+};
+
+export function EditPrograma({ programa, departamentos, puestos, onSave, onCancel }: EditProgramaProps) {
   const [nombre, setNombre] = useState(programa.NOMBRE)
   const [descripcion, setDescripcion] = useState(programa.DESCRIPCION)
   const [tipo, setTipo] = useState(programa.TIPO)
@@ -34,18 +54,23 @@ export function EditPrograma({ programa, departamentos, onSave, onCancel }: Edit
   const [estado, setEstado] = useState(programa.ESTADO)
   const [detalles, setDetalles] = useState<ProgramaDetalle[]>(programa.PROGRAMA_DETALLES)
 
-  // State for new training detail
   const [showAddTraining, setShowAddTraining] = useState(false)
-  const [newTraining, setNewTraining] = useState<ProgramaDetalleForm>({
-    NOMBRE: "",
-    CATEGORIA_CAPACITACION: "GENERAL",
-    TIPO_CAPACITACION: "INTERNA",
-    APLICA_TODOS_DEPARTAMENTOS: true,
-    APLICA_DIPLOMA: false,
-    FECHA_PROGRAMADA: "",
-    ESTADO: "ACTIVO",
-    DEPARTAMENTO_RELACIONES: [],
-  })
+  const [newTraining, setNewTraining] = useState<ProgramaDetalleForm>(INITIAL_TRAINING_STATE)
+
+  const isTrainingValid = () => {
+    if (!newTraining.NOMBRE || !newTraining.MES_PROGRAMADO) {
+      return false
+    }
+
+    if (!newTraining.APLICA_TODOS_COLABORADORES) {
+      if (newTraining.DEPARTAMENTO_RELACIONES.length === 0) {
+        return false
+      }
+      return newTraining.PUESTO_RELACIONES.length > 0
+    }
+
+    return true
+  }
 
   useEffect(() => {
     if (showAddTraining) {
@@ -59,32 +84,35 @@ export function EditPrograma({ programa, departamentos, onSave, onCancel }: Edit
     }
   }, [showAddTraining])
 
+  const handleCancelAddTraining = () => {
+    setShowAddTraining(false);
+    setNewTraining(INITIAL_TRAINING_STATE);
+  };
+
   const handleAddTraining = () => {
-    if (newTraining.NOMBRE && newTraining.FECHA_PROGRAMADA) {
-      const newDetalle: ProgramaDetalle = {
-        ...newTraining,
-        ID_DETALLE: Date.now(),
-        PROGRAMA_ID: programa.ID_PROGRAMA,
-        DEPARTAMENTO_RELACIONES: newTraining.APLICA_TODOS_DEPARTAMENTOS
-          ? []
-          : newTraining.DEPARTAMENTO_RELACIONES,
-      };
+    if (!isTrainingValid()) return;
 
-      setDetalles((prev) => [...prev, newDetalle]);
+    const newTrainingIsGlobal = newTraining.APLICA_TODOS_COLABORADORES;
+    const newDetalleBase: ProgramaDetalleBase = newTraining;
+    
+    const newDetalle: ProgramaDetalle = {
+      ...newDetalleBase, 
+      
+      ID_DETALLE: Date.now() + Math.random(), 
+      PROGRAMA_ID: programa.ID_PROGRAMA,
 
-      setNewTraining({
-        NOMBRE: "",
-        CATEGORIA_CAPACITACION: "GENERAL",
-        TIPO_CAPACITACION: "INTERNA",
-        APLICA_TODOS_DEPARTAMENTOS: true,
-        APLICA_DIPLOMA: false,
-        FECHA_PROGRAMADA: "",
-        ESTADO: "ACTIVO",
-        DEPARTAMENTO_RELACIONES: [],
-      });
+      DEPARTAMENTO_RELACIONES: newTrainingIsGlobal 
+        ? [] 
+        : newDetalleBase.DEPARTAMENTO_RELACIONES,
+      
+      PUESTO_RELACIONES: newTrainingIsGlobal 
+        ? [] 
+        : newDetalleBase.PUESTO_RELACIONES,
+    };
 
-      setShowAddTraining(false);
-    }
+    setDetalles((prev) => [...prev, newDetalle]);
+    setNewTraining(INITIAL_TRAINING_STATE);
+    setShowAddTraining(false);
   };
 
   const handleRemoveTraining = (id: number) => {
@@ -93,21 +121,53 @@ export function EditPrograma({ programa, departamentos, onSave, onCancel }: Edit
 
   const handleToggleDepartamento = (dept: Departamento) => {
     setNewTraining((prev) => {
-      const exists = prev.DEPARTAMENTO_RELACIONES.some(
+      const newTrainingState: ProgramaDetalleForm = {
+        ...prev,
+        APLICA_TODOS_COLABORADORES: false,
+      };
+
+      const exists = newTrainingState.DEPARTAMENTO_RELACIONES.some(
         (d) => d.ID_DEPARTAMENTO === dept.ID_DEPARTAMENTO
       );
 
+      if (exists) {
+        const newDeptRelations = newTrainingState.DEPARTAMENTO_RELACIONES.filter(
+          (d) => d.ID_DEPARTAMENTO !== dept.ID_DEPARTAMENTO
+        );
+        
+        return {
+          ...newTrainingState,
+          DEPARTAMENTO_RELACIONES: newDeptRelations,
+          PUESTO_RELACIONES: newTrainingState.PUESTO_RELACIONES.filter(puesto => 
+            puesto.DEPARTAMENTO_ID && newDeptRelations.some(d => d.ID_DEPARTAMENTO === puesto.DEPARTAMENTO_ID)
+          )
+        };
+      }
+      
       return {
-        ...prev,
-        DEPARTAMENTO_RELACIONES: exists
-          ? prev.DEPARTAMENTO_RELACIONES.filter((d) => d.ID_DEPARTAMENTO !== dept.ID_DEPARTAMENTO)
-          : [...prev.DEPARTAMENTO_RELACIONES, dept],
+        ...newTrainingState,
+        DEPARTAMENTO_RELACIONES: [...newTrainingState.DEPARTAMENTO_RELACIONES, dept],
       };
     });
   };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    const detallesParaGuardar = detalles.map((d) => {
+      const isGlobal = d.APLICA_TODOS_COLABORADORES;
+
+      return {
+        ...d,
+        DEPARTAMENTOS_IDS: isGlobal 
+          ? [] 
+          : d.DEPARTAMENTO_RELACIONES.map((dep) => dep.ID_DEPARTAMENTO),
+        
+        PUESTOS_IDS: isGlobal 
+          ? [] 
+          : d.PUESTO_RELACIONES.map((pue) => pue.ID_PUESTO),
+      } as ProgramaDetalle;
+    });
 
     const updatedPrograma: ProgramaCapacitacion = {
       ...programa,
@@ -116,14 +176,8 @@ export function EditPrograma({ programa, departamentos, onSave, onCancel }: Edit
       TIPO: tipo,
       PERIODO: periodo,
       ESTADO: estado,
-      PROGRAMA_DETALLES: detalles.map((d) => ({
-        ...d,
-        DEPARTAMENTOS_IDS: d.APLICA_TODOS_DEPARTAMENTOS
-          ? []
-          : d.DEPARTAMENTO_RELACIONES.map((dep) => dep.ID_DEPARTAMENTO),
-      })),
+      PROGRAMA_DETALLES: detallesParaGuardar,
     };
-
 
     onSave(updatedPrograma, programa.ID_PROGRAMA);
   };
@@ -163,13 +217,12 @@ export function EditPrograma({ programa, departamentos, onSave, onCancel }: Edit
               <div className="space-y-2">
                 <Label htmlFor="tipo">Tipo *</Label>
                 <Select value={tipo} onValueChange={setTipo}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="PROGRAMA">PROGRAMA</SelectItem>
                     <SelectItem value="ANUAL">ANUAL</SelectItem>
-                    <SelectItem value="TRIMESTRAL">TRIMESTRAL</SelectItem>
+                    <SelectItem value="PROGRAMA">PROGRAMA</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -182,7 +235,6 @@ export function EditPrograma({ programa, departamentos, onSave, onCancel }: Edit
                   value={periodo}
                   onChange={(e) => setPeriodo(Number(e.target.value))}
                   min={2020}
-                  max={2050}
                   required
                 />
               </div>
@@ -190,7 +242,7 @@ export function EditPrograma({ programa, departamentos, onSave, onCancel }: Edit
               <div className="space-y-2">
                 <Label htmlFor="estado">Estado *</Label>
                 <Select value={estado} onValueChange={setEstado}>
-                  <SelectTrigger>
+                  <SelectTrigger className="w-full">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
@@ -265,16 +317,28 @@ export function EditPrograma({ programa, departamentos, onSave, onCancel }: Edit
                         <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/20">
                           {detalle.TIPO_CAPACITACION}
                         </Badge>
-                        <Badge variant="outline">📅 {detalle.FECHA_PROGRAMADA}</Badge>
+                        <Badge variant="outline">📅 {detalle.MES_PROGRAMADO}</Badge>
                         {detalle.APLICA_DIPLOMA && <Badge variant="outline">🎓 Diploma</Badge>}
                       </div>
+
                       <div className="text-sm text-muted-foreground">
-                        {detalle.APLICA_TODOS_DEPARTAMENTOS ? (
-                          <span>Aplica a todos los departamentos</span>
+                        {detalle.APLICA_TODOS_COLABORADORES ? (
+                          <>
+                            <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/20">
+                              <Users className="" />
+                            </Badge>
+                            <span> Aplica a todos los colaboradores</span>
+                          </>
                         ) : (
-                          <span>Departamentos: {detalle.DEPARTAMENTO_RELACIONES.map((d) => d.NOMBRE).join(", ")}</span>
+                          <>
+                            <div>Departamentos: {detalle.DEPARTAMENTO_RELACIONES.map((d) => d.NOMBRE).join(", ")}</div>
+                            {detalle.PUESTO_RELACIONES.length > 0 && (
+                              <div>Puestos: {detalle.PUESTO_RELACIONES.map((p) => p.NOMBRE).join(", ")}</div>
+                            )}
+                          </>
                         )}
                       </div>
+
                     </div>
                   </div>
                 ))}
@@ -309,7 +373,7 @@ export function EditPrograma({ programa, departamentos, onSave, onCancel }: Edit
                       setNewTraining({ ...newTraining, CATEGORIA_CAPACITACION: value })
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -328,7 +392,7 @@ export function EditPrograma({ programa, departamentos, onSave, onCancel }: Edit
                       setNewTraining({ ...newTraining, TIPO_CAPACITACION: value })
                     }
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -338,15 +402,17 @@ export function EditPrograma({ programa, departamentos, onSave, onCancel }: Edit
                   </Select>
                 </div>
 
-                <div className="space-y-2">
-                  <Label htmlFor="training-fecha">Fecha Programada *</Label>
-                  <Input
-                    id="training-fecha"
-                    type="date"
-                    value={newTraining.FECHA_PROGRAMADA}
-                    onChange={(e) => setNewTraining({ ...newTraining, FECHA_PROGRAMADA: e.target.value })}
-                  />
-                </div>
+              <div className="space-y-2">
+                <Label htmlFor="modal-fecha">Mes Programado <span className="text-destructive">*</span></Label>
+                <Input
+                  id="modal-fecha"
+                  type="number"
+                  value={newTraining.MES_PROGRAMADO}
+                  onChange={(e) => setNewTraining({ ...newTraining, MES_PROGRAMADO: +e.target.value })}
+                  min={1} max={12}
+                  className="bg-background"
+                />
+              </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="training-estado">Estado *</Label>
@@ -354,7 +420,7 @@ export function EditPrograma({ programa, departamentos, onSave, onCancel }: Edit
                     value={newTraining.ESTADO}
                     onValueChange={(value) => setNewTraining({ ...newTraining, ESTADO: value })}
                   >
-                    <SelectTrigger>
+                    <SelectTrigger className="w-full">
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
@@ -380,40 +446,49 @@ export function EditPrograma({ programa, departamentos, onSave, onCancel }: Edit
                 <div className="flex items-center space-x-2">
                   <Checkbox
                     id="training-todos-dept"
-                    checked={newTraining.APLICA_TODOS_DEPARTAMENTOS}
+                    checked={newTraining.APLICA_TODOS_COLABORADORES}
                     onCheckedChange={(checked) =>
                       setNewTraining({
                         ...newTraining,
-                        APLICA_TODOS_DEPARTAMENTOS: checked as boolean,
+                        APLICA_TODOS_COLABORADORES: checked as boolean,
                         DEPARTAMENTO_RELACIONES: checked ? [] : newTraining.DEPARTAMENTO_RELACIONES,
+                        PUESTO_RELACIONES: checked ? [] : newTraining.PUESTO_RELACIONES,
                       })
                     }
                   />
                   <Label htmlFor="training-todos-dept" className="cursor-pointer">
-                    Aplica a todos los departamentos
+                    Aplica a todos los colaboradores
                   </Label>
                 </div>
 
-                {!newTraining.APLICA_TODOS_DEPARTAMENTOS && (
-                  <div className="space-y-2 pl-6">
-                    <Label>Seleccionar Departamentos *</Label>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
-                      {departamentos.map((dept) => (
-                        <div key={dept.ID_DEPARTAMENTO} className="flex items-center space-x-2">
-                          <Checkbox
-                            id={`dept-${dept.ID_DEPARTAMENTO}`}
-                            checked={newTraining.DEPARTAMENTO_RELACIONES.some(
-                              (d) => d.ID_DEPARTAMENTO === dept.ID_DEPARTAMENTO,
-                            )}
-                            onCheckedChange={() => handleToggleDepartamento(dept)}
-                          />
-                          <Label htmlFor={`dept-${dept.ID_DEPARTAMENTO}`} className="cursor-pointer font-normal">
-                            {dept.NOMBRE}
-                          </Label>
-                        </div>
-                      ))}
+                {!newTraining.APLICA_TODOS_COLABORADORES && (
+                  <>
+                    <div className="space-y-2 pl-6">
+                      <Label>Seleccionar Departamentos *</Label>
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        {departamentos.map((dept) => (
+                          <div key={dept.ID_DEPARTAMENTO} className="flex items-center space-x-2">
+                            <Checkbox
+                              id={`dept-${dept.ID_DEPARTAMENTO}`}
+                              checked={newTraining.DEPARTAMENTO_RELACIONES.some(
+                                (d) => d.ID_DEPARTAMENTO === dept.ID_DEPARTAMENTO,
+                              )}
+                              onCheckedChange={() => handleToggleDepartamento(dept)}
+                            />
+                            <Label htmlFor={`dept-${dept.ID_DEPARTAMENTO}`} className="cursor-pointer font-normal">
+                              {dept.NOMBRE}
+                            </Label>
+                          </div>
+                        ))}
+                      </div>
                     </div>
-                  </div>
+                    
+                    <PuestosFiltrados 
+                      newTraining={newTraining} 
+                      setNewTraining={setNewTraining} 
+                      puestos={puestos} 
+                    />
+                  </>
                 )}
               </div>
 
@@ -421,7 +496,7 @@ export function EditPrograma({ programa, departamentos, onSave, onCancel }: Edit
                 <Button
                   type="button"
                   onClick={handleAddTraining}
-                  disabled={!newTraining.NOMBRE || !newTraining.FECHA_PROGRAMADA}
+                  disabled={!isTrainingValid()}
                   className="bg-primary text-primary-foreground hover:bg-primary/90"
                 >
                   Agregar
@@ -429,7 +504,7 @@ export function EditPrograma({ programa, departamentos, onSave, onCancel }: Edit
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setShowAddTraining(false)}
+                  onClick={handleCancelAddTraining}
                   className="border-border"
                 >
                   Cancelar
@@ -456,3 +531,60 @@ export function EditPrograma({ programa, departamentos, onSave, onCancel }: Edit
     </div>
   )
 }
+
+const PuestosFiltrados = ({ newTraining, setNewTraining, puestos }: PuestosFiltradosProps) => {
+  const handleTogglePuesto = (puesto: Puesto) => {
+    setNewTraining((prev) => {
+      const isSelected = prev.PUESTO_RELACIONES.some((p) => p.ID_PUESTO === puesto.ID_PUESTO);
+      
+      const newPuestoRelaciones = isSelected
+        ? prev.PUESTO_RELACIONES.filter((p) => p.ID_PUESTO !== puesto.ID_PUESTO)
+        : [...prev.PUESTO_RELACIONES, puesto];
+
+      return {
+        ...prev,
+        PUESTO_RELACIONES: newPuestoRelaciones,
+      };
+    });
+  };
+
+  const selectedDeptIds = newTraining.DEPARTAMENTO_RELACIONES.map((d) => d.ID_DEPARTAMENTO);
+  
+  const puestosFiltrados = puestos.filter((puesto) => 
+    puesto.DEPARTAMENTO_ID && selectedDeptIds.includes(puesto.DEPARTAMENTO_ID)
+  );
+
+  if (selectedDeptIds.length === 0) {
+    return null;
+  }
+  
+  if (puestosFiltrados.length === 0) {
+    return (
+      <div className="space-y-2 pl-6 pt-2 text-sm text-muted-foreground border-t border-border mt-3">
+        No se encontraron puestos relacionados con los departamentos seleccionados.
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-2 pl-6 pt-4 border-t border-border mt-4">
+      <Label>Seleccionar Puestos *</Label>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+        {puestosFiltrados.map((puesto) => (
+          <div key={puesto.ID_PUESTO} className="flex items-center space-x-2">
+            <Checkbox
+              id={`puesto-${puesto.ID_PUESTO}`}
+              checked={newTraining.PUESTO_RELACIONES.some(
+                (p) => p.ID_PUESTO === puesto.ID_PUESTO,
+              )}
+              onCheckedChange={() => handleTogglePuesto(puesto)}
+            />
+            <Label htmlFor={`puesto-${puesto.ID_PUESTO}`} className="cursor-pointer font-normal">
+              {puesto.NOMBRE}
+            </Label>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};

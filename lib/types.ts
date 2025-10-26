@@ -345,10 +345,10 @@ export const mockAuditLogs: AuditLog[] = [
 export const mockReportes: Reporte[] = [
   {
     id: "1",
-    nombre: "Cumplimiento de Planes Q1 2024",
+    nombre: "Cumplimiento de Planes 2025",
     tipo: "cumplimiento",
-    parametros: { periodo: "Q1-2024", departamento: "todos" },
-    fechaGeneracion: "2024-03-31",
+    parametros: { periodo: "2024", departamento: "todos" },
+    fechaGeneracion: "2025-10-01",
     generadoPor: "1",
     datos: [
       { plan: "Plan de Inducción", cumplimiento: 85, meta: 90 },
@@ -360,7 +360,7 @@ export const mockReportes: Reporte[] = [
     nombre: "Participación por Departamento",
     tipo: "participacion",
     parametros: { periodo: "2024", departamento: "todos" },
-    fechaGeneracion: "2024-03-30",
+    fechaGeneracion: "2025-09-30",
     generadoPor: "1",
     datos: [
       { departamento: "RRHH", participantes: 15, capacitaciones: 8 },

@@ -143,7 +143,7 @@ export default function ReportesPage() {
                           <SelectValue />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="2024">2024</SelectItem>
+                          <SelectItem value="2024">2025</SelectItem>
                           <SelectItem value="Q1-2024">Q1 2024</SelectItem>
                           <SelectItem value="Q2-2024">Q2 2024</SelectItem>
                           <SelectItem value="Q3-2024">Q3 2024</SelectItem>

@@ -6,14 +6,33 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, Eye, Pencil, Trash2, Calendar, BookOpen } from "lucide-react"
+import { Plus, Search, Eye, Pencil, Trash2, Calendar, BookOpen, MoreHorizontal, UserPlus } from "lucide-react"
 import type { ProgramaCapacitacion } from "@/lib/programas_capacitacion/types"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface ProgramasCapacitacionListProps {
   programas: ProgramaCapacitacion[]
   onCreateNew: () => void
   onEdit: (programa: ProgramaCapacitacion) => void
   onViewDetails: (programa: ProgramaCapacitacion) => void
+  onAssign: (programa: ProgramaCapacitacion) => void
   onDelete: (id: number) => void
 }
 
@@ -21,10 +40,12 @@ export function ProgramasCapacitacionList({
   programas,
   onCreateNew,
   onEdit,
+  onAssign,
   onViewDetails,
   onDelete,
 }: ProgramasCapacitacionListProps) {
   const [searchTerm, setSearchTerm] = useState("")
+  const [programaParaAsignar, setProgramaParaAsignar] = useState<ProgramaCapacitacion | null>(null);
 
   const filteredProgramas = useMemo(() => {
     return programas.filter(
@@ -40,6 +61,21 @@ export function ProgramasCapacitacionList({
       .sort((a, b) => new Date(b.FECHA_CREACION).getTime() - new Date(a.FECHA_CREACION).getTime())
       .slice(0, 3)
   }, [programas])
+
+  const handleAssignClick = (programa: ProgramaCapacitacion) => {
+    setProgramaParaAsignar(programa);
+  };
+
+  const handleConfirmAssign = () => {
+    if (programaParaAsignar) {
+      onAssign(programaParaAsignar); 
+    }
+    setProgramaParaAsignar(null); 
+  };
+
+  const handleCancelAssign = () => {
+    setProgramaParaAsignar(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -180,33 +216,59 @@ export function ProgramasCapacitacionList({
                           {programa.ESTADO}
                         </Badge>
                       </TableCell>
-                      <TableCell className="text-right">
-                        <div className="flex items-center justify-end">
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onViewDetails(programa)}
-                            className="hover:bg-primary/10 hover:text-primary"
-                          >
-                            <Eye className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onEdit(programa)}
-                            className="hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400"
-                          >
-                            <Pencil className="w-4 h-4" />
-                          </Button>
-                          <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onDelete(programa.ID_PROGRAMA)}
-                            className="hover:bg-destructive/10 hover:text-destructive"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
+                      <TableCell className="text-center">
+                        <DropdownMenu>
+                          <DropdownMenuTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              className="h-8 w-8 p-0"
+                            >
+                              <span className="sr-only">Abrir menú</span>
+                              <MoreHorizontal className="h-4 w-4" />
+                            </Button>
+                          </DropdownMenuTrigger>
+                          
+                          <DropdownMenuContent align="end">
+                            
+                            {/* 1. Ver Detalles */}
+                            <DropdownMenuItem 
+                              onClick={() => onViewDetails(programa)}
+                              className="cursor-pointer"
+                            >
+                              <Eye className="w-4 h-4 mr-2 text-primary" />
+                              Ver Detalles
+                            </DropdownMenuItem>
+                            
+                            {/* 2. Editar */}
+                            <DropdownMenuItem 
+                              onClick={() => onEdit(programa)}
+                              className="cursor-pointer text-blue-600 dark:text-blue-400"
+                            >
+                              <Pencil className="w-4 h-4 mr-2" />
+                              Editar
+                            </DropdownMenuItem>
+
+                            {/* 3. Asignar programa */}
+                            <DropdownMenuItem 
+                              onClick={() => handleAssignClick(programa)} 
+                              className="cursor-pointer text-emerald-600 dark:text-emerald-400"
+                            >
+                              <UserPlus className="w-4 h-4 mr-2" /> 
+                              Asignar Programa
+                            </DropdownMenuItem>
+                            
+                            <DropdownMenuSeparator />
+
+                            {/* 4. Eliminar */}
+                            <DropdownMenuItem 
+                              onClick={() => onDelete(programa.ID_PROGRAMA)}
+                              className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
+                            >
+                              <Trash2 className="w-4 h-4 mr-2" />
+                              Eliminar
+                            </DropdownMenuItem>
+                          </DropdownMenuContent>
+                        </DropdownMenu>
                       </TableCell>
                     </TableRow>
                   ))
@@ -216,6 +278,34 @@ export function ProgramasCapacitacionList({
           </div>
         </CardContent>
       </Card>
+
+      {programaParaAsignar && (
+        <AlertDialog open={!!programaParaAsignar} onOpenChange={(open) => !open && setProgramaParaAsignar(null)}>
+            <AlertDialogContent>
+                <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      ¿Está seguro de asignar este programa?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Al confirmar, todas las capacitaciones dentro del programa **{programaParaAsignar.NOMBRE}** serán asignadas a los colaboradores, departamentos y puestos especificados.
+                    </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel
+                      onClick={handleCancelAssign}
+                      className="dark:hover:bg-accent cursor-pointer"
+                    >
+                      Cancelar</AlertDialogCancel>
+                    <AlertDialogAction 
+                        onClick={handleConfirmAssign}
+                        className="cursor-pointer"
+                    >
+                      Confirmar Asignación
+                    </AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
+      )}
     </div>
   )
 }

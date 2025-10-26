@@ -6,7 +6,7 @@ import { CreatePrograma } from "./create-programa"
 import { EditPrograma } from "./edit-programa"
 import { ProgramaDetails } from "./programa-details"
 import type { ProgramaCapacitacion, ProgramaCapacitacionForm, CreateProgramaDetalleDto } from "@/lib/programas_capacitacion/types"
-import type { Departamento } from "@/lib/types"
+import type { Departamento, Puesto } from "@/lib/types"
 import { Toaster } from "react-hot-toast"
 import { apiClient } from "@/lib/api-client"
 import { useProgramasCapacitacion } from "@/hooks/useProgramasCapacitacion"
@@ -22,11 +22,22 @@ const getDepartamentosList = async () => {
   }
 }
 
+const getPuestosList = async () => {
+  try {
+    const { data } = await apiClient.get<Puesto[]>('/puesto');
+    return data;
+  } catch (err) {
+    console.error("Error al cargar lista de puestos para select:", err);
+    return [];
+  }
+}
+
 type ViewState = "list" | "create" | "edit" | "details"
 
 export default function ProgramsModule() {
   const { user } = useAuth()
   const [departamentosList, setDepartamentosList] = useState<Departamento[]>([])
+  const [puestosList, setPuestosList] = useState<Puesto[]>([])
   const [viewState, setViewState] = useState<ViewState>("list")
   const [selectedPrograma, setSelectedPrograma] = useState<ProgramaCapacitacion | null>(null)
 
@@ -39,6 +50,7 @@ export default function ProgramsModule() {
   useEffect(() => {
     if (user) {
       getDepartamentosList().then(setDepartamentosList);
+      getPuestosList().then(setPuestosList)
     }
   }, [user]);
 
@@ -80,6 +92,10 @@ export default function ProgramsModule() {
     await saveProgramaDetalle(programaDetalle)
   }
 
+  const handleAssingProgram = async () => {
+    console.log("Programa de capacitacion asignado")
+  }
+
   return (
     <div className="flex h-screen overflow-hidden bg-background">
       <div className="flex-1 flex flex-col overflow-hidden">
@@ -92,6 +108,7 @@ export default function ProgramsModule() {
               programas={programasCapacitacion}
               onCreateNew={handleCreate}
               onEdit={handleEdit}
+              onAssign={handleAssingProgram}
               onViewDetails={handleViewDetails}
               onDelete={handleDelete}
             />
@@ -100,6 +117,7 @@ export default function ProgramsModule() {
           {viewState === "create" && (
             <CreatePrograma
               departamentos={departamentosList}
+              puestos={puestosList}
               onSave={handleSaveNew}
               onCancel={handleBack}
             />
@@ -109,6 +127,7 @@ export default function ProgramsModule() {
             <EditPrograma
               programa={selectedPrograma}
               departamentos={departamentosList}
+              puestos={puestosList}
               onSave={handleSaveEdit}
               onCancel={handleBack}
             />
@@ -118,6 +137,7 @@ export default function ProgramsModule() {
             <ProgramaDetails
               programa={selectedPrograma}
               departamentos={departamentosList}
+              puestos={puestosList}
               onEdit={handleEdit}
               onBack={handleBack}
               onUpdate={handleNewDetalle}
