@@ -101,6 +101,10 @@ export default function PlansModule() {
     setCurrentView("list")
   }
 
+  const handleAssingPlan = async () => {
+    console.log("Plan de induccion asignado correctamente")
+  }
+
   return (
     <div className="h-full px-6">
 
@@ -112,6 +116,7 @@ export default function PlansModule() {
           onCreatePlan={handleCreatePlan}
           onViewDetails={handleViewDetails}
           onImport={handleImport}
+          onAssign={handleAssingPlan}
         />
       )}
       {currentView === "create" &&
@@ -124,7 +129,11 @@ export default function PlansModule() {
         />
       }
       {currentView === "details" && selectedPlan && (
-        <PlanDetails plan={selectedPlan} onBack={handleBackToList} onEdit={handleEditPlan} />
+        <PlanDetails
+          plan={selectedPlan}
+          onBack={handleBackToList}
+          onEdit={handleEditPlan}
+        />
       )}
       {currentView === "edit" && selectedPlan && (
         <EditPlan

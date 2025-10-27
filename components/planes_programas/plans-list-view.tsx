@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Plus, Eye, BookOpen, Calendar, Building2, Upload } from "lucide-react"
+import { Search, Plus, Eye, BookOpen, Calendar, Building2, Upload, UserPlus, Check } from "lucide-react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,11 +15,40 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { Separator } from "@/components/ui/separator"
+import { ScrollArea } from "@/components/ui/scroll-area"
+import { Checkbox } from "@/components/ui/checkbox"
+import { Label } from "@/components/ui/label"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
+
+type Colaborador = {
+  id: number;
+  nombre: string;
+  puesto: string;
+  seleccionado: boolean;
+};
+
+const MOCK_COLABORADORES: Colaborador[] = [
+  { id: 1, nombre: "Ana López", puesto: "Diseñadora", seleccionado: false },
+  { id: 2, nombre: "Juan Pérez", puesto: "Desarrollador", seleccionado: false },
+  { id: 3, nombre: "Sofía Martínez", puesto: "Gerente de RH", seleccionado: false },
+  { id: 4, nombre: "Carlos Gómez", puesto: "Analista de Ventas", seleccionado: false },
+  { id: 5, nombre: "Elena Ruiz", puesto: "Asistente Administrativa", seleccionado: false },
+  { id: 6, nombre: "Miguel Torres", puesto: "Técnico de Soporte", seleccionado: false },
+];
 
 interface PlansListViewProps {
   plans: PlanCapacitacion[]
   onCreatePlan: () => void
   onViewDetails: (plan: PlanCapacitacion) => void
+  onAssign: (programa: PlanCapacitacion, selectedEmployeeIds: number[]) => void
   onImport: () => void
 }
 
@@ -51,10 +80,13 @@ export const getTypeBadgeColor = (type: string) => {
   }
 };
 
-export default function PlansListView({ plans, onCreatePlan, onViewDetails, onImport }: PlansListViewProps) {
+export default function PlansListView({ plans, onCreatePlan, onViewDetails, onAssign, onImport }: PlansListViewProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [typeFilter, setTypeFilter] = useState<string>("all")
   const [statusFilter, setStatusFilter] = useState<string>("all")
+
+  const [planParaAsignar, setPlanParaAsignar] = useState<PlanCapacitacion | null>(null);
+  const [colaboradores, setColaboradores] = useState<Colaborador[]>(MOCK_COLABORADORES);
 
   const featuredPlans = plans.slice(0, 6)
 
@@ -66,6 +98,33 @@ export default function PlansListView({ plans, onCreatePlan, onViewDetails, onIm
     const matchesStatus = statusFilter === "all" || plan.ESTADO === statusFilter
     return matchesSearch && matchesType && matchesStatus
   })
+
+  const handleAssignClick = (plan: PlanCapacitacion) => {
+    setPlanParaAsignar(plan);
+    setColaboradores(MOCK_COLABORADORES.map(c => ({ ...c, seleccionado: false })));
+  };
+
+  const handleToggleColaborador = (id: number) => {
+    setColaboradores(prev =>
+      prev.map(c =>
+        c.id === id ? { ...c, seleccionado: !c.seleccionado } : c
+      )
+    );
+  };
+
+  const handleFinalAssign = () => {
+    if (!planParaAsignar) return;
+
+    const selectedEmployeeIds = colaboradores
+      .filter(c => c.seleccionado)
+      .map(c => c.id);
+
+    onAssign(planParaAsignar, selectedEmployeeIds);
+
+    setPlanParaAsignar(null);
+  };
+  
+  const handleCloseModal = () => setPlanParaAsignar(null);
 
   return (
     <div className="h-full flex flex-col">
@@ -197,7 +256,66 @@ export default function PlansListView({ plans, onCreatePlan, onViewDetails, onIm
         title="Todos los Planes"
         filteredPlans={filteredPlans}
         onViewDetails={onViewDetails}
+        onAssignPlan={handleAssignClick}
       />
+
+      {/* 💡 MODAL DE ASIGNACIÓN (CENTRALIZADO AL FINAL) */}
+      {planParaAsignar && (
+        <Dialog
+          open={!!planParaAsignar} 
+          onOpenChange={(open) => !open && handleCloseModal()}
+        >
+          <DialogContent className="sm:max-w-md md:max-w-lg">
+            <DialogHeader>
+              <DialogTitle>Asignar Plan: {planParaAsignar.NOMBRE}</DialogTitle>
+              <DialogDescription>
+                Selecciona los colaboradores que deben completar el plan de capacitación.
+              </DialogDescription>
+            </DialogHeader>
+
+            <Separator className="" />
+            
+            <div className="flex items-center space-x-2">
+              <UserPlus className="h-4 w-4 text-primary" />
+              <h4 className="font-semibold text-sm">Selección de Colaboradores</h4>
+            </div>
+
+            <ScrollArea className="h-[320px] w-full border rounded-md p-4">
+              <div className="space-y-3">
+                {colaboradores.map((colaborador) => (
+                  <div key={colaborador.id} className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-md transition-colors">
+                    <Label htmlFor={`colaborador-${colaborador.id}`} className="flex flex-col flex-grow cursor-pointer">
+                      <span className="font-medium">{colaborador.nombre}</span>
+                      <span className="text-sm text-muted-foreground">{colaborador.puesto}</span>
+                    </Label>
+                    <Checkbox
+                      id={`colaborador-${colaborador.id}`}
+                      checked={colaborador.seleccionado}
+                      onCheckedChange={() => handleToggleColaborador(colaborador.id)}
+                      className="h-5 w-5 ml-4"
+                    />
+                  </div>
+                ))}
+              </div>
+            </ScrollArea>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={handleCloseModal}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleFinalAssign}
+                disabled={colaboradores.filter(c => c.seleccionado).length === 0}
+                className="bg-primary hover:bg-primary/90"
+              >
+                <Check className="h-4 w-4 mr-2" />
+                Asignar a {colaboradores.filter(c => c.seleccionado).length}{" "}
+                {colaboradores.filter(c => c.seleccionado).length === 1 ? "Colaborador" : "Colaboradores"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }

@@ -10,14 +10,22 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Eye } from "lucide-react"
+import { Eye, Pencil, Trash2, MoreHorizontal, UserPlus } from "lucide-react"
 import { PlanCapacitacion } from "@/lib/planes_programas/types"
 import { getEstatusBadgeVariant } from "./plans-list-view"
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu"
 
 interface PlansTableProps {
   title: string
   filteredPlans: PlanCapacitacion[]
   onViewDetails: (plan: PlanCapacitacion) => void
+  onAssignPlan: (plan: PlanCapacitacion) => void
 }
 
 export const getTypeBadgeColor = (type: string) => {
@@ -33,7 +41,7 @@ export const getTypeBadgeColor = (type: string) => {
   }
 };
 
-export function PlansTable({ title, filteredPlans, onViewDetails }: PlansTableProps) {
+export function PlansTable({ title, filteredPlans, onViewDetails, onAssignPlan }: PlansTableProps) {
   return (
     <div className="space-y-4">
 
@@ -85,17 +93,53 @@ export function PlansTable({ title, filteredPlans, onViewDetails }: PlansTablePr
                     <TableCell className="whitespace-nowrap">
                       {plan.FECHA_CREACION}
                     </TableCell>
-                    <TableCell className="text-right">
-                      <Button
-                        onClick={() => onViewDetails(plan)}
-                        variant="ghost"
-                        size="sm"
-                        className="text-blue-600 dark:text-foreground font-normal cursor-pointer"
-                      >
-                        <Eye className="w-4 h-4 mr-1" />
-                        Ver detalles
-                      </Button>
+
+                    <TableCell className="text-center">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                          >
+                            <span className="sr-only">Abrir menú</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        
+                        <DropdownMenuContent align="end">
+                          
+                          <DropdownMenuItem 
+                            onClick={() => onViewDetails(plan)}
+                            className="cursor-pointer"
+                          >
+                            <Eye className="w-4 h-4 mr-2 text-primary" />
+                            Ver Detalles
+                          </DropdownMenuItem>
+
+                          <DropdownMenuSeparator />
+                          
+                          <DropdownMenuItem 
+                            onClick={() => onAssignPlan(plan)}
+                            className="cursor-pointer text-emerald-600 dark:text-emerald-400"
+                          >
+                            <UserPlus className="w-4 h-4 mr-2" /> 
+                            Asignar Plan
+                          </DropdownMenuItem>
+
+                          {/* <DropdownMenuSeparator /> */}
+
+                          {/* Editar y Eliminar */}
+                          {/* <DropdownMenuItem>
+                            <Pencil className="w-4 h-4 mr-2" /> Editar
+                          </DropdownMenuItem>
+                          <DropdownMenuItem className="text-destructive">
+                            <Trash2 className="w-4 h-4 mr-2" /> Eliminar
+                          </DropdownMenuItem> 
+                          */}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     </TableCell>
+
                   </TableRow>
                 ))
               ) : (
