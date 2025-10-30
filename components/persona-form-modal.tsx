@@ -102,7 +102,7 @@ const FormFieldRenderer = React.memo(({ field, value, updateField, options }: Fo
           onValueChange={(selectValue) => updateField(field.key, selectValue)}
           required={field.required}
         >
-          <SelectTrigger>
+          <SelectTrigger className="w-full">
             <SelectValue placeholder={field.placeholder} />
           </SelectTrigger>
           <SelectContent>

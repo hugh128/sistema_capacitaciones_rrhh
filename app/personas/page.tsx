@@ -169,7 +169,7 @@ export default function PersonasPage() {
           initialFormData={(editingPersona || DEFAULT_NEW_DATA || {}) as FormValues}
           onSubmit={handleSubmit}
           initialPersonaData={editingPersona}
-          loading={false} 
+          loading={false}
         />
         <PersonaDetailModal
           open={detailModalOpen}
