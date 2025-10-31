@@ -11,8 +11,6 @@ import { RequirePermission } from "@/components/RequirePermission"
 export default function DashboardPage() {
   const { user } = useAuth()
 
-  console.log(user)
-
   if (!user) {
     return null
   }

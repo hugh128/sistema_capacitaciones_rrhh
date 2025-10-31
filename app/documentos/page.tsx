@@ -29,11 +29,11 @@ export default function DocumentosPage() {
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   // Filter documents based on user role
-  const filteredDocumentos = user?.roles.some((role) => role.nombre === "Capacitador")
+  const filteredDocumentos = user?.ROLES.some((role) => role.NOMBRE === "Capacitador")
     ? documentos.filter((d) => {
         if (!d.capacitacionId) return false
         const capacitacion = mockCapacitaciones.find((c) => c.id === d.capacitacionId)
-        return capacitacion?.capacitadorId === user.id
+        return capacitacion?.capacitadorId === String(user.ID_USUARIO)
       })
     : documentos
 
@@ -104,7 +104,7 @@ export default function DocumentosPage() {
               </Button>
             </>
           )}
-          {!row.url && user?.roles.some((role) => ["RRHH", "Capacitador"].includes(role.nombre)) && (
+          {!row.url && user?.ROLES.some((role) => ["RRHH", "Capacitador"].includes(role.NOMBRE)) && (
             <Button variant="ghost" size="sm" title="Subir archivo" onClick={() => handleUploadDocument(row)}>
               <Upload className="h-4 w-4" />
             </Button>
@@ -319,8 +319,8 @@ export default function DocumentosPage() {
   }
 
   // Get trainings assigned to current trainer
-  const trainerCapacitaciones = user?.roles.some((role) => role.nombre === "Capacitador")
-    ? mockCapacitaciones.filter((c) => c.capacitadorId === user.id)
+  const trainerCapacitaciones = user?.ROLES.some((role) => role.NOMBRE === "Capacitador")
+    ? mockCapacitaciones.filter((c) => c.capacitadorId === String(user.ID_USUARIO))
     : mockCapacitaciones
 
 
@@ -350,7 +350,7 @@ export default function DocumentosPage() {
             </div>
 
             {/* Document Generation Tools - Only for Trainers */}
-            {user?.roles.some((role) => role.nombre === "Capacitador") && (
+            {user?.ROLES.some((role) => role.NOMBRE === "Capacitador") && (
               <Card>
                 <CardHeader>
                   <CardTitle>Generar Documentos Base</CardTitle>
@@ -456,10 +456,10 @@ export default function DocumentosPage() {
               columns={columns}
               onAdd={handleAdd}
               onEdit={handleEdit}
-              onDelete={user?.roles.some((role) => role.nombre === "RRHH") ? handleDelete : undefined}
+              onDelete={user?.ROLES.some((role) => role.NOMBRE === "RRHH") ? handleDelete : undefined}
               searchPlaceholder="Buscar documentos..."
               customActions={
-                user?.roles.some((role) => ["RRHH", "Capacitador"].includes(role.nombre)) ? (
+                user?.ROLES.some((role) => ["RRHH", "Capacitador"].includes(role.NOMBRE)) ? (
                   <Button onClick={handleBulkUpload} variant="outline" className="gap-2 bg-transparent">
                     <Upload className="w-4 h-4" />
                     Subir Evidencias
@@ -472,7 +472,7 @@ export default function DocumentosPage() {
       </div>
 
       {/* Document Form Modal */}
-      <FormModal
+{/*       <FormModal
         open={modalOpen}
         onOpenChange={setModalOpen}
         title={editingDocumento ? "Editar Documento" : "Nuevo Documento"}
@@ -480,10 +480,10 @@ export default function DocumentosPage() {
         fields={formFields}
         initialData={editingDocumento || {}}
         onSubmit={handleSubmit}
-      />
+      /> */}
 
       {/* Upload Modal */}
-      <FormModal
+{/*       <FormModal
         open={uploadModalOpen}
         onOpenChange={setUploadModalOpen}
         title={editingDocumento ? "Subir Archivo" : "Subir Evidencias"}
@@ -494,7 +494,6 @@ export default function DocumentosPage() {
           <div className="space-y-6">
             {!editingDocumento && (
               <>
-                {/* Training Selection */}
                 <div className="space-y-2">
                   <Label>Capacitación</Label>
                   <select
@@ -511,7 +510,6 @@ export default function DocumentosPage() {
                   </select>
                 </div>
 
-                {/* Upload Type Selection */}
                 <div className="space-y-2">
                   <Label>Tipo de Evidencia</Label>
                   <Tabs value={uploadType} onValueChange={(value) => setUploadType(value as any)}>
@@ -526,7 +524,6 @@ export default function DocumentosPage() {
               </>
             )}
 
-            {/* File Upload */}
             <div className="space-y-2">
               <Label>Archivos</Label>
               <Input
@@ -565,7 +562,7 @@ export default function DocumentosPage() {
             </div>
           </div>
         }
-      />
+      /> */}
     </div>
   )
 }
