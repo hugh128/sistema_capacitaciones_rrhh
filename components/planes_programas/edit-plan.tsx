@@ -194,11 +194,11 @@ export default function EditPlan({
             </div>
             <div>
               <Label htmlFor="planType" className="mb-2">Tipo <span className="text-destructive">*</span></Label>
-              <Select value={planType} onValueChange={(v) => setPlanType(v as "Induccion" | "Individual")}>
+              <Select value={planType} onValueChange={(v) => setPlanType(v as "INDUCCION" | "INDIVIDUAL")}>
                 <SelectTrigger id="planType" className="w-full"><SelectValue placeholder="Selecciona un tipo"/></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="Induccion">Induccion</SelectItem>
-                  <SelectItem value="Individual">Individual</SelectItem>
+                  <SelectItem value="INDUCCION">INDUCCION</SelectItem>
+                  <SelectItem value="INDIVIDUAL">INDIVIDUAL</SelectItem>
                 </SelectContent>
               </Select>
             </div>

@@ -1,12 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Plus, Eye, BookOpen, Calendar, Building2, Upload, UserPlus, Check } from "lucide-react"
+import { Search, Plus, Eye, BookOpen, Calendar, Building2, Upload, UserPlus, Check, Loader2, Info, AlertTriangle } from "lucide-react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
-import type { PlanCapacitacion } from "@/lib/planes_programas/types"
+import type { AplicarPlan, ColaboradorDisponible, PlanCapacitacion } from "@/lib/planes_programas/types"
 import { PlansTable } from "./plans-table";
 import {
   Select,
@@ -27,29 +27,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-
-type Colaborador = {
-  id: number;
-  nombre: string;
-  puesto: string;
-  seleccionado: boolean;
-};
-
-const MOCK_COLABORADORES: Colaborador[] = [
-  { id: 1, nombre: "Ana López", puesto: "Diseñadora", seleccionado: false },
-  { id: 2, nombre: "Juan Pérez", puesto: "Desarrollador", seleccionado: false },
-  { id: 3, nombre: "Sofía Martínez", puesto: "Gerente de RH", seleccionado: false },
-  { id: 4, nombre: "Carlos Gómez", puesto: "Analista de Ventas", seleccionado: false },
-  { id: 5, nombre: "Elena Ruiz", puesto: "Asistente Administrativa", seleccionado: false },
-  { id: 6, nombre: "Miguel Torres", puesto: "Técnico de Soporte", seleccionado: false },
-];
+import { UsuarioLogin } from "@/lib/auth";
 
 interface PlansListViewProps {
   plans: PlanCapacitacion[]
   onCreatePlan: () => void
   onViewDetails: (plan: PlanCapacitacion) => void
-  onAssign: (programa: PlanCapacitacion, selectedEmployeeIds: number[]) => void
+  onAssign: (aplicarPlan: AplicarPlan) => void
   onImport: () => void
+  onObtenerColaboradores: (idPlan: number) => Promise<ColaboradorDisponible[]>
+  usuario: UsuarioLogin | null
 }
 
 type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
@@ -80,13 +67,15 @@ export const getTypeBadgeColor = (type: string) => {
   }
 };
 
-export default function PlansListView({ plans, onCreatePlan, onViewDetails, onAssign, onImport }: PlansListViewProps) {
+export default function PlansListView({ plans, onCreatePlan, onViewDetails, onAssign, onImport, onObtenerColaboradores, usuario }: PlansListViewProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [typeFilter, setTypeFilter] = useState<string>("all")
   const [statusFilter, setStatusFilter] = useState<string>("all")
 
   const [planParaAsignar, setPlanParaAsignar] = useState<PlanCapacitacion | null>(null);
-  const [colaboradores, setColaboradores] = useState<Colaborador[]>(MOCK_COLABORADORES);
+  const [colaboradores, setColaboradores] = useState<ColaboradorDisponible[]>([]);
+  const [isLoadingColaboradores, setIsLoadingColaboradores] = useState(false);
+  const [errorCargaColaboradores, setErrorCargaColaboradores] = useState<string | null>(null);
 
   const featuredPlans = plans.slice(0, 6)
 
@@ -99,27 +88,64 @@ export default function PlansListView({ plans, onCreatePlan, onViewDetails, onAs
     return matchesSearch && matchesType && matchesStatus
   })
 
-  const handleAssignClick = (plan: PlanCapacitacion) => {
+  const handleAssignClick = async (plan: PlanCapacitacion) => {
     setPlanParaAsignar(plan);
-    setColaboradores(MOCK_COLABORADORES.map(c => ({ ...c, seleccionado: false })));
+    setErrorCargaColaboradores(null);
+    setColaboradores([]); 
+    setIsLoadingColaboradores(true);
+
+    try {
+      const colaboradoresDisponibles = await onObtenerColaboradores(plan.ID_PLAN);
+
+      const colaboradoresIniciales = colaboradoresDisponibles
+        .filter(c => !c.PLAN_YA_APLICADO)
+        .map(c => ({
+          ...c,
+          seleccionado: false,
+        }));
+
+      setColaboradores(colaboradoresIniciales);
+
+    } catch (error) {
+      console.error("Error al cargar colaboradores:", error);
+      setErrorCargaColaboradores("No se pudo cargar la lista de colaboradores. Intente de nuevo.");
+      setColaboradores([]);
+      
+    } finally {
+      setIsLoadingColaboradores(false);
+    }
   };
 
   const handleToggleColaborador = (id: number) => {
     setColaboradores(prev =>
       prev.map(c =>
-        c.id === id ? { ...c, seleccionado: !c.seleccionado } : c
+        c.ID_COLABORADOR === id ? { ...c, seleccionado: !c.seleccionado } : c
       )
     );
   };
 
   const handleFinalAssign = () => {
+    if (!usuario) {
+      console.error("Error: Usuario no logueado para asignar programa.");
+      return;
+    }
+
     if (!planParaAsignar) return;
 
     const selectedEmployeeIds = colaboradores
       .filter(c => c.seleccionado)
-      .map(c => c.id);
+      .map(c => c.ID_COLABORADOR); 
 
-    onAssign(planParaAsignar, selectedEmployeeIds);
+    const usuarioActual = usuario?.USERNAME
+
+    const payload: AplicarPlan = {
+      idPlan: planParaAsignar.ID_PLAN,
+      idsColaboradores: selectedEmployeeIds,
+      usuario: usuarioActual,
+      NOMBRE: planParaAsignar.NOMBRE,
+    };
+
+    onAssign(payload);
 
     setPlanParaAsignar(null);
   };
@@ -206,10 +232,10 @@ export default function PlansListView({ plans, onCreatePlan, onViewDetails, onAs
           <Plus className="w-4 h-4 mr-2" />
           Crear Nuevo Plan
         </Button>
-        <Button onClick={onImport} variant="outline" className="cursor-pointer dark:hover:bg-accent">
+{/*         <Button onClick={onImport} variant="outline" className="cursor-pointer dark:hover:bg-accent">
           <Upload className="w-4 h-4 mr-2" />
           Importar CSV/Excel
-        </Button>
+        </Button> */}
       </div>
 
       {/* Filters and Search */}
@@ -232,8 +258,8 @@ export default function PlansListView({ plans, onCreatePlan, onViewDetails, onAs
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos los tipos</SelectItem>
-            <SelectItem value="Induccion">Induccion</SelectItem>
-            <SelectItem value="Individual">Individual</SelectItem>
+            <SelectItem value="INDIVIDUAL">INDUCCION</SelectItem>
+            <SelectItem value="INDIVUDUAL">INDIVIDUAL</SelectItem>
           </SelectContent>
         </Select>
 
@@ -259,7 +285,6 @@ export default function PlansListView({ plans, onCreatePlan, onViewDetails, onAs
         onAssignPlan={handleAssignClick}
       />
 
-      {/* 💡 MODAL DE ASIGNACIÓN (CENTRALIZADO AL FINAL) */}
       {planParaAsignar && (
         <Dialog
           open={!!planParaAsignar} 
@@ -282,20 +307,44 @@ export default function PlansListView({ plans, onCreatePlan, onViewDetails, onAs
 
             <ScrollArea className="h-[320px] w-full border rounded-md p-4">
               <div className="space-y-3">
-                {colaboradores.map((colaborador) => (
-                  <div key={colaborador.id} className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-md transition-colors">
-                    <Label htmlFor={`colaborador-${colaborador.id}`} className="flex flex-col flex-grow cursor-pointer">
-                      <span className="font-medium">{colaborador.nombre}</span>
-                      <span className="text-sm text-muted-foreground">{colaborador.puesto}</span>
-                    </Label>
-                    <Checkbox
-                      id={`colaborador-${colaborador.id}`}
-                      checked={colaborador.seleccionado}
-                      onCheckedChange={() => handleToggleColaborador(colaborador.id)}
-                      className="h-5 w-5 ml-4"
-                    />
+                {isLoadingColaboradores ? (
+                  <div className="flex flex-col items-center justify-center h-full py-16 text-muted-foreground">
+                    <Loader2 className="w-6 h-6 animate-spin mb-3" />
+                    <span>Cargando colaboradores aplicables...</span>
                   </div>
-                ))}
+                ) : errorCargaColaboradores ? (
+                  <div className="flex flex-col items-center justify-center h-full py-16 text-destructive">
+                    <AlertTriangle className="w-6 h-6 mb-3" />
+                    <span className="text-center font-medium">{errorCargaColaboradores}</span>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => handleAssignClick(planParaAsignar!)} 
+                      className="mt-4"
+                    >
+                      Reintentar Carga
+                    </Button>
+                  </div>
+                ) : colaboradores.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center h-full py-16 text-muted-foreground">
+                    <Info className="w-6 h-6 mb-3" />
+                    <span>No se encontraron colaboradores que apliquen a este plan.</span>
+                  </div>
+                ) : (
+                  colaboradores.map((colaborador) => (
+                    <div key={colaborador.ID_COLABORADOR} className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-md transition-colors">
+                      <Label htmlFor={`colaborador-${colaborador.ID_COLABORADOR}`} className="flex flex-col flex-grow cursor-pointer">
+                        <span className="font-medium">{colaborador.NOMBRE_COMPLETO}</span> 
+                        <span className="text-sm text-muted-foreground">{colaborador.PUESTO}</span>
+                      </Label>
+                      <Checkbox
+                        id={`colaborador-${colaborador.ID_COLABORADOR}`}
+                        checked={colaborador.seleccionado}
+                        onCheckedChange={() => handleToggleColaborador(colaborador.ID_COLABORADOR)} 
+                        className="h-5 w-5 ml-4"
+                      />
+                    </div>
+                  ))
+                )}
               </div>
             </ScrollArea>
 
@@ -305,7 +354,7 @@ export default function PlansListView({ plans, onCreatePlan, onViewDetails, onAs
               </Button>
               <Button 
                 onClick={handleFinalAssign}
-                disabled={colaboradores.filter(c => c.seleccionado).length === 0}
+                disabled={colaboradores.filter(c => c.seleccionado).length === 0 || !!errorCargaColaboradores}
                 className="bg-primary hover:bg-primary/90"
               >
                 <Check className="h-4 w-4 mr-2" />

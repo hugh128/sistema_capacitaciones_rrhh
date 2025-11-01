@@ -1,7 +1,7 @@
 import { CodigoPadre } from "../codigos/types"
 import { Departamento, Puesto } from "../types"
 
-export type PlanType = "Induccion" | "Individual"
+export type PlanType = "INDUCCION" | "INDIVIDUAL"
 export type ProgramType = "Programa"
 export type PlanStatus = "Activo" | "Borrador" | "Inactivo"
 export type TrainingCategory = "GENERAL" | "ESPECIFICA" | "CONTINUA"
@@ -80,4 +80,28 @@ export interface PlanCapacitacion {
   DEPARTAMENTO: Departamento
   PLANES_PUESTOS: Puesto[]
   DOCUMENTOS_PLANES: CodigoPadre[]
+}
+
+export interface AplicarPlan {
+  idPlan: number;
+  idsColaboradores: number[];
+  usuario: string;
+  NOMBRE: string
+}
+
+export interface ColaboradorDisponible {
+  ID_COLABORADOR: number;
+  NOMBRE: string;
+  APELLIDO: string;
+  NOMBRE_COMPLETO: string;
+  CORREO: string;
+  TELEFONO: string;
+  DPI: string;
+  FECHA_INGRESO: string;
+  ID_DEPARTAMENTO: number;
+  DEPARTAMENTO: string;
+  ID_PUESTO: number;
+  PUESTO: string;
+  PLAN_YA_APLICADO: boolean;
+  seleccionado?: boolean;
 }

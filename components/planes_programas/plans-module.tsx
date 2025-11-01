@@ -7,7 +7,7 @@ import CreatePlan from "./create-plan"
 import PlanDetails from "./plan-details"
 import EditPlan from "./edit-plan"
 import PlansImport from "./plans-import"
-import type { PlanCapacitacion } from "@/lib/planes_programas/types"
+import type { AplicarPlan, PlanCapacitacion } from "@/lib/planes_programas/types"
 import { useAuth } from "@/contexts/auth-context"
 import { apiClient } from "@/lib/api-client"
 import { Toaster } from "react-hot-toast"
@@ -58,6 +58,8 @@ export default function PlansModule() {
   const {
     planesCapacitacion,
     savePlanesCapacitacion,
+    aplicarPlanCapacitacion,
+    obtenerColaboradoresDisponiblesPlan,
   } = usePlanesCapacitacion(user)
 
   useEffect(() => {
@@ -101,8 +103,8 @@ export default function PlansModule() {
     setCurrentView("list")
   }
 
-  const handleAssingPlan = async () => {
-    console.log("Plan de induccion asignado correctamente")
+  const handleAssingPlan = async (aplicarPlan: AplicarPlan) => {
+    await aplicarPlanCapacitacion(aplicarPlan);
   }
 
   return (
@@ -117,6 +119,8 @@ export default function PlansModule() {
           onViewDetails={handleViewDetails}
           onImport={handleImport}
           onAssign={handleAssingPlan}
+          onObtenerColaboradores={obtenerColaboradoresDisponiblesPlan}
+          usuario={user}
         />
       )}
       {currentView === "create" &&

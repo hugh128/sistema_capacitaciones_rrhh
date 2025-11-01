@@ -1,6 +1,6 @@
 import { apiClient } from "@/lib/api-client";
 import { UsuarioLogin } from "@/lib/auth";
-import type { PlanCapacitacion } from "@/lib/planes_programas/types";
+import type { AplicarPlan, ColaboradorDisponible, PlanCapacitacion } from "@/lib/planes_programas/types";
 import { handleApiError } from "@/utils/error-handler";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -88,6 +88,52 @@ export function usePlanesCapacitacion(user: UsuarioLogin | null) {
     }
   }, [user, refreshPlanesCapacitacion]);
 
+  const aplicarPlanCapacitacion = async (payload: AplicarPlan) => {
+    if (!user) {
+      toast.error("Usuario no autenticado.");
+      return;
+    }
+    
+    setIsMutating(true);
+    setError(null);
+    
+    try {
+      
+      await apiClient.post(`/capacitaciones/planes/aplicar`, payload)
+      toast.success("Plan de capacitacion aplicado exitosamente.");
+      await refreshPlanesCapacitacion();
+
+    } catch (err) {
+      const baseMessage = "Error al aplicar plan de capacitacion.";
+      setError(baseMessage);
+      handleApiError(err, baseMessage);
+    } finally {
+      setIsMutating(false);
+    }
+  }
+
+  const obtenerColaboradoresDisponiblesPlan = async (idPlan: number): Promise<ColaboradorDisponible[]> => {  
+    if (!user) {
+      toast.error("Usuario no autenticado.");
+      return [];
+    }
+    
+    setIsMutating(true);
+    setError(null);
+
+    try {
+      const { data } = await apiClient.get(`/capacitaciones/planes/${idPlan}/colaboradores-disponibles`);
+      return data.data.disponibles;
+    } catch (err) {
+      const baseMessage = "Error al obtener colaboradores disponibles para aplicar plan de capacitacion.";
+      setError(baseMessage);
+      handleApiError(err, baseMessage);
+      return [];
+    } finally {
+      setIsMutating(false);
+    }
+  }
+
   useEffect(() => {
     if (user) {
       refreshPlanesCapacitacion();
@@ -101,6 +147,8 @@ export function usePlanesCapacitacion(user: UsuarioLogin | null) {
     error,
     isMutating,
     savePlanesCapacitacion,
-    deletePlanesCapacitacion
+    deletePlanesCapacitacion,
+    aplicarPlanCapacitacion,
+    obtenerColaboradoresDisponiblesPlan,
   }
 }

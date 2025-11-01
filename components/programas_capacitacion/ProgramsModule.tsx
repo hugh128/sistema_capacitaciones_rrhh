@@ -5,7 +5,7 @@ import { ProgramasCapacitacionList } from "./programas-list"
 import { CreatePrograma } from "./create-programa"
 import { EditPrograma } from "./edit-programa"
 import { ProgramaDetails } from "./programa-details"
-import type { ProgramaCapacitacion, ProgramaCapacitacionForm, CreateProgramaDetalleDto } from "@/lib/programas_capacitacion/types"
+import type { ProgramaCapacitacion, ProgramaCapacitacionForm, CreateProgramaDetalleDto, AsignarProgramaCapacitacion } from "@/lib/programas_capacitacion/types"
 import type { Departamento, Puesto } from "@/lib/types"
 import { Toaster } from "react-hot-toast"
 import { apiClient } from "@/lib/api-client"
@@ -45,6 +45,7 @@ export default function ProgramsModule() {
     programasCapacitacion,
     saveProgramaCapacitacion,
     saveProgramaDetalle,
+    asignarProgramaCapacitacion,
   } = useProgramasCapacitacion(user)
 
   useEffect(() => {
@@ -92,8 +93,8 @@ export default function ProgramsModule() {
     await saveProgramaDetalle(programaDetalle)
   }
 
-  const handleAssingProgram = async () => {
-    console.log("Programa de capacitacion asignado")
+  const handleAssingProgram = async (asignarPrograma: AsignarProgramaCapacitacion) => {
+    await asignarProgramaCapacitacion(asignarPrograma)
   }
 
   return (
@@ -111,6 +112,7 @@ export default function ProgramsModule() {
               onAssign={handleAssingProgram}
               onViewDetails={handleViewDetails}
               onDelete={handleDelete}
+              usuario={user}
             />
           )}
 

@@ -52,3 +52,9 @@ export interface CreateProgramaDetalleDto {
 export type ProgramaDetalleBase = Omit<ProgramaDetalleForm, 
     "DEPARTAMENTOS_IDS" | "PUESTOS_IDS"
 >;
+
+export interface AsignarProgramaCapacitacion {
+  idPrograma: number
+  usuario: string
+  NOMBRE: string
+}

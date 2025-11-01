@@ -26,8 +26,8 @@ interface CreatePlanProps {
   puestosDisponibles: Puesto[]
 }
 
-type PlanType = "Induccion" | "Individual"
-type PlanStatus = "Activo" | "Borrador" | "Inactivo"
+type PlanType = "INDUCCION" | "INDIVIDUAL"
+type PlanStatus = "ACTIVO" | "BORRADOR" | "INACTIVO"
 interface planesCapacitacionPayload {
   NOMBRE: string
   DESCRIPCION: string
@@ -47,8 +47,8 @@ export default function CreatePlan({
   puestosDisponibles
 }: CreatePlanProps) {
   const [planName, setPlanName] = useState("")
-  const [planType, setPlanType] = useState<PlanType>("Induccion")
-  const [planStatus, setPlanStatus] = useState<PlanStatus>("Activo")
+  const [planType, setPlanType] = useState<PlanType>("INDUCCION")
+  const [planStatus, setPlanStatus] = useState<PlanStatus>("ACTIVO")
   const [planDescription, setPlanDescription] = useState("")
   const [planCode, setPlanCode] = useState("")
 
@@ -187,8 +187,8 @@ export default function CreatePlan({
                       <SelectValue placeholder="Seleccionar tipo" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Induccion">Induccion</SelectItem>
-                      <SelectItem value="Individual">Individual</SelectItem>
+                      <SelectItem value="INDUCCION">INDUCCION</SelectItem>
+                      <SelectItem value="INDIVIDUAL">INDIVIDUAL</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

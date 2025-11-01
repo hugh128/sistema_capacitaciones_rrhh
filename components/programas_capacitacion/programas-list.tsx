@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Plus, Search, Eye, Pencil, Trash2, Calendar, BookOpen, MoreHorizontal, UserPlus } from "lucide-react"
-import type { ProgramaCapacitacion } from "@/lib/programas_capacitacion/types"
+import type { AsignarProgramaCapacitacion, ProgramaCapacitacion } from "@/lib/programas_capacitacion/types"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,14 +25,16 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { UsuarioLogin } from "@/lib/auth"
 
 interface ProgramasCapacitacionListProps {
   programas: ProgramaCapacitacion[]
   onCreateNew: () => void
   onEdit: (programa: ProgramaCapacitacion) => void
   onViewDetails: (programa: ProgramaCapacitacion) => void
-  onAssign: (programa: ProgramaCapacitacion) => void
+  onAssign: (asignarPrograma: AsignarProgramaCapacitacion) => void
   onDelete: (id: number) => void
+  usuario: UsuarioLogin | null
 }
 
 export function ProgramasCapacitacionList({
@@ -42,9 +44,10 @@ export function ProgramasCapacitacionList({
   onAssign,
   onViewDetails,
   onDelete,
+  usuario,
 }: ProgramasCapacitacionListProps) {
   const [searchTerm, setSearchTerm] = useState("")
-  const [programaParaAsignar, setProgramaParaAsignar] = useState<ProgramaCapacitacion | null>(null);
+  const [programaParaAsignar, setProgramaParaAsignar] = useState<AsignarProgramaCapacitacion | null>(null);
 
   const filteredProgramas = useMemo(() => {
     return programas.filter(
@@ -62,7 +65,20 @@ export function ProgramasCapacitacionList({
   }, [programas])
 
   const handleAssignClick = (programa: ProgramaCapacitacion) => {
-    setProgramaParaAsignar(programa);
+    if (!usuario) {
+      console.error("Error: Usuario no logueado para asignar programa.");
+      return;
+    }
+
+    const usuarioActual = usuario.USERNAME
+
+    const payload: AsignarProgramaCapacitacion = {
+      idPrograma: programa.ID_PROGRAMA,
+      usuario: usuarioActual,
+      NOMBRE: programa.NOMBRE,
+    };
+
+    setProgramaParaAsignar(payload);
   };
 
   const handleConfirmAssign = () => {
@@ -259,13 +275,13 @@ export function ProgramasCapacitacionList({
                             <DropdownMenuSeparator />
 
                             {/* 4. Eliminar */}
-                            <DropdownMenuItem 
+{/*                             <DropdownMenuItem 
                               onClick={() => onDelete(programa.ID_PROGRAMA)}
                               className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
                             >
                               <Trash2 className="w-4 h-4 mr-2" />
-                              Eliminar
-                            </DropdownMenuItem>
+                              Inactivar
+                            </DropdownMenuItem> */}
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>

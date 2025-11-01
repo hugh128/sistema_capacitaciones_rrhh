@@ -1,6 +1,6 @@
 import { apiClient } from "@/lib/api-client";
 import { UsuarioLogin } from "@/lib/auth";
-import type { ProgramaCapacitacion, ProgramaCapacitacionForm, CreateProgramaDetalleDto } from "@/lib/programas_capacitacion/types";
+import type { ProgramaCapacitacion, ProgramaCapacitacionForm, CreateProgramaDetalleDto, AsignarProgramaCapacitacion } from "@/lib/programas_capacitacion/types";
 import { handleApiError } from "@/utils/error-handler";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -112,6 +112,29 @@ export function useProgramasCapacitacion(user: UsuarioLogin | null) {
     }
   }, [user, refreshProgramasCapacitacion]);
 
+  const asignarProgramaCapacitacion = async (payload: AsignarProgramaCapacitacion) => {
+    if (!user) {
+      toast.error("Usuario no autenticado.");
+      return;
+    }
+
+    setIsMutating(true);
+    setError(null);
+
+    try {
+      await apiClient.post(`/capacitaciones/programas/aplicar`, payload)
+      toast.success("Programa de capacitacion asignado exitosamente.");
+      await refreshProgramasCapacitacion();
+
+    } catch (err) {
+      const baseMessage = "Error al asignar programa de capacitacion.";
+      setError(baseMessage);
+      handleApiError(err, baseMessage);
+    } finally {
+      setIsMutating(false);
+    }
+  }
+
   useEffect(() => {
     if (user) {
       refreshProgramasCapacitacion();
@@ -126,6 +149,7 @@ export function useProgramasCapacitacion(user: UsuarioLogin | null) {
     isMutating,
     saveProgramaDetalle,
     saveProgramaCapacitacion,
-    deleteProgramasCapacitacion
+    deleteProgramasCapacitacion,
+    asignarProgramaCapacitacion
   }
 }
