@@ -62,6 +62,7 @@ export interface UsuarioLogin {
   PUESTO_NOMBRE: string;
   DEPARTAMENTO_NOMBRE: string;
   ROLES: RolLoginProyectado[];
+  PERSONA_ID: number
 }
 
 export interface LoginApiResponse {

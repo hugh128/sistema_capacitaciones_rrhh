@@ -16,10 +16,10 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Users, CheckCircle2, FileText, Award, AlertCircle, CheckCheck } from "lucide-react"
-import type { Capacitacion } from "./capacitaciones-types"
+import type { SESION_DETALLE } from "./capacitaciones-types"
 
 interface FinalizationTabProps {
-  capacitacion: Capacitacion
+  sesion: SESION_DETALLE
   stats: {
     total: number
     asistencias: number
@@ -34,7 +34,7 @@ interface FinalizationTabProps {
 }
 
 export function FinalizationTab({
-  capacitacion,
+  sesion,
   stats,
   canFinalize,
   observacionesFinales,
@@ -68,7 +68,7 @@ export function FinalizationTab({
                 )}
               </CardContent>
             </Card>
-            {capacitacion.APLICA_EXAMEN && (
+            {sesion.APLICA_EXAMEN && (
               <Card className="border-2 border-purple-200 bg-purple-50 dark:bg-purple-950/20">
                 <CardContent className="p-6 text-center">
                   <FileText className="h-8 w-8 text-purple-600 mx-auto mb-2" />
@@ -82,7 +82,7 @@ export function FinalizationTab({
                 </CardContent>
               </Card>
             )}
-            {capacitacion.APLICA_DIPLOMA && (
+            {sesion.APLICA_DIPLOMA && (
               <Card className="border-2 border-yellow-200 bg-yellow-50 dark:bg-yellow-950/20">
                 <CardContent className="p-6 text-center">
                   <Award className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
@@ -115,7 +115,7 @@ export function FinalizationTab({
                 )}
                 <span className="font-medium">Todas las asistencias registradas</span>
               </div>
-              {capacitacion.APLICA_EXAMEN && (
+              {sesion.APLICA_EXAMEN && (
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                   {stats.examenes === stats.asistencias ? (
                     <CheckCircle2 className="h-6 w-6 text-green-600 shrink-0" />
@@ -125,10 +125,20 @@ export function FinalizationTab({
                   <span className="font-medium">Todos los exámenes subidos</span>
                 </div>
               )}
-              {capacitacion.APLICA_DIPLOMA && (
+              {sesion.APLICA_DIPLOMA && (
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                   <CheckCircle2 className="h-6 w-6 text-green-600 shrink-0" />
                   <span className="font-medium">Diplomas para aprobados</span>
+                </div>
+              )}
+              {sesion.ESTADO && (
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                  {sesion.ESTADO === "EN_PROCESO" ? (
+                    <CheckCircle2 className="h-6 w-6 text-green-600 shrink-0" />
+                  ) : (
+                    <AlertCircle className="h-6 w-6 text-yellow-600 shrink-0" />
+                  )}
+                  <span className="font-medium">Sesion en proceso</span>
                 </div>
               )}
             </div>
@@ -143,6 +153,7 @@ export function FinalizationTab({
             placeholder="Agrega observaciones finales sobre la capacitación, logros, desafíos, recomendaciones..."
             rows={5}
             className="mt-2"
+            disabled={sesion.ESTADO !== "EN_PROCESO"}
           />
         </div>
 
@@ -151,7 +162,7 @@ export function FinalizationTab({
             <Button
               size="lg"
               className="w-full h-14 text-lg"
-              disabled={!canFinalize || capacitacion.ESTADO !== "EN_PROCESO"}
+              disabled={!canFinalize || sesion.ESTADO !== "EN_PROCESO"}
             >
               <CheckCheck className="h-6 w-6 mr-2" />
               Finalizar y Enviar a RRHH para Revisión
@@ -172,7 +183,7 @@ export function FinalizationTab({
           </AlertDialogContent>
         </AlertDialog>
 
-        {!canFinalize && capacitacion.ESTADO === "EN_PROCESO" && (
+        {!canFinalize && sesion.ESTADO === "EN_PROCESO" && (
           <Card className="border-2 border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20">
             <CardContent className="p-4">
               <div className="flex gap-3">

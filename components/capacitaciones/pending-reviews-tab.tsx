@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Calendar, Users, Eye } from "lucide-react"
 import Link from "next/link"
 import { CheckCircle2 } from "lucide-react"
-import { type Capacitacion, getEstadoColor } from "@/lib/capacitaciones/capacitaciones-types"
+import { type Capacitacion, getEstadoCapacitacionColor } from "@/lib/capacitaciones/capacitaciones-types"
 
 interface PendingReviewsTabProps {
   capacitaciones: Capacitacion[]
@@ -39,7 +39,7 @@ export function PendingReviewsTab({ capacitaciones }: PendingReviewsTabProps) {
               <div className="flex-1 space-y-3">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-semibold text-lg text-foreground">{cap.NOMBRE}</h3>
-                  <Badge className={getEstadoColor(cap.ESTADO)}>{cap.ESTADO}</Badge>
+                  <Badge className={getEstadoCapacitacionColor(cap.ESTADO)}>{cap.ESTADO}</Badge>
                 </div>
 
                 {cap.CODIGO_DOCUMENTO && (

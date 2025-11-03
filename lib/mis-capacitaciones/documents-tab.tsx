@@ -1,93 +1,347 @@
 "use client"
 
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Upload, Download, Eye } from "lucide-react"
-import type { Capacitacion } from "./capacitaciones-types"
+import { Upload, Download, Eye, CheckCircle, FileText, Trash2, Info } from "lucide-react"
+import type { COLABORADORES_SESION, SESION_DETALLE } from "./capacitaciones-types"
+import { Alert, AlertDescription } from "@/components/ui/alert"
+import { useCapacitaciones } from "@/hooks/useCapacitaciones"
+import { UsuarioLogin } from "../auth"
+import { useState } from "react"
 
 interface DocumentsTabProps {
-  capacitacion: Capacitacion
+  sesion: SESION_DETALLE
+  colaboradores: COLABORADORES_SESION[]
   stats: {
     total: number
     asistencias: number
     examenes: number
     diplomas: number
   }
-  onSubirListaAsistencia: () => void
+  onSelectAttendanceFile: (file: File) => void
+  onDeleteAttendance: () => void
+  displayedFileUrl: string | null
+  isFileUploaded: boolean
+  usuario: UsuarioLogin
 }
 
-export function DocumentsTab({ capacitacion, stats, onSubirListaAsistencia }: DocumentsTabProps) {
+export function DocumentsTab({ 
+  sesion,
+  colaboradores,
+  stats, 
+  onSelectAttendanceFile, 
+  onDeleteAttendance, 
+  displayedFileUrl, 
+  isFileUploaded,
+  usuario,
+}: DocumentsTabProps) {
+  const [loadingDownload, setLoadingDownload] = useState(false);
+  const {
+    descargarListaAsistencia,
+    descargarPlantillaAsistencia,
+    descargarArchivoPorRuta,
+  } = useCapacitaciones(usuario);
+
+  const attendanceInfo = displayedFileUrl
+  
+  const isEditable = sesion.ESTADO === 'EN_PROCESO'
+
+  const fileInputId = `attendance-upload-${sesion.ID_SESION || 'new'}`;
+
+  const getFileName = (urlOrName: string) => {
+    if (urlOrName.startsWith('http')) {
+      return urlOrName.split('/').pop();
+    }
+    return urlOrName;
+  }
+
+  const handleDownload = async () => {
+    try {
+      setLoadingDownload(true);
+
+      if (!attendanceInfo) {
+        return;
+      }
+
+      if (
+        attendanceInfo.startsWith("blob:") ||
+        attendanceInfo.startsWith("C:") ||
+        attendanceInfo.startsWith("/")
+      ) {
+        window.open(attendanceInfo, "_blank");
+        return;
+      }
+
+      const signedUrl = await descargarListaAsistencia(sesion.ID_SESION);
+
+      if (signedUrl) {
+        window.open(signedUrl, "_blank");
+      }
+    } catch (error) {
+      console.error("Error al descargar la lista:", error);
+    } finally {
+      setLoadingDownload(false);
+    }
+  };
+
+  const handleDownloadPlantilla = async () => {
+    try {
+      setLoadingDownload(true);
+
+      const fechaEmision = new Date().toISOString().split("T")[0];
+
+      let documentosAsociados: { codigoDocumento: string }[] = [];
+
+      if (sesion?.ES_SISTEMA_DOCUMENTAL) {
+        if (sesion?.TEMAS && typeof sesion.TEMAS === "string") {
+          documentosAsociados = sesion.TEMAS.split(",")
+            .map((t) => t.trim())
+            .filter((t) => t.length > 0)
+            .map((t) => ({ codigoDocumento: t }));
+        } else {
+          documentosAsociados = [{ codigoDocumento: "SIN-CODIGO" }];
+        }
+      } else {
+        documentosAsociados = [{ codigoDocumento: "SIN-CODIGO" }];
+      }
+
+      const documentoPadre = sesion?.ES_SISTEMA_DOCUMENTAL
+        ? {
+            codigoDocumento: sesion?.CODIGO_DOCUMENTO || "SIN-CODIGO",
+            versionDocumento: sesion?.VERSION || "1",
+          }
+        : {
+            codigoDocumento: "SIN-CODIGO",
+            versionDocumento: "1",
+          };
+
+      const datos = {
+        fechaEmision,
+        fechaProximaRevision: "2026-11-03",
+        tipoCapacitacion: sesion?.TIPO_CAPACITACION || "Presencial",
+        documentoPadre,
+        documentosAsociados,
+        grupoObjetivo: sesion?.GRUPO_OBJETIVO || "Sin grupo objetivo",
+        nombreCapacitacion: sesion?.CAPACITACION_NOMBRE || "Sin nombre",
+        objetivoCapacitacion: sesion?.OBJETIVO || "Sin objetivo definido",
+        nombreFacilitador: sesion?.CAPACITADOR_NOMBRE || "No asignado",
+        fechaCapacitacion: sesion?.FECHA_FORMATO || "Sin fecha",
+        horario: sesion?.HORARIO_FORMATO_12H || "00:00",
+        instruccion: "Firmar al asistir y completar el listado.",
+        capacitados:
+          colaboradores?.map((col) => ({
+            nombre:
+              col.NOMBRE_COMPLETO ||
+              `${col.NOMBRE ?? ""} ${col.APELLIDO ?? ""}`.trim() ||
+              "Sin nombre",
+          })) || [],
+      };
+
+      await descargarPlantillaAsistencia(datos);
+
+    } catch (error) {
+      console.error("❌ Error al descargar la plantilla:", error);
+    } finally {
+      setLoadingDownload(false);
+    }
+  };
+
+  const handleDownloadExamen = async () => {
+    try {
+      setLoadingDownload(true);
+
+      const folderPath = "capacitaciones/plantillas";
+      const fileName = "Examen-de-Word.doc";
+
+      await descargarArchivoPorRuta(
+        folderPath, 
+        fileName, 
+        "Descarga del examen iniciada"
+      );
+    } catch (error) {
+      console.error("❌ Error al descargar el examen:", error);
+    } finally {
+      setLoadingDownload(false);
+    }
+  };
+
   return (
     <Card className="shadow-sm">
       <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
-        <CardTitle className="text-xl">Documentos de la Capacitación</CardTitle>
+        <CardTitle className="text-xl">Documentos de la Sesión</CardTitle>
+        <CardDescription>Gestiona los documentos de los participantes</CardDescription>
       </CardHeader>
-      <CardContent className="space-y-6 pt-6">
-        <Card className="border-2">
-          <CardHeader>
-            <CardTitle className="text-base">Lista de Asistencia General</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="flex gap-2">
-              <Button variant="outline" className="flex-1 bg-transparent" onClick={onSubirListaAsistencia}>
-                <Upload className="h-4 w-4 mr-2" />
-                {capacitacion.URL_LISTA_ASISTENCIA ? "Reemplazar Lista" : "Subir Lista de Asistencia"}
-              </Button>
-              {capacitacion.URL_LISTA_ASISTENCIA && (
-                <Button variant="outline">
-                  <Eye className="h-4 w-4 mr-2" />
-                  Ver
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+      <CardContent className="space-y-6">
 
-        <Card className="border-2">
-          <CardHeader>
-            <CardTitle className="text-base">Plantillas</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-              <Button variant="outline">
-                <Download className="h-4 w-4 mr-2" />
-                Plantilla de Lista
-              </Button>
-              {capacitacion.APLICA_EXAMEN && (
-                <Button variant="outline">
-                  <Download className="h-4 w-4 mr-2" />
-                  Plantilla de Examen
-                </Button>
-              )}
-            </div>
-          </CardContent>
-        </Card>
+        {/* --------------------------- 1. Lista de Asistencia --------------------------- */}
+        <div>
+          <h3 className="text-lg font-semibold mb-3">1. Lista de Asistencia General</h3>
+          
+          <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 sm:p-8 text-center bg-white dark:bg-transparent transition duration-300 hover:border-blue-400">
+            {attendanceInfo ? (
+              <div className="space-y-4">
+                
+                {isFileUploaded ? (
+                  <CheckCircle className="w-12 h-12 mx-auto text-green-500" />
+                ) : (
+                  <FileText className="w-12 h-12 mx-auto text-blue-500" />
+                )}
 
-        <Card className="border-2">
-          <CardHeader>
-            <CardTitle className="text-base">Resumen de Documentos</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-4">
-              <div className="text-center p-4 bg-blue-50 dark:bg-blue-950/20 rounded-lg">
-                <p className="text-sm font-medium text-muted-foreground mb-1">Exámenes Subidos</p>
-                <p className="text-4xl font-bold text-blue-600">
-                  {stats.examenes} <span className="text-2xl text-muted-foreground">/ {stats.asistencias}</span>
-                </p>
+                <div>
+                  <p className="font-medium text-lg">
+                    {isFileUploaded ? 'Registro de asistencia subido' : 'Archivo seleccionado localmente'}
+                  </p>
+                  <p className="text-sm text-muted-foreground truncate px-4">
+                    {getFileName(attendanceInfo)}
+                    {!isFileUploaded && (
+                      <span className="text-orange-500 ml-2 font-semibold">(Pendiente de Subida)</span>
+                    )}
+                  </p>
+                </div>
+
+                <div className="flex gap-3 justify-center flex-wrap">
+                  {isFileUploaded && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDownload}
+                      disabled={loadingDownload}
+                      className="dark:text-foreground dark:hover:border-amber-700"
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      {loadingDownload ? "Generando enlace..." : "Ver Documento"}
+                    </Button>
+                  )}
+                  
+                  {isEditable && (
+                    <>
+                      <label htmlFor={fileInputId} className="cursor-pointer">
+                        <Button variant="secondary" size="sm" asChild>
+                          <span>
+                            <Upload className="w-4 h-4 mr-2" />
+                            {isFileUploaded ? 'Reemplazar' : 'Cambiar Archivo'}
+                          </span>
+                        </Button>
+                        <input
+                          id={fileInputId}
+                          type="file"
+                          accept=".pdf"
+                          className="hidden"
+                          onChange={(e) => {
+                            if (e.target.files?.[0]) {
+                              onSelectAttendanceFile(e.target.files[0]) 
+                              e.target.value = ''
+                            }
+                          }}
+                        />
+                      </label>
+
+                      <Button 
+                        variant="destructive" 
+                        size="sm" 
+                        onClick={onDeleteAttendance}
+                        title={isFileUploaded ? "Borrar documento del servidor" : "Borrar selección local"}
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </Button>
+                    </>
+                  )}
+                </div>
               </div>
-              <div className="text-center p-4 bg-purple-50 dark:bg-purple-950/20 rounded-lg">
-                <p className="text-sm font-medium text-muted-foreground mb-1">Diplomas Subidos</p>
-                <p className="text-4xl font-bold text-purple-600">
-                  {stats.diplomas} <span className="text-2xl text-muted-foreground">/ {stats.asistencias}</span>
-                </p>
+            ) : (
+              <div className="space-y-4">
+                <FileText className="w-12 h-12 mx-auto text-muted-foreground" />
+                <div>
+                  <p className="font-medium text-lg">Subir registro de asistencia</p>
+                  <p className="text-sm text-muted-foreground">
+                    Archivo requerido para la conclusión de la sesión.
+                  </p>
+                </div>
+                {isEditable ? (
+                  <label htmlFor={fileInputId} className="cursor-pointer">
+                    <Button asChild>
+                      <span>
+                        <Upload className="w-4 h-4 mr-2" />
+                        Subir archivo PDF
+                      </span>
+                    </Button>
+                    <input
+                      id={fileInputId}
+                      type="file"
+                      accept=".pdf"
+                      className="hidden"
+                      onChange={(e) => {
+                        if (e.target.files?.[0]) {
+                          onSelectAttendanceFile(e.target.files[0]) 
+                          e.target.value = ''
+                        }
+                      }}
+                    />
+                  </label>
+                ) : (
+                  <p className="text-sm text-red-500 font-medium">Solo se puede subir documentos si la sesión está en curso.</p>
+                )}
               </div>
-            </div>
-            <Button variant="outline" className="w-full bg-transparent">
-              <Download className="h-4 w-4 mr-2" />
-              Descargar Todos los Documentos (ZIP)
+            )}
+          </div>
+          
+          <Alert className="mt-4 border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-950/20">
+            <Info className="w-4 h-4 text-blue-600" />
+            <AlertDescription>
+              <p className="font-semibold mb-2 text-blue-700 dark:text-blue-300">Formato del Archivo y Proceso:</p>
+              <ul className="text-sm space-y-1 list-disc list-inside text-gray-700 dark:text-gray-300">
+                <li>El archivo debe ser un **PDF** de la lista de asistencia firmada.</li>
+                <li>El documento debe incluir columnas para No., Nombre del Colaborador, Firma y Área.</li>
+              </ul>
+            </AlertDescription>
+          </Alert>
+        </div>
+
+        {/* --------------------------- 2. Plantillas --------------------------- */}
+        <div className="pt-4 border-t dark:border-gray-700">
+          <h3 className="text-lg font-semibold mb-3">2. Plantillas Descargables</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <Button
+              variant="outline"
+              className="w-full justify-start bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+              onClick={handleDownloadPlantilla}
+              disabled={loadingDownload}
+            >
+              <Download className="h-4 w-4 mr-2 text-blue-500" />
+              {loadingDownload ? "Generando plantilla..." : "Plantilla de Listado (PDF)"}
             </Button>
-          </CardContent>
-        </Card>
+            {sesion.APLICA_EXAMEN && (
+              <Button
+                variant="outline"
+                className="w-full justify-start bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+                onClick={handleDownloadExamen}
+                disabled={loadingDownload}
+              >
+                <Download className="h-4 w-4 mr-2 text-purple-500" />
+                {loadingDownload ? "Generando enlace..." : "Plantilla de Examen (DOC)"}
+              </Button>
+            )}
+          </div>
+        </div>
+
+        {/* --------------------------- 3. Resumen de Documentos --------------------------- */}
+        <div className="pt-4 border-t dark:border-gray-700">
+          <h3 className="text-lg font-semibold mb-3">3. Resumen y Estadísticas</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="text-center p-4 bg-blue-50 dark:bg-blue-950/20 rounded-xl shadow-inner">
+              <p className="text-sm font-medium text-muted-foreground mb-1">Exámenes Subidos</p>
+              <p className="text-4xl font-bold text-blue-600 dark:text-blue-400">
+                {stats.examenes} <span className="text-2xl text-muted-foreground">/ {stats.asistencias}</span>
+              </p>
+            </div>
+            <div className="text-center p-4 bg-purple-50 dark:bg-purple-950/20 rounded-xl shadow-inner">
+              <p className="text-sm font-medium text-muted-foreground mb-1">Diplomas Subidos</p>
+              <p className="text-4xl font-bold text-purple-600 dark:text-purple-400">
+                {stats.diplomas} <span className="text-2xl text-muted-foreground">/ {stats.asistencias}</span>
+              </p>
+            </div>
+          </div>
+        </div>
       </CardContent>
     </Card>
   )

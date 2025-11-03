@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Calendar, Clock, Users, Search, Filter, Eye, BookOpen } from "lucide-react"
 import Link from "next/link"
-import { type Capacitacion, getEstadoColor } from "@/lib/capacitaciones/capacitaciones-types"
+import { type Capacitacion, getEstadoCapacitacionColor } from "@/lib/capacitaciones/capacitaciones-types"
 
 interface AllCapacitacionesTabProps {
   capacitaciones: Capacitacion[]
@@ -100,7 +100,7 @@ export function AllCapacitacionesTab({ capacitaciones }: AllCapacitacionesTabPro
                       <div className="flex-1 space-y-3">
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-semibold text-lg text-foreground">{cap.NOMBRE}</h3>
-                          <Badge className={getEstadoColor(cap.ESTADO)}>{cap.ESTADO}</Badge>
+                          <Badge className={getEstadoCapacitacionColor(cap.ESTADO)}>{cap.ESTADO}</Badge>
                           <Badge variant="outline">{cap.TIPO_CAPACITACION}</Badge>
                         </div>
 

@@ -12,9 +12,14 @@ import { PendingReviewsTab } from "@/components/capacitaciones/pending-reviews-t
 import { AllCapacitacionesTab } from "@/components/capacitaciones/all-capacitaciones-tab"
 import { mockCapacitaciones } from "@/lib/mis-capacitaciones/capacitaciones-mock-data"
 import { RequirePermission } from "@/components/RequirePermission"
+import { useCapacitaciones } from "@/hooks/useCapacitaciones"
+import { Toaster } from "react-hot-toast"
 
 export default function GestionCapacitacionesPage() {
   const { user } = useAuth()
+  const {
+    capacitacionesPendientes,
+  } = useCapacitaciones(user);
 
   // Calculate metrics
   const metrics = useMemo(() => {
@@ -48,11 +53,6 @@ export default function GestionCapacitacionesPage() {
     }
   }, [])
 
-  // Get pending data
-  const pendientesAsignacion = useMemo(() => {
-    return mockCapacitaciones.filter((c) => c.ESTADO === "PENDIENTE_ASIGNACION" || c.ESTADO === "CREADA")
-  }, [])
-
   const pendientesRevision = useMemo(() => {
     return mockCapacitaciones.filter((c) => c.ESTADO === "FINALIZADA_CAPACITADOR")
   }, [])
@@ -79,6 +79,9 @@ export default function GestionCapacitacionesPage() {
           <AppHeader title="Gestión de Capacitaciones" subtitle="Panel de control para administrar todas las capacitaciones de la empresa" />
 
           <main className="flex-1 p-6 space-y-6 overflow-auto custom-scrollbar">
+
+            <Toaster />
+
             {/* Metrics Cards */}
             <MetricsCards
               total={metrics.total}
@@ -94,13 +97,15 @@ export default function GestionCapacitacionesPage() {
             {/* Main Tabs */}
             <Tabs defaultValue="pendientes" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="pendientes">Pendientes de Asignar ({pendientesAsignacion.length})</TabsTrigger>
+                <TabsTrigger value="pendientes">Pendientes de Asignar ({capacitacionesPendientes.length})</TabsTrigger>
                 <TabsTrigger value="revision">Pendientes de Revisión ({pendientesRevision.length})</TabsTrigger>
                 <TabsTrigger value="todas">Todas las Capacitaciones</TabsTrigger>
               </TabsList>
 
               <TabsContent value="pendientes">
-                <PendingAssignmentsTab capacitaciones={pendientesAsignacion} />
+                <PendingAssignmentsTab
+                  capacitaciones={capacitacionesPendientes}
+                />
               </TabsContent>
 
               <TabsContent value="revision">

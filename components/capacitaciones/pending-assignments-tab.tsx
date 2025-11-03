@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge"
 import { Calendar, Users } from "lucide-react"
 import Link from "next/link"
 import { CheckCircle2, UserPlus } from "lucide-react"
-import { type Capacitacion, getEstadoColor } from "@/lib/capacitaciones/capacitaciones-types"
+import { type Capacitacion, getEstadoCapacitacionColor } from "@/lib/capacitaciones/capacitaciones-types"
 
 interface PendingAssignmentsTabProps {
   capacitaciones: Capacitacion[]
@@ -41,7 +41,7 @@ export function PendingAssignmentsTab({ capacitaciones }: PendingAssignmentsTabP
               <div className="flex-1 space-y-3">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h3 className="font-semibold text-lg text-foreground">{cap.NOMBRE}</h3>
-                  <Badge className={getEstadoColor(cap.ESTADO)}>{cap.ESTADO}</Badge>
+                  <Badge className={getEstadoCapacitacionColor(cap.ESTADO)}>{cap.ESTADO}</Badge>
                   <Badge variant="outline">{cap.TIPO_CAPACITACION}</Badge>
                 </div>
 
@@ -56,7 +56,7 @@ export function PendingAssignmentsTab({ capacitaciones }: PendingAssignmentsTabP
                   </div>
                   <div className="flex items-center gap-2 text-muted-foreground">
                     <Users className="h-4 w-4" />
-                    <span>{cap.TOTAL_COLABORADORES_PENDIENTES} participantes</span>
+                    <span>{cap.PENDIENTES_ASIGNAR_SESION} participantes</span>
                   </div>
                   <div className="col-span-2 sm:col-span-2 text-muted-foreground">
                     <span className="text-xs">Origen: {cap.NOMBRE_ORIGEN}</span>

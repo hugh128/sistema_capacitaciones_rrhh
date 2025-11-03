@@ -16,14 +16,16 @@ import {
 import { ArrowLeft, Play } from "lucide-react"
 import Link from "next/link"
 import { getEstadoColor } from "@/lib/mis-capacitaciones/capacitaciones-types"
-import type { Capacitacion, EstadoCapacitacion } from "@/lib/mis-capacitaciones/capacitaciones-types"
+import type { SESION_DETALLE } from "@/lib/mis-capacitaciones/capacitaciones-types"
+import { UsuarioLogin } from "@/lib/auth"
 
 interface TrainingHeaderProps {
-  capacitacion: Capacitacion
-  onChangeEstado: (nuevoEstado: EstadoCapacitacion) => void
+  sesion: SESION_DETALLE
+  onChangeEstado: (idSesion: number, idCapacitador: number, observaciones: null | string) => Promise<void>
+  usuario: UsuarioLogin
 }
 
-export function TrainingHeader({ capacitacion, onChangeEstado }: TrainingHeaderProps) {
+export function TrainingHeader({ sesion, onChangeEstado, usuario }: TrainingHeaderProps) {
   return (
     <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
       <div className="flex items-start gap-4 flex-1">
@@ -34,21 +36,21 @@ export function TrainingHeader({ capacitacion, onChangeEstado }: TrainingHeaderP
         </Link>
         <div className="space-y-2">
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-3xl font-bold text-foreground">{capacitacion.NOMBRE}</h1>
-            <Badge className={`${getEstadoColor(capacitacion.ESTADO)} text-sm px-3 py-1`}>{capacitacion.ESTADO}</Badge>
+            <h1 className="text-3xl font-bold text-foreground">{sesion.CAPACITACION_NOMBRE}</h1>
+            <Badge className={`${getEstadoColor(sesion.ESTADO)} text-sm px-3 py-1`}>{sesion.ESTADO}</Badge>
           </div>
-          {capacitacion.CODIGO_DOCUMENTO && (
+          {sesion.CODIGO_DOCUMENTO && (
             <p className="text-muted-foreground font-mono text-sm bg-muted px-2 py-1 rounded inline-block">
-              Código: {capacitacion.CODIGO_DOCUMENTO}
+              Código: {sesion.CODIGO_DOCUMENTO}
             </p>
           )}
         </div>
       </div>
       <div className="flex gap-2">
-        {capacitacion.ESTADO === "ASIGNADA" && (
+        {(sesion.ESTADO === "ASIGNADA" || sesion.ESTADO === "PROGRAMADA") && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button size="lg" className="bg-green-600 hover:bg-green-700">
+              <Button size="lg" className="bg-green-600 hover:bg-green-700 cursor-pointer">
                 <Play className="h-5 w-5 mr-2" />
                 Iniciar Capacitación
               </Button>
@@ -63,7 +65,7 @@ export function TrainingHeader({ capacitacion, onChangeEstado }: TrainingHeaderP
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={() => onChangeEstado("EN_PROCESO")}>Sí, Iniciar</AlertDialogAction>
+                <AlertDialogAction onClick={() => onChangeEstado(sesion.ID_SESION, usuario.PERSONA_ID, sesion.OBSERVACIONES)}>Sí, Iniciar</AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>

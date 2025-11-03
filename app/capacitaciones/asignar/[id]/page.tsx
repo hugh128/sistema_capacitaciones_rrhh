@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Sidebar } from "@/components/sidebar"
 import { AppHeader } from "@/components/app-header"
@@ -12,82 +12,32 @@ import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ArrowLeft, Calendar, Clock, UserPlus } from "lucide-react"
+import { ArrowLeft, Calendar, Clock, UserPlus, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
-import { mockCapacitaciones } from "@/lib/mis-capacitaciones/capacitaciones-mock-data"
-import { mockUsers } from "@/lib/auth"
 import { RequirePermission } from "@/components/RequirePermission"
-
-// Mock colaboradores disponibles
-const mockColaboradoresDisponibles = [
-  {
-    id: 101,
-    nombre: "Juan Pérez García",
-    departamento: "Laboratorio Clínico",
-    puesto: "Técnico de Laboratorio",
-    correo: "juan.perez@phara.com",
-  },
-  {
-    id: 102,
-    nombre: "María Rodríguez López",
-    departamento: "Laboratorio Clínico",
-    puesto: "Técnico de Laboratorio",
-    correo: "maria.rodriguez@phara.com",
-  },
-  {
-    id: 103,
-    nombre: "Pedro Martínez Sánchez",
-    departamento: "Laboratorio Clínico",
-    puesto: "Auxiliar de Laboratorio",
-    correo: "pedro.martinez@phara.com",
-  },
-  {
-    id: 104,
-    nombre: "Ana Gómez Torres",
-    departamento: "Laboratorio Clínico",
-    puesto: "Técnico de Laboratorio",
-    correo: "ana.gomez@phara.com",
-  },
-  {
-    id: 105,
-    nombre: "Luis Hernández Díaz",
-    departamento: "Laboratorio Químico",
-    puesto: "Técnico Químico",
-    correo: "luis.hernandez@phara.com",
-  },
-  {
-    id: 106,
-    nombre: "Carmen Flores Ruiz",
-    departamento: "Laboratorio Químico",
-    puesto: "Técnico Químico",
-    correo: "carmen.flores@phara.com",
-  },
-  {
-    id: 107,
-    nombre: "Roberto Silva Castro",
-    departamento: "Control de Calidad",
-    puesto: "Analista de Calidad",
-    correo: "roberto.silva@phara.com",
-  },
-  {
-    id: 108,
-    nombre: "Laura Morales Vega",
-    departamento: "Control de Calidad",
-    puesto: "Analista de Calidad",
-    correo: "laura.morales@phara.com",
-  },
-]
+import { useCapacitaciones } from "@/hooks/useCapacitaciones"
+import type { Capacitador, Capacitacion, AsignarCapacitacion, ColaboradoresSinSesion, AsignarSesion } from "@/lib/capacitaciones/capacitaciones-types"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 
 export default function AsignarCapacitacionPage() {
   const { user } = useAuth()
   const params = useParams()
   const router = useRouter()
   const capacitacionId = Number(params.id)
+  const {
+    obtenerDetallesCapacitacion,
+    obtenerCapacitadores,
+    obtenerColaboradoresSinSesion,
+    asignarCapacitacion,
+    asignarSesion,
+  } = useCapacitaciones(user);
 
-  const capacitacion = useMemo(() => {
-    return mockCapacitaciones.find((c) => c.ID_CAPACITACION === capacitacionId)
-  }, [capacitacionId])
+  const [capacitacion, setCapacitacion] = useState<Capacitacion>()
+  const [capacitadores, setCapacitadores] = useState<Capacitador[]>([])
+  const [colaboradoresDisponibles, setColaboradoresDisponibles] = useState<ColaboradoresSinSesion[]>([])
+  const [isLoading, setIsLoading] = useState(true);
+  const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   // Form state
   const [capacitadorId, setCapacitadorId] = useState("")
@@ -105,18 +55,61 @@ export default function AsignarCapacitacionPage() {
   const [selectedColaboradores, setSelectedColaboradores] = useState<number[]>([])
   const [searchTerm, setSearchTerm] = useState("")
 
+  useEffect(() => {
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const detalle = await obtenerDetallesCapacitacion(capacitacionId)
+        setCapacitacion(detalle)
+
+        if (detalle) {
+          if (detalle.TIPO_CAPACITACION) setTipoCapacitacion(detalle.TIPO_CAPACITACION);
+          if (detalle.MODALIDAD) setModalidad(detalle.MODALIDAD);
+          if (detalle.APLICA_DIPLOMA !== undefined) setAplicaDiploma(detalle.APLICA_DIPLOMA);
+          if (detalle.APLICA_EXAMEN !== undefined) setAplicaExamen(detalle.APLICA_EXAMEN);
+          if (detalle.NOTA_MINIMA) setNotaMinima(String(detalle.NOTA_MINIMA)); 
+        }
+
+        const lista = await obtenerCapacitadores()
+        setCapacitadores(lista)
+
+        const colaboradoresDisponiblesAsignacion = await obtenerColaboradoresSinSesion(capacitacionId)
+        setColaboradoresDisponibles(colaboradoresDisponiblesAsignacion)
+      } catch (error) {
+        console.error('Error al cargar datos:', error)
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchData()
+  }, [capacitacionId, obtenerDetallesCapacitacion, obtenerCapacitadores, obtenerColaboradoresSinSesion])
+
   // Filter colaboradores
   const colaboradoresFiltrados = useMemo(() => {
-    return mockColaboradoresDisponibles.filter(
+    return (colaboradoresDisponibles ?? []).filter(
       (col) =>
-        col.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        col.departamento.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        col.puesto.toLowerCase().includes(searchTerm.toLowerCase()),
+        col.NOMBRE_COMPLETO.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        col.DEPARTAMENTO.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        col.PUESTO.toLowerCase().includes(searchTerm.toLowerCase()),
     )
-  }, [searchTerm])
+  }, [searchTerm, colaboradoresDisponibles])
 
-  // Get capacitadores (trainers)
-  const capacitadores = mockUsers.filter((u) => u.roles.some((r) => r.nombre === "Capacitador"))
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="w-96">
+          <CardHeader>
+            <CardTitle>Cargando Detalles...</CardTitle>
+            <CardDescription>Obteniendo información de la capacitación y capacitadores.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (!user || !user.ROLES.some((role) => role.NOMBRE === "RRHH")) {
     return (
@@ -149,36 +142,73 @@ export default function AsignarCapacitacionPage() {
     )
   }
 
-  const handleAsignar = () => {
+  const handleAsignar = async () => {
     // Validations
+    const errors: string[] = [];
+
+    // 1. Capacitador
     if (!capacitadorId) {
-      alert("Selecciona un capacitador")
-      return
-    }
-    if (!fechaInicio) {
-      alert("Selecciona una fecha de inicio")
-      return
-    }
-    if (!horaInicio || !horaFin) {
-      alert("Selecciona hora de inicio y fin")
-      return
-    }
-    if (horaFin <= horaInicio) {
-      alert("La hora de fin debe ser mayor a la hora de inicio")
-      return
-    }
-    if (selectedColaboradores.length === 0) {
-      alert("Selecciona al menos un colaborador")
-      return
-    }
-    if (aplicaExamen && (!notaMinima || Number(notaMinima) < 0 || Number(notaMinima) > 100)) {
-      alert("Ingresa una nota mínima válida entre 0 y 100")
-      return
+      errors.push("Selecciona un capacitador.");
     }
 
-    alert(`Capacitación asignada exitosamente a ${selectedColaboradores.length} colaboradores`)
-    router.push("/capacitaciones")
-    // In real app, this would be an API call
+    // 2. Fecha de Inicio
+    if (!fechaInicio) {
+      errors.push("Selecciona una fecha de inicio.");
+    }
+
+    // 3. Horas y lógica de horario
+    if (!horaInicio || !horaFin) {
+      errors.push("Debes seleccionar hora de inicio y fin.");
+    } else if (horaFin <= horaInicio) {
+      errors.push("La hora de fin debe ser posterior a la hora de inicio.");
+    }
+
+    // 4. Colaboradores Seleccionados
+    if (selectedColaboradores.length === 0) {
+      errors.push("Selecciona al menos un colaborador.");
+    }
+
+    // 5. Nota Mínima (si aplica examen)
+    if (aplicaExamen && (!notaMinima || Number(notaMinima) < 0 || Number(notaMinima) > 100)) {
+      errors.push("Ingresa una nota mínima válida entre 0 y 100.");
+    }
+    
+    setValidationErrors(errors);
+
+    if (errors.length > 0) {
+      return;
+    }
+
+    const payloadCapacitacion: AsignarCapacitacion = {
+      idCapacitacion: capacitacionId,
+      idsColaboradores: selectedColaboradores,
+      tipoCapacitacion: tipoCapacitacion,
+      modalidad: modalidad,
+      aplicaExamen: aplicaExamen,
+      notaMinima: aplicaExamen ? Number(notaMinima) : null,
+      aplicaDiploma: aplicaDiploma,
+    };
+    
+    const payloadSesion: AsignarSesion = {
+      idCapacitacion: capacitacionId,
+      capacitadorId: Number(capacitadorId),
+      fechaInicio: fechaInicio,
+      horaInicio: horaInicio,
+      horaFin: horaFin,
+      idsColaboradores: selectedColaboradores,
+      grupoObjetivo: grupoObjetivo,
+      observaciones: observaciones,
+      usuario: user.USERNAME,
+    };
+
+    try {
+      await asignarCapacitacion(payloadCapacitacion);
+      await asignarSesion(payloadSesion);
+      router.push("/capacitaciones");
+        
+    } catch (error) {
+      console.error("Error al completar la asignación:", error);
+    }
   }
 
   return (
@@ -190,6 +220,22 @@ export default function AsignarCapacitacionPage() {
           <AppHeader title="Gestión de Capacitaciones" subtitle="Panel de control para administrar todas las capacitaciones de la empresa" />
 
           <main className="flex-1 p-6 space-y-6 overflow-auto custom-scrollbar">
+
+          {validationErrors.length > 0 && (
+            <Alert variant="destructive">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Se encontraron {validationErrors.length} errores</AlertTitle>
+              <AlertDescription>
+                <p>Por favor, corrige los siguientes problemas antes de continuar:</p>
+                <ul className="list-inside list-disc text-sm mt-2 space-y-1">
+                  {validationErrors.map((error, index) => (
+                    <li key={index} className="text-destructive-foreground">{error}</li>
+                  ))}
+                </ul>
+              </AlertDescription>
+            </Alert>
+          )}
+
             {/* Header */}
             <div className="flex items-center gap-4">
               <Link href="/capacitaciones">
@@ -199,7 +245,7 @@ export default function AsignarCapacitacionPage() {
               </Link>
               <div>
                 <h1 className="text-3xl font-bold text-foreground">Asignar Capacitación</h1>
-                <p className="text-muted-foreground mt-1">{capacitacion.NOMBRE}</p>
+                <p className="text-xl mt-1">{capacitacion.NOMBRE}</p>
               </div>
             </div>
 
@@ -222,8 +268,8 @@ export default function AsignarCapacitacionPage() {
                           </SelectTrigger>
                           <SelectContent>
                             {capacitadores.map((cap) => (
-                              <SelectItem key={cap.id} value={cap.id}>
-                                {cap.nombre} {cap.apellido}
+                              <SelectItem key={cap.PERSONA_ID} value={cap.PERSONA_ID.toString()}>
+                                {cap.NOMBRE} {cap.APELLIDO}
                               </SelectItem>
                             ))}
                           </SelectContent>
@@ -262,10 +308,10 @@ export default function AsignarCapacitacionPage() {
                             <SelectValue placeholder="Seleccionar tipo" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="TALLER">Taller</SelectItem>
-                            <SelectItem value="CURSO">Curso</SelectItem>
-                            <SelectItem value="CHARLA">Charla</SelectItem>
-                            <SelectItem value="OTRO">Otro</SelectItem>
+                            <SelectItem value="TALLER">TALLER</SelectItem>
+                            <SelectItem value="CURSO">CURSO</SelectItem>
+                            <SelectItem value="CHARLA">CHARLA</SelectItem>
+                            <SelectItem value="OTRO">OTRO</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -277,8 +323,8 @@ export default function AsignarCapacitacionPage() {
                             <SelectValue placeholder="Seleccionar modalidad" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="INTERNA">Interna</SelectItem>
-                            <SelectItem value="EXTERNA">Externa</SelectItem>
+                            <SelectItem value="INTERNA">INTERNA</SelectItem>
+                            <SelectItem value="EXTERNA">EXTERNA</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
@@ -311,6 +357,7 @@ export default function AsignarCapacitacionPage() {
                           id="aplicaExamen"
                           checked={aplicaExamen}
                           onCheckedChange={(checked) => setAplicaExamen(checked as boolean)}
+                          className="cursor-pointer"
                         />
                         <Label htmlFor="aplicaExamen" className="cursor-pointer">
                           Aplica Examen
@@ -338,6 +385,7 @@ export default function AsignarCapacitacionPage() {
                           id="aplicaDiploma"
                           checked={aplicaDiploma}
                           onCheckedChange={(checked) => setAplicaDiploma(checked as boolean)}
+                          className="cursor-pointer"
                         />
                         <Label htmlFor="aplicaDiploma" className="cursor-pointer">
                           Aplica Diploma
@@ -379,10 +427,11 @@ export default function AsignarCapacitacionPage() {
                           <TableRow>
                             <TableHead className="w-12">
                               <Checkbox
+                                className="cursor-pointer"
                                 checked={selectedColaboradores.length === colaboradoresFiltrados.length}
                                 onCheckedChange={(checked) => {
                                   if (checked) {
-                                    setSelectedColaboradores(colaboradoresFiltrados.map((c) => c.id))
+                                    setSelectedColaboradores(colaboradoresFiltrados.map((c) => c.ID_COLABORADOR))
                                   } else {
                                     setSelectedColaboradores([])
                                   }
@@ -396,27 +445,28 @@ export default function AsignarCapacitacionPage() {
                         </TableHeader>
                         <TableBody>
                           {colaboradoresFiltrados.map((col) => (
-                            <TableRow key={col.id}>
+                            <TableRow key={col.ID_COLABORADOR}>
                               <TableCell>
                                 <Checkbox
-                                  checked={selectedColaboradores.includes(col.id)}
+                                  className="cursor-pointer"
+                                  checked={selectedColaboradores.includes(col.ID_COLABORADOR)}
                                   onCheckedChange={(checked) => {
                                     if (checked) {
-                                      setSelectedColaboradores([...selectedColaboradores, col.id])
+                                      setSelectedColaboradores([...selectedColaboradores, col.ID_COLABORADOR])
                                     } else {
-                                      setSelectedColaboradores(selectedColaboradores.filter((id) => id !== col.id))
+                                      setSelectedColaboradores(selectedColaboradores.filter((id) => id !== col.ID_COLABORADOR))
                                     }
                                   }}
                                 />
                               </TableCell>
                               <TableCell>
                                 <div>
-                                  <p className="font-medium">{col.nombre}</p>
-                                  <p className="text-sm text-muted-foreground">{col.correo}</p>
+                                  <p className="font-medium">{col.NOMBRE_COMPLETO}</p>
+                                  <p className="text-sm text-muted-foreground">{col.CORREO}</p>
                                 </div>
                               </TableCell>
-                              <TableCell>{col.departamento}</TableCell>
-                              <TableCell>{col.puesto}</TableCell>
+                              <TableCell>{col.DEPARTAMENTO}</TableCell>
+                              <TableCell>{col.PUESTO}</TableCell>
                             </TableRow>
                           ))}
                         </TableBody>
@@ -446,8 +496,8 @@ export default function AsignarCapacitacionPage() {
                       <div>
                         <Label className="text-muted-foreground">Capacitador</Label>
                         <p className="font-medium">
-                          {capacitadores.find((c) => c.id === capacitadorId)?.nombre}{" "}
-                          {capacitadores.find((c) => c.id === capacitadorId)?.apellido}
+                          {capacitadores.find((c) => c.PERSONA_ID === +capacitadorId)?.NOMBRE}{" "}
+                          {capacitadores.find((c) => c.PERSONA_ID === +capacitadorId)?.APELLIDO}
                         </p>
                       </div>
                     )}

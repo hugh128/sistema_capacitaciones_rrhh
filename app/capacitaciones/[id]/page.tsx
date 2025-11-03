@@ -13,7 +13,7 @@ import { ArrowLeft, CheckCircle2, XCircle, Calendar, Clock, Users, BookOpen } fr
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { mockCapacitaciones, getColaboradoresByCapacitacion } from "@/lib/mis-capacitaciones/capacitaciones-mock-data"
-import { getEstadoColor, getEstadoColaboradorColor } from "@/lib/capacitaciones/capacitaciones-types"
+import { getEstadoCapacitacionColor, getEstadoColaboradorColor } from "@/lib/capacitaciones/capacitaciones-types"
 import { RequirePermission } from "@/components/RequirePermission"
 
 export default function CapacitacionDetailPage() {
@@ -96,7 +96,7 @@ export default function CapacitacionDetailPage() {
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <h1 className="text-3xl font-bold text-foreground">Detalle de Capacitación</h1>
-                    <Badge className={getEstadoColor(capacitacion.ESTADO)}>{capacitacion.ESTADO}</Badge>
+                    <Badge className={getEstadoCapacitacionColor(capacitacion.ESTADO)}>{capacitacion.ESTADO}</Badge>
                   </div>
                   <p className="text-muted-foreground">{capacitacion.NOMBRE}</p>
                 </div>

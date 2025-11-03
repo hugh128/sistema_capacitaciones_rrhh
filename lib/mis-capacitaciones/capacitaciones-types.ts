@@ -9,6 +9,7 @@ export type EstadoCapacitacion =
   | "EN_REVISION"
   | "FINALIZADA"
   | "CANCELADA"
+  | "PROGRAMADA"
 
 export type TipoCapacitacion = "TALLER" | "CURSO" | "CHARLA" | "OTRO"
 
@@ -49,6 +50,55 @@ export interface Capacitacion {
   TOTAL_COLABORADORES_PENDIENTES: number
 }
 
+export interface CapacitacionSesion {
+  ID_SESION: number;              // ⭐ NUEVO - ID único de la sesión
+  ID_CAPACITACION: number;        // ID de la capacitación padre
+  CODIGO_DOCUMENTO: string | null
+  NOMBRE: string
+  OBJETIVO: string
+  VERSION: number | null
+  ES_SISTEMA_DOCUMENTAL: boolean
+  TIPO_CAPACITACION: TipoCapacitacion
+  MODALIDAD: Modalidad
+  NUMERO_SESION: number;          // ⭐ NUEVO - Número de sesión (1, 2, 3...)
+  NOMBRE_SESION: string | null; 
+  GRUPO_OBJETIVO: string
+  CAPACITADOR_ID: number | null
+  CAPACITADOR_NOMBRE: string
+  FECHA_PROGRAMADA: string | null
+  FECHA_INICIO: string | null
+  HORA_INICIO: string | null // "14:00:00"
+  HORA_FIN: string | null // "16:30:00"
+  DURACION_MINUTOS: number | null // Calculado automáticamente
+  HORARIO_FORMATO: string // "13:00 - 14:00"
+  HORARIO_FORMATO_12H: string //"1:00 PM - 2:00 PM"
+  DURACION_FORMATO: string // "2h 30min"
+  APLICA_EXAMEN: boolean
+  NOTA_MINIMA: number | null
+  APLICA_DIPLOMA: boolean
+  ESTADO: EstadoCapacitacion
+  URL_LISTA_ASISTENCIA: string | null
+  OBSERVACIONES: string
+  TIPO_ORIGEN: TipoOrigen
+  NOMBRE_ORIGEN: string
+  DEPARTAMENTO: string
+  TEMAS: string // String separado por comas
+  TOTAL_COLABORADORES_PENDIENTES: number
+  TOTAL_ASISTENCIAS: number
+  TOTAL_AUSENCIAS: number
+  PENDIENTES_REGISTRAR: number
+  TOTAL_APROBADOS: number
+  TOTAL_REPROBADOS: number
+  PROMEDIO_NOTAS: number
+  PORCENTAJE_COMPLETADO: number
+  ESTADO_DESCRIPTIVO: string
+  PUEDE_INICIAR: number
+  PUEDE_FINALIZAR: number
+  FECHA_CREACION: string
+  FECHA_MODIFICACION: string
+  USUARIO_CREACION: string
+}
+
 export interface ColaboradorCapacitacion {
   ID_CAPACITACION: number
   ID_COLABORADOR: number
@@ -64,6 +114,103 @@ export interface ColaboradorCapacitacion {
   URL_DIPLOMA: string | null
   OBSERVACIONES: string
   ESTADO_COLABORADOR: EstadoColaborador
+}
+
+export interface SESION_RESPONSE {
+  SESION: SESION_DETALLE;
+  COLABORADORES: COLABORADORES_SESION[];
+}
+
+export interface SESION_DETALLE {
+  ID_SESION: number;
+  ID_CAPACITACION: number;
+  NUMERO_SESION: number;
+  NOMBRE_SESION: string;
+  CODIGO_DOCUMENTO: string | null;
+  CAPACITACION_NOMBRE: string;
+  OBJETIVO: string | null;
+  VERSION: number | null;
+  ES_SISTEMA_DOCUMENTAL: boolean;
+  TIPO_CAPACITACION: string; // "CURSO"
+  MODALIDAD: string; // "EXTERNA"
+  APLICA_EXAMEN: boolean;
+  NOTA_MINIMA: number | null;
+  APLICA_DIPLOMA: boolean;
+  CAPACITADOR_ID: number | null;
+  CAPACITADOR_NOMBRE: string;
+  CAPACITADOR_CORREO: string | null;
+  CAPACITADOR_TELEFONO: string | null;
+  FECHA_PROGRAMADA: string | null;
+  FECHA_INICIO: string | null;
+  HORA_INICIO: string | null;
+  HORA_FIN: string | null;
+  DURACION_MINUTOS: number | null;
+  GRUPO_OBJETIVO: string;
+  FECHA_FORMATO_LARGO: string;
+  FECHA_FORMATO: string;
+  HORARIO_FORMATO: string;
+  HORARIO_FORMATO_12H: string;
+  DURACION_FORMATO: string;
+  ESTADO: EstadoCapacitacion;
+  ESTADO_DESCRIPTIVO: string;
+  URL_LISTA_ASISTENCIA: string | null;
+  OBSERVACIONES: string | null;
+  TIPO_ORIGEN: string;
+  NOMBRE_ORIGEN: string;
+  DEPARTAMENTO: string | null;
+  DEPARTAMENTO_CODIGO: string | null;
+  TEMAS: string | null;
+  TOTAL_COLABORADORES: number;
+  TOTAL_ASISTENCIAS: number;
+  TOTAL_AUSENCIAS: number;
+  PENDIENTES_REGISTRAR: number;
+  TOTAL_APROBADOS: number;
+  TOTAL_REPROBADOS: number;
+  PROMEDIO_NOTAS: number | null;
+  PORCENTAJE_COMPLETADO: number;
+  PUEDE_INICIAR: number;
+  PUEDE_FINALIZAR: number;
+  PUEDE_EDITAR: number;
+  FECHA_CREACION: string;
+  FECHA_MODIFICACION: string | null;
+  USUARIO_CREACION: string;
+}
+
+export interface COLABORADORES_SESION {
+  ID_COLABORADOR: number;
+  NOMBRE: string;
+  APELLIDO: string;
+  NOMBRE_COMPLETO: string;
+  CORREO: string;
+  TELEFONO: string;
+  DPI: string;
+  ID_DEPARTAMENTO: number;
+  DEPARTAMENTO: string;
+  DEPARTAMENTO_CODIGO: string;
+  ID_PUESTO: number;
+  PUESTO: string;
+  ASISTIO: boolean | null;
+  ASISTENCIA_ESTADO: string; // "Pendiente", "Asistió", etc.
+  FECHA_ASISTENCIA: string | null;
+  NOTA_OBTENIDA: number | null;
+  APROBADO: boolean | null;
+  EVALUACION_ESTADO: string; // "Sin evaluar", "Aprobado", etc.
+  URL_EXAMEN: string | null;
+  URL_DIPLOMA: string | null;
+  TIENE_DIPLOMA: number; // 0 o 1
+  OBSERVACIONES: string | null;
+  FECHA_ASIGNACION: string;
+  REQUIERE_REGISTRAR_ASISTENCIA: number;
+  REQUIERE_EVALUAR: number;
+}
+
+export interface ColaboradorAsistenciaData {
+  idColaborador: number;
+  asistio: boolean;
+  notaObtenida?: number | null;
+  observaciones?: string;
+  archivoExamen?: File;
+  archivoDiploma?: File;
 }
 
 // Helper functions
@@ -101,6 +248,7 @@ export function getEstadoColor(estado: EstadoCapacitacion): string {
   const colors: Record<EstadoCapacitacion, string> = {
     CREADA: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
     PENDIENTE_ASIGNACION: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+    PROGRAMADA: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
     ASIGNADA: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
     EN_PROCESO: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
     FINALIZADA_CAPACITADOR: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",

@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -9,24 +9,24 @@ import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { CheckCircle2, XCircle, Upload, Award, Info, X } from "lucide-react"
-import type { Capacitacion, ColaboradorCapacitacion, EstadoColaborador } from "./capacitaciones-types"
+import type { COLABORADORES_SESION, EstadoColaborador, SESION_DETALLE } from "./capacitaciones-types"
 
 interface ParticipantsTabProps {
-  capacitacion: Capacitacion
-  colaboradores: ColaboradorCapacitacion[]
+  sesion: SESION_DETALLE
+  colaboradores: COLABORADORES_SESION[]
   asistenciaState: Record<number, boolean>
   notasState: Record<number, number | null>
-  examenesState: Record<number, boolean>
-  diplomasState: Record<number, boolean>
+  examenesState: Record<number, File | null>
+  diplomasState: Record<number, File | null>
   onToggleAsistencia: (colaboradorId: number, currentValue: boolean | undefined) => void
   onUpdateNota: (colaboradorId: number, nota: number) => void
-  onSubirDocumento: (tipo: "examen" | "diploma", colaboradorId: number) => void
+  onSubirDocumento: (tipo: "examen" | "diploma", colaboradorId: number, file: File) => void
   onEliminarDocumento: (tipo: "examen" | "diploma", colaboradorId: number) => void
   onMarcarAsistenciaMasiva: (asistio: boolean, colaboradorIds: number[]) => void
 }
 
 export function ParticipantsTab({
-  capacitacion,
+  sesion,
   colaboradores,
   asistenciaState,
   notasState,
@@ -43,6 +43,27 @@ export function ParticipantsTab({
   const [editingGradeId, setEditingGradeId] = useState<number | null>(null)
   const [gradeValues, setGradeValues] = useState<Record<number, string>>({})
 
+  const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
+
+  const isEditable = sesion.ESTADO === "EN_PROCESO";
+
+  const handleOpenFileDialog = (tipo: "examen" | "diploma", colaboradorId: number) => {
+    const key = `${tipo}-${colaboradorId}`
+    fileInputRefs.current[key]?.click()
+  }
+
+  const handleFileChange = (
+    e: React.ChangeEvent<HTMLInputElement>,
+    tipo: "examen" | "diploma",
+    colaboradorId: number
+  ) => {
+    const file = e.target.files?.[0]
+    if (file) {
+      onSubirDocumento(tipo, colaboradorId, file)
+      e.target.value = "" 
+    }
+  }
+
   const getEstadoColaboradorDynamic = (colaboradorId: number): EstadoColaborador => {
     const asistio = asistenciaState[colaboradorId]
     const nota = notasState[colaboradorId]
@@ -55,7 +76,7 @@ export function ParticipantsTab({
       return "NO_ASISTIO"
     }
 
-    if (!capacitacion?.APLICA_EXAMEN) {
+    if (!sesion?.APLICA_EXAMEN) {
       return "APROBADO"
     }
 
@@ -63,7 +84,7 @@ export function ParticipantsTab({
       return "PENDIENTE"
     }
 
-    const notaMinima = capacitacion?.NOTA_MINIMA || 60
+    const notaMinima = sesion?.NOTA_MINIMA || 60
     if (nota >= notaMinima) {
       return "APROBADO"
     } else {
@@ -134,6 +155,7 @@ export function ParticipantsTab({
                 variant="default"
                 size="sm"
                 onClick={() => {
+                  if (!isEditable) return;
                   onMarcarAsistenciaMasiva(true, selectedColaboradores)
                   setSelectedColaboradores([])
                 }}
@@ -179,6 +201,7 @@ export function ParticipantsTab({
                         colaboradoresFiltrados.length > 0
                       }
                       onCheckedChange={(checked) => {
+                        if (!isEditable) return;
                         if (checked) {
                           setSelectedColaboradores(colaboradoresFiltrados.map((c) => c.ID_COLABORADOR))
                         } else {
@@ -192,9 +215,9 @@ export function ParticipantsTab({
                   <TableHead className="min-w-[150px]">Puesto</TableHead>
                   <TableHead className="min-w-[120px]">Estado</TableHead>
                   <TableHead className="w-24 text-center">Asistió</TableHead>
-                  {capacitacion.APLICA_EXAMEN && <TableHead className="w-28 text-center">Nota</TableHead>}
-                  {capacitacion.APLICA_EXAMEN && <TableHead className="w-32 text-center">Examen</TableHead>}
-                  {capacitacion.APLICA_DIPLOMA && <TableHead className="w-32 text-center">Diploma</TableHead>}
+                  {sesion.APLICA_EXAMEN && <TableHead className="w-28 text-center">Nota</TableHead>}
+                  {sesion.APLICA_EXAMEN && <TableHead className="w-32 text-center">Examen</TableHead>}
+                  {sesion.APLICA_DIPLOMA && <TableHead className="w-32 text-center">Diploma</TableHead>}
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -234,76 +257,107 @@ export function ParticipantsTab({
                         <div className="flex justify-center">
                           <Checkbox
                             checked={asistio === true}
-                            onCheckedChange={() => onToggleAsistencia(col.ID_COLABORADOR, asistio)}
+                            onCheckedChange={() => isEditable && onToggleAsistencia(col.ID_COLABORADOR, asistio)}
                             className="h-5 w-5"
                           />
                         </div>
                       </TableCell>
-                      {capacitacion.APLICA_EXAMEN && (
+                      {sesion.APLICA_EXAMEN && (
                         <TableCell className="text-center">
                           {asistio === true ? (
-                            editingGradeId === col.ID_COLABORADOR ? (
-                              <Input
-                                type="number"
-                                min="0"
-                                max="100"
-                                value={gradeValues[col.ID_COLABORADOR] ?? nota ?? ""}
-                                onChange={(e) => handleGradeChange(col.ID_COLABORADOR, e.target.value)}
-                                onBlur={() => handleGradeBlur(col.ID_COLABORADOR)}
-                                onKeyDown={(e) => handleGradeKeyDown(e, col.ID_COLABORADOR)}
-                                className="w-20 h-8 text-center"
-                                autoFocus
-                                placeholder="0-100"
-                              />
+                            sesion.ESTADO === "EN_PROCESO" ? (
+                              editingGradeId === col.ID_COLABORADOR ? (
+                                <Input
+                                  type="number"
+                                  min="0"
+                                  max="100"
+                                  value={gradeValues[col.ID_COLABORADOR] ?? nota ?? ""}
+                                  onChange={(e) => handleGradeChange(col.ID_COLABORADOR, e.target.value)}
+                                  onBlur={() => handleGradeBlur(col.ID_COLABORADOR)}
+                                  onKeyDown={(e) => handleGradeKeyDown(e, col.ID_COLABORADOR)}
+                                  className="w-20 h-8 text-center"
+                                  autoFocus
+                                  placeholder="0-100"
+                                />
+                              ) : (
+                                <button
+                                  onClick={() => {
+                                    setEditingGradeId(col.ID_COLABORADOR)
+                                    setGradeValues((prev) => ({
+                                      ...prev,
+                                      [col.ID_COLABORADOR]: nota?.toString() ?? "",
+                                    }))
+                                  }}
+                                  className="w-full h-8 px-2 rounded hover:bg-muted flex items-center justify-center"
+                                >
+                                  {nota !== null && nota !== undefined ? (
+                                    <span
+                                      className={`font-bold ${
+                                        estadoDinamico === "APROBADO"
+                                          ? "text-green-600"
+                                          : estadoDinamico === "REPROBADO"
+                                          ? "text-red-600"
+                                          : ""
+                                      }`}
+                                    >
+                                      {nota}
+                                    </span>
+                                  ) : (
+                                    <span className="text-muted-foreground text-sm">Agregar</span>
+                                  )}
+                                </button>
+                              )
                             ) : (
-                              <button
-                                onClick={() => {
-                                  setEditingGradeId(col.ID_COLABORADOR)
-                                  setGradeValues((prev) => ({
-                                    ...prev,
-                                    [col.ID_COLABORADOR]: nota?.toString() ?? "",
-                                  }))
-                                }}
-                                className="w-full h-8 px-2 rounded hover:bg-muted flex items-center justify-center"
+                              <span
+                                className={`font-bold ${
+                                  estadoDinamico === "APROBADO"
+                                    ? "text-green-600"
+                                    : estadoDinamico === "REPROBADO"
+                                    ? "text-red-600"
+                                    : "text-muted-foreground"
+                                }`}
                               >
-                                {nota !== null && nota !== undefined ? (
-                                  <span
-                                    className={`font-bold ${estadoDinamico === "APROBADO" ? "text-green-600" : estadoDinamico === "REPROBADO" ? "text-red-600" : ""}`}
-                                  >
-                                    {nota}
-                                  </span>
-                                ) : (
-                                  <span className="text-muted-foreground text-sm">Agregar</span>
-                                )}
-                              </button>
+                                {nota !== null && nota !== undefined ? nota : "-"}
+                              </span>
                             )
                           ) : (
                             <span className="text-muted-foreground">-</span>
                           )}
                         </TableCell>
                       )}
-                      {capacitacion.APLICA_EXAMEN && (
+                      {sesion.APLICA_EXAMEN && (
                         <TableCell className="text-center">
                           {asistio === true ? (
-                            <div className="flex items-center justify-center gap-1">
+                            <div className="flex items-center justify-center gap-1 relative"> 
+                              <input
+                                type="file"
+                                accept=".pdf"
+                                ref={(el) => { 
+                                  fileInputRefs.current[`examen-${col.ID_COLABORADOR}`] = el
+                                }}
+                                onChange={(e) => handleFileChange(e, "examen", col.ID_COLABORADOR)}
+                                className="hidden"
+                              />
                               <Button
                                 size="sm"
                                 variant={tieneExamen ? "default" : "outline"}
-                                onClick={() => onSubirDocumento("examen", col.ID_COLABORADOR)}
+                                onClick={() => handleOpenFileDialog("examen", col.ID_COLABORADOR)}
                                 className={tieneExamen ? "bg-green-600 hover:bg-green-700 relative" : ""}
+                                disabled={!isEditable}
                               >
                                 <Upload className="h-3 w-3 mr-1" />
                                 {tieneExamen ? "OK" : "Subir"}
-                                {tieneExamen && (
-                                  <button
+                                {isEditable && tieneExamen && (
+                                  <span
+                                    role="button"
                                     onClick={(e) => {
                                       e.stopPropagation()
                                       onEliminarDocumento("examen", col.ID_COLABORADOR)
                                     }}
-                                    className="absolute -top-1 -right-1 bg-red-500 hover:bg-red-600 rounded-full p-0.5"
+                                    className="absolute -top-1 -right-1 bg-red-500 hover:bg-red-600 rounded-full p-0.5 cursor-pointer"
                                   >
                                     <X className="h-3 w-3 text-white" />
-                                  </button>
+                                  </span>
                                 )}
                               </Button>
                             </div>
@@ -312,28 +366,39 @@ export function ParticipantsTab({
                           )}
                         </TableCell>
                       )}
-                      {capacitacion.APLICA_DIPLOMA && (
+                      {sesion.APLICA_DIPLOMA && (
                         <TableCell className="text-center">
                           {estadoDinamico === "APROBADO" ? (
-                            <div className="flex items-center justify-center gap-1">
+                            <div className="flex items-center justify-center gap-1 relative">
+                              <input
+                                type="file"
+                                accept=".pdf"
+                                ref={(el) => {
+                                  fileInputRefs.current[`diploma-${col.ID_COLABORADOR}`] = el
+                                }}
+                                onChange={(e) => handleFileChange(e, "diploma", col.ID_COLABORADOR)}
+                                className="hidden"
+                              />
                               <Button
                                 size="sm"
                                 variant={tieneDiploma ? "default" : "outline"}
-                                onClick={() => onSubirDocumento("diploma", col.ID_COLABORADOR)}
+                                onClick={() => handleOpenFileDialog("diploma", col.ID_COLABORADOR)}
                                 className={tieneDiploma ? "bg-purple-600 hover:bg-purple-700 relative" : ""}
+                                disabled={!isEditable}
                               >
                                 <Award className="h-3 w-3 mr-1" />
                                 {tieneDiploma ? "OK" : "Subir"}
-                                {tieneDiploma && (
-                                  <button
+                                {isEditable && tieneDiploma && (
+                                  <span
+                                    role="button"
                                     onClick={(e) => {
                                       e.stopPropagation()
                                       onEliminarDocumento("diploma", col.ID_COLABORADOR)
                                     }}
-                                    className="absolute -top-1 -right-1 bg-red-500 hover:bg-red-600 rounded-full p-0.5"
+                                    className="absolute -top-1 -right-1 bg-red-500 hover:bg-red-600 rounded-full p-0.5 cursor-pointer"
                                   >
                                     <X className="h-3 w-3 text-white" />
-                                  </button>
+                                  </span>
                                 )}
                               </Button>
                             </div>
@@ -362,7 +427,6 @@ export function ParticipantsTab({
                   <li>Usa los botones Subir para cargar exámenes y diplomas</li>
                   <li>Haz clic en la X roja para eliminar un documento subido</li>
                   <li>El estado se actualiza automáticamente según asistencia y nota</li>
-                  <li>Selecciona múltiples participantes para acciones masivas</li>
                 </ul>
               </div>
             </div>

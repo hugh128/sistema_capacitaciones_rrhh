@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Sidebar } from "@/components/sidebar"
 import { AppHeader } from "@/components/app-header"
@@ -22,27 +22,52 @@ import {
   TrendingUp,
 } from "lucide-react"
 import Link from "next/link"
-import { getCapacitacionesByCapacitador } from "@/lib/mis-capacitaciones/capacitaciones-mock-data"
-import { getEstadoColor } from "@/lib/mis-capacitaciones/capacitaciones-types"
+import { CapacitacionSesion, getEstadoColor } from "@/lib/mis-capacitaciones/capacitaciones-types"
 import { RequirePermission } from "@/components/RequirePermission"
+import { useCapacitaciones } from "@/hooks/useCapacitaciones"
 
 export default function MisCapacitacionesPage() {
   const { user } = useAuth()
   const [searchTerm, setSearchTerm] = useState("")
   const [estadoFilter, setEstadoFilter] = useState<string>("TODOS")
   const [tipoFilter, setTipoFilter] = useState<string>("TODOS")
+  const [misCapacitaciones, setMisCapacitaciones] = useState<CapacitacionSesion[]>([])
+  const [isLoading, setIsLoading] = useState(true);
 
-  const misCapacitaciones = useMemo(() => {
-    if (!user) return []
-    return getCapacitacionesByCapacitador(Number(user.ID_USUARIO))
-  }, [user])
+  const {
+    obtenerCapacitacionesPorCapacitador,
+  } = useCapacitaciones(user);
+
+  useEffect(() => {
+    if (!user || !user.PERSONA_ID) {
+      setIsLoading(false);
+      return; 
+    }
+
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const capacitaciones = await obtenerCapacitacionesPorCapacitador(user.PERSONA_ID)
+        setMisCapacitaciones(capacitaciones)
+
+      } catch (error) {
+        console.error('Error al cargar las capacitaciones:', error)
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchData()
+  }, [user, obtenerCapacitacionesPorCapacitador])
 
   // Filter capacitaciones
   const capacitacionesFiltradas = useMemo(() => {
+    if (!misCapacitaciones) return [];
+
     return misCapacitaciones.filter((cap) => {
       const matchesSearch =
         cap.NOMBRE.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cap.CODIGO_DOCUMENTO?.toLowerCase().includes(searchTerm.toLowerCase())
+        cap.CODIGO_DOCUMENTO?.toLowerCase().includes(searchTerm.toLowerCase() || '')
       const matchesEstado = estadoFilter === "TODOS" || cap.ESTADO === estadoFilter
       const matchesTipo = tipoFilter === "TODOS" || cap.TIPO_CAPACITACION === tipoFilter
       return matchesSearch && matchesEstado && matchesTipo
@@ -50,8 +75,10 @@ export default function MisCapacitacionesPage() {
   }, [misCapacitaciones, searchTerm, estadoFilter, tipoFilter])
 
   const metrics = useMemo(() => {
+    if (!misCapacitaciones) return { total: 0, pendientes: 0, enProceso: 0, finalizadasEsteMes: 0 };
+
     const total = misCapacitaciones.length
-    const pendientes = misCapacitaciones.filter((c) => c.ESTADO === "ASIGNADA").length
+    const pendientes = misCapacitaciones.filter((c) => c.ESTADO === "PROGRAMADA").length
     const enProceso = misCapacitaciones.filter((c) => c.ESTADO === "EN_PROCESO").length
     const finalizadasEsteMes = misCapacitaciones.filter((c) => {
       if (c.ESTADO !== "FINALIZADA" && c.ESTADO !== "FINALIZADA_CAPACITADOR") return false
@@ -67,6 +94,7 @@ export default function MisCapacitacionesPage() {
   // Get upcoming trainings (next 7 days)
   const proximasCapacitaciones = useMemo(() => {
     const hoy = new Date()
+    hoy.setHours(0, 0, 0, 0);
     const enSieteDias = new Date()
     enSieteDias.setDate(hoy.getDate() + 7)
 
@@ -74,6 +102,8 @@ export default function MisCapacitacionesPage() {
       .filter((cap) => {
         if (!cap.FECHA_PROGRAMADA) return false
         const fecha = new Date(cap.FECHA_PROGRAMADA)
+        fecha.setHours(0, 0, 0, 0);
+
         return fecha >= hoy && fecha <= enSieteDias && (cap.ESTADO === "ASIGNADA" || cap.ESTADO === "EN_PROCESO")
       })
       .sort((a, b) => {
@@ -83,6 +113,22 @@ export default function MisCapacitacionesPage() {
       })
       .slice(0, 5)
   }, [misCapacitaciones])
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="w-96">
+          <CardHeader>
+            <CardTitle>Cargando Detalles...</CardTitle>
+            <CardDescription>Obteniendo información de la capacitación.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   if (
     !user ||
@@ -255,7 +301,7 @@ export default function MisCapacitacionesPage() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="TODOS">Todos los estados</SelectItem>
-                      <SelectItem value="ASIGNADA">Asignada</SelectItem>
+                      <SelectItem value="PROGRAMADA">Programada</SelectItem>
                       <SelectItem value="EN_PROCESO">En Proceso</SelectItem>
                       <SelectItem value="FINALIZADA_CAPACITADOR">Finalizada</SelectItem>
                       <SelectItem value="EN_REVISION">En Revisión</SelectItem>
@@ -307,13 +353,13 @@ export default function MisCapacitacionesPage() {
                                   {cap.CODIGO_DOCUMENTO}
                                 </p>
                               )}
-                              <p className="text-sm text-muted-foreground leading-relaxed">{cap.OBJETIVO}</p>
+                              <p className="text-sm text-muted-foreground leading-relaxed">{cap.GRUPO_OBJETIVO}</p>
                               <div className="flex flex-wrap gap-6 text-sm pt-2">
                                 <span className="flex items-center gap-2 text-muted-foreground">
                                   <Calendar className="h-4 w-4 text-blue-600" />
                                   <span className="font-medium">
-                                    {cap.FECHA_PROGRAMADA
-                                      ? new Date(cap.FECHA_PROGRAMADA).toLocaleDateString("es-GT", {
+                                    {cap.FECHA_INICIO
+                                      ? new Date(cap.FECHA_INICIO).toLocaleDateString("es-GT", {
                                           day: "numeric",
                                           month: "long",
                                           year: "numeric",
@@ -333,7 +379,7 @@ export default function MisCapacitacionesPage() {
                                 </span>
                               </div>
                             </div>
-                            <Link href={`/mis-capacitaciones/${cap.ID_CAPACITACION}`}>
+                            <Link href={`/mis-capacitaciones/${cap.ID_SESION}`}>
                               <Button size="lg" className="shrink-0">
                                 <Eye className="h-4 w-4 mr-2" />
                                 Ver Detalle
