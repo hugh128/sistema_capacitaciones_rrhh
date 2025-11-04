@@ -11,6 +11,10 @@ import { PUESTO_COLUMNS, PUESTO_FORM_FIELDS, DEFAULT_NEW_DATA } from "@/data/pue
 import { usePuestos } from "@/hooks/usePuestos"
 import { Toaster } from 'react-hot-toast'
 import { RequirePermission } from "@/components/RequirePermission"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { ArrowLeft } from "lucide-react"
+import { AppHeader } from "@/components/app-header"
 
 const getDepartamentosList = async () => {
   try {
@@ -81,17 +85,23 @@ export default function PuestosPage() {
         <Sidebar />
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          <header className="border-b border-border bg-card px-6 py-4">
-            <div>
-              <h1 className="text-2xl font-bold text-card-foreground">Configuración - Puestos</h1>
-              <p className="text-sm text-muted-foreground">Gestiona los puestos de trabajo por departamento</p>
-            </div>
-          </header>
+          <AppHeader title="Configuración - Puestos" subtitle="Gestiona los puestos de trabajo por departamento" />
 
           <main className="flex-1 overflow-auto p-6">
             <Toaster />
 
             <div className="max-w-7xl mx-auto">
+              <div className="flex">
+                <div className="flex flex-col items-start gap-2">
+                  <Link href="/configuracion">
+                    <Button variant="ghost" className="cursor-pointer">
+                      <ArrowLeft className="w-4 h-4" />
+                      Configuracion
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+
               <DataTable
                 title="Puestos"
                 data={puestos}

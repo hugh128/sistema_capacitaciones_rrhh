@@ -8,9 +8,13 @@ import { useAuth } from "@/contexts/auth-context"
 import { apiClient } from "@/lib/api-client"
 import { DEPARTAMENTO_COLUMNS, DEPARTAMENTO_FORM_FIELDS } from "@/data/departamento-config"
 import { Toaster } from 'react-hot-toast'
-import { Departamento, Empresa } from "@/lib/types"
+import { Departamento, Empresa, Persona } from "@/lib/types"
 import { useDepartamentos } from "@/hooks/useDepartamentos"
 import { RequirePermission } from "@/components/RequirePermission"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { ArrowLeft } from "lucide-react"
+import { AppHeader } from "@/components/app-header"
 
 const getEmpresasList = async () => {
   try {
@@ -22,11 +26,22 @@ const getEmpresasList = async () => {
   }
 }
 
+const getPersonasList = async () => {
+  try {
+    const { data } = await apiClient.get<Persona[]>('/persona');
+    return data;
+  } catch (error) {
+    console.error("Error al cargar lista personas ", error);
+    return [];
+  }
+}
+
 export default function DepartamentosPage() {
   const { user } = useAuth()
   const [modalOpen, setModalOpen] = useState(false)
   const [editingDepartamento, setEditingDepartamento] = useState<Departamento | null>(null)
   const [empresasList, setEmpresasList] = useState<Empresa[]>([]);
+  const [personasList, setPersonasList] = useState<Persona[]>([])
 
   const { 
     departamentos,
@@ -37,17 +52,23 @@ export default function DepartamentosPage() {
   useEffect(() => {
     if (user) {
       getEmpresasList().then(setEmpresasList);
+      getPersonasList().then(setPersonasList);
     }
   }, [user]);
 
-  const empresaOptions = empresasList.map((empresa) => ({
+/*   const empresaOptions = empresasList.map((empresa) => ({
     value: empresa.ID_EMPRESA.toString(),
     label: empresa.NOMBRE,
+  })); */
+
+  const personaOptions = personasList.map((persona) => ({
+    value: persona.ID_PERSONA.toString(),
+    label: `${persona.NOMBRE} ${persona.APELLIDO}`,
   }));
   
   const formFields = DEPARTAMENTO_FORM_FIELDS.map(field => {
-    if (field.key === 'empresaId') {
-        return { ...field, options: empresaOptions };
+    if (field.key === 'ID_ENCARGADO') {
+        return { ...field, options: personaOptions };
     }
     return field;
   });
@@ -87,17 +108,23 @@ export default function DepartamentosPage() {
       <Sidebar />
 
       <div className="flex-1 flex flex-col overflow-hidden">
-        <header className="border-b border-border bg-card px-6 py-4">
-          <div>
-            <h1 className="text-2xl font-bold text-card-foreground">Configuración - Departamentos</h1>
-            <p className="text-sm text-muted-foreground">Gestiona los departamentos de las empresas</p>
-          </div>
-        </header>
+        <AppHeader title="Configuración - Departamentos" subtitle="Gestiona los departamentos de las empresas" />
 
         <main className="flex-1 overflow-auto p-6">
           <Toaster />
 
           <div className="max-w-7xl mx-auto">
+            <div className="flex">
+              <div className="flex flex-col items-start gap-2">
+                <Link href="/configuracion">
+                  <Button variant="ghost" className="cursor-pointer">
+                    <ArrowLeft className="w-4 h-4" />
+                    Configuracion
+                  </Button>
+                </Link>
+              </div>
+            </div>
+
             <DataTable
               title="Departamentos"
               data={departamentos}

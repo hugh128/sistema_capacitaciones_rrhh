@@ -1,16 +1,23 @@
 import { Badge } from "@/components/ui/badge"
-import { Departamento } from "@/lib/types";
+import { Departamento, Persona } from "@/lib/types";
 
 export const DEPARTAMENTO_COLUMNS = [
   { key: "NOMBRE", label: "Nombre" },
   { key: "CODIGO", label: "Codigo" },
   { key: "DESCRIPCION", label: "Descripción" },
   {
+    key: "ENCARGADO", label: "Encargado",
+    render: (value: Persona) => {
+      if (!value) return "Sin encargado";
+      return `${value.NOMBRE} ${value.APELLIDO}`;
+    }, 
+  },
+  {
     key: "ESTADO",
     label: "Estado",
     render: (value: boolean) => <Badge variant={value ? "default" : "destructive"}>{value ? "Activo" : "Inactivo"}</Badge>,
   },
-  {
+/*   {
     key: "FECHA_CREACION",
     label: "Fecha Creacion",
     render: (value: string) => {
@@ -20,7 +27,7 @@ export const DEPARTAMENTO_COLUMNS = [
 
       return date.toLocaleDateString();
     }
-  },
+  }, */
 ]
 
 export const DEPARTAMENTO_FORM_FIELDS = [
@@ -34,6 +41,13 @@ export const DEPARTAMENTO_FORM_FIELDS = [
     required: true,
     options: [],
   }, */
+  {
+    key: "ID_ENCARGADO",
+    label: "Encargado",
+    type: "select" as const,
+    required: false,
+    options: [],
+  },
   {
     key: "ESTADO",
     label: "Estado",

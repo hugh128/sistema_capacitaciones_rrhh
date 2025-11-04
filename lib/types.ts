@@ -16,8 +16,10 @@ export interface Departamento {
   CODIGO: string
   NOMBRE: string
   DESCRIPCION: string
+  ID_ENCARGADO?: number
   ESTADO: boolean
   FECHA_CREACION: string
+  ENCARGADO?: Persona | null
 }
 
 export interface Puesto {

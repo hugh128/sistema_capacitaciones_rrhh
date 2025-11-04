@@ -25,6 +25,30 @@ export function AppHeader({ title, subtitle, showActions = true }: AppHeaderProp
 
   if (!user) return null
 
+  const getNavigationButtons = () => {
+    if (user.ROLES.some((role) => ["RRHH"].includes(role.NOMBRE))) {
+      return (
+        <Link href="/capacitaciones">
+          <Button size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Capacitaciones
+          </Button>
+        </Link>
+      )
+    } else if (user.ROLES.some((role) => ["Capacitador"].includes(role.NOMBRE)))  {
+      return (
+        <Link href="/mis-capacitaciones">
+          <Button size="sm">
+            <Plus className="h-4 w-4 mr-2" />
+            Mis Capacitaciones
+          </Button>
+        </Link>
+      )
+    }
+    return null
+  }
+
+
   return (
     <header className="border-b border-border bg-card">
       <div className="flex items-center justify-between px-6 py-4">
@@ -36,22 +60,12 @@ export function AppHeader({ title, subtitle, showActions = true }: AppHeaderProp
         <div className="flex items-center gap-4">
           {showActions && (
             <>
-              <div className="relative">
-{/*                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-muted-foreground h-4 w-4" />
-                <Input placeholder="Buscar..." className="pl-10 w-64" /> */}
-              </div>
-
               <Button variant="outline" size="sm">
                 <Bell className="h-4 w-4" />
               </Button>
 
               {user.ROLES.some((role) => ["RRHH", "Capacitador"].includes(role.NOMBRE)) && (
-                <Link href="/capacitaciones">
-                  <Button size="sm">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Nueva Capacitación
-                  </Button>                
-                </Link>
+                getNavigationButtons()
               )}
             </>
           )}

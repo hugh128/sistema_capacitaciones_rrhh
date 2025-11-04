@@ -12,6 +12,10 @@ import toast, { Toaster } from 'react-hot-toast'
 import { EMPRESA_COLUMNS, EMPRESA_FORM_FIELDS, DEFAULT_NEW_EMPRESA_DATA } from "@/data/empresa-config"
 import { useEmpresas } from "@/hooks/useEmpresas"
 import { RequirePermission } from "@/components/RequirePermission"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
+import { ArrowLeft } from "lucide-react"
+import { AppHeader } from "@/components/app-header"
 
 export default function EmpresasPage() {
   const { user } = useAuth()
@@ -52,16 +56,23 @@ export default function EmpresasPage() {
         <Sidebar />
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          <header className="border-b border-border bg-card px-6 py-4">
-            <div>
-              <h1 className="text-2xl font-bold text-card-foreground">Configuración - Empresas</h1>
-              <p className="text-sm text-muted-foreground">Gestiona las empresas del sistema</p>
-            </div>
-          </header>
+
+          <AppHeader title="Configuración - Empresas" subtitle="Gestiona las empresas del sistema" />
 
           <main className="flex-1 overflow-auto p-6">
             <Toaster />
             <div className="max-w-7xl mx-auto">
+              <div className="flex">
+                <div className="flex flex-col items-start gap-2">
+                  <Link href="/configuracion">
+                    <Button variant="ghost" className="cursor-pointer">
+                      <ArrowLeft className="w-4 h-4" />
+                      Configuracion
+                    </Button>
+                  </Link>
+                </div>
+              </div>
+
               <DataTable
                 title="Empresas"
                 data={empresas}
