@@ -35,6 +35,7 @@ export type EstadoColaborador =
   | "ASISTIO_SIN_EVALUAR"
   | "APROBADO"
   | "REPROBADO"
+  | "PENDIENTE_ASISTENCIA"
 
 // ========================================
 // INTERFACES PRINCIPALES
@@ -217,6 +218,7 @@ export interface AsignarSesion {
   grupoObjetivo: string
   observaciones: string
   usuario: string
+  objetivo?: string
 }
 
 
@@ -328,6 +330,7 @@ export function getEstadoColaboradorColor(estado: EstadoColaborador): string {
     ASISTIO_SIN_EVALUAR: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
     APROBADO: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
     REPROBADO: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
+    PENDIENTE_ASISTENCIA: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
   }
   return colors[estado]
 }

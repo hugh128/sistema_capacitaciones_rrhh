@@ -222,6 +222,27 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     }
   }, [user]);
 
+  const obtenerDetalleSesion = useCallback(async (idSesion: number) => {  
+    if (!user) {
+      toast.error("Usuario no autenticado.");
+      return;
+    }
+
+    setIsMutating(true);
+    setError(null);
+
+    try {
+      const { data } = await apiClient.get(`/capacitaciones/${idSesion}/sesion/detalle`);
+      return data;
+    } catch (err) {
+      const baseMessage = "Error al obtener detalle de sesion.";
+      setError(baseMessage);
+      handleApiError(err, baseMessage);
+    } finally {
+      setIsMutating(false);
+    }
+  }, [user]);
+
   const iniciarSesionCapacitador = useCallback(async (idSesion: number, idCapacitador: number, observaciones: string | null) => {  
     if (!user) {
       toast.error("Usuario no autenticado.");
@@ -539,5 +560,6 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     obtenerCapacitacionEnRevision,
     aprobarAsistencia,
     aprobarSesion,
+    obtenerDetalleSesion,
   }
 }

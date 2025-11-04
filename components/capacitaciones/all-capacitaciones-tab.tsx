@@ -35,6 +35,15 @@ export function AllCapacitacionesTab({ capacitaciones }: AllCapacitacionesTabPro
     })
   }, [searchTerm, estadoFilter, capacitadorFilter, capacitaciones])
 
+  const getDetailRoute = (capacitacion: ApiCapacitacionSesion): string => {
+    if (capacitacion.ESTADO === "PENDIENTE_ASIGNACION" || capacitacion.ESTADO === "ASIGNADA") {
+      return `/capacitaciones/asignar/${capacitacion.ID_CAPACITACION}`
+    } else if (capacitacion.ESTADO === "FINALIZADA_CAPACITADOR" || capacitacion.ESTADO === "EN_REVISION") {
+      return `capacitaciones/revisar/${capacitacion.ID_SESION}`
+    }
+    return `/capacitaciones/${capacitacion.ID_SESION}`
+  }
+
   return (
     <div className="space-y-4">
       <Card>
@@ -116,19 +125,19 @@ export function AllCapacitacionesTab({ capacitaciones }: AllCapacitacionesTabPro
 
                         <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
                           <div className="text-muted-foreground">
-                            <span className="font-medium text-foreground">Capacitador:</span> {cap.CAPACITADOR_NOMBRE}
+                            <span className="font-medium text-foreground">Capacitador:</span> {cap.CAPACITADOR_NOMBRE ?? "Por asignar"}
                           </div>
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <Calendar className="h-4 w-4" />
                             <span>
-                              {cap.FECHA_PROGRAMADA
-                                ? new Date(cap.FECHA_PROGRAMADA).toLocaleDateString("es-GT")
+                              {cap.FECHA_INICIO
+                                ? new Date(cap.FECHA_INICIO).toLocaleDateString("es-GT")
                                 : "Sin fecha"}
                             </span>
                           </div>
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <Clock className="h-4 w-4" />
-                            <span>{cap.HORARIO_FORMATO}</span>
+                            <span>{cap.HORARIO_FORMATO_12H ?? "Sin horario"}</span>
                           </div>
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <Users className="h-4 w-4" />
@@ -137,7 +146,7 @@ export function AllCapacitacionesTab({ capacitaciones }: AllCapacitacionesTabPro
                         </div>
                       </div>
 
-                      <Link href={`/capacitaciones/${cap.ID_CAPACITACION}`}>
+                      <Link href={getDetailRoute(cap)}>
                         <Button variant="outline" className="whitespace-nowrap bg-transparent">
                           <Eye className="h-4 w-4 mr-2" />
                           Ver Detalle

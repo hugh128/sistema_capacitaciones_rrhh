@@ -37,7 +37,7 @@ import { useParams, useRouter } from "next/navigation"
 import { getEstadoCapacitacionColor, getEstadoColaboradorColor } from "@/lib/capacitaciones/capacitaciones-types"
 import { RequirePermission } from "@/components/RequirePermission"
 import { useCapacitaciones } from "@/hooks/useCapacitaciones"
-import { ColaboradorAsistenciaData, COLABORADORES_SESION, EstadoColaborador, SESION_DETALLE } from "@/lib/mis-capacitaciones/capacitaciones-types"
+import { COLABORADORES_SESION, EstadoColaborador, SESION_DETALLE } from "@/lib/mis-capacitaciones/capacitaciones-types"
 
 export default function RevisarCapacitacionPage() {
   const { user } = useAuth()

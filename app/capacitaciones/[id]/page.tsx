@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useEffect, useMemo, useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Sidebar } from "@/components/sidebar"
 import { AppHeader } from "@/components/app-header"
@@ -9,39 +9,109 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ArrowLeft, CheckCircle2, XCircle, Calendar, Clock, Users, BookOpen } from "lucide-react"
+import { ArrowLeft, CheckCircle2, XCircle, Calendar, Clock, Users, BookOpen, Eye } from "lucide-react"
 import Link from "next/link"
-import { useParams, useRouter } from "next/navigation"
-import { mockCapacitaciones, getColaboradoresByCapacitacion } from "@/lib/mis-capacitaciones/capacitaciones-mock-data"
+import { useParams } from "next/navigation"
 import { getEstadoCapacitacionColor, getEstadoColaboradorColor } from "@/lib/capacitaciones/capacitaciones-types"
 import { RequirePermission } from "@/components/RequirePermission"
+import { useCapacitaciones } from "@/hooks/useCapacitaciones"
+import { COLABORADORES_SESION, SESION_DETALLE } from "@/lib/mis-capacitaciones/capacitaciones-types"
 
 export default function CapacitacionDetailPage() {
   const { user } = useAuth()
   const params = useParams()
-  const router = useRouter()
-  const capacitacionId = Number(params.id)
+  const sesionId = Number(params.id)
 
-  const capacitacion = useMemo(() => {
-    return mockCapacitaciones.find((c) => c.ID_CAPACITACION === capacitacionId)
-  }, [capacitacionId])
+  const {
+    obtenerDetalleSesion,
+    descargarListaAsistencia,
+  } = useCapacitaciones(user)
 
-  const colaboradores = useMemo(() => {
-    return getColaboradoresByCapacitacion(capacitacionId)
-  }, [capacitacionId])
+  const [isLoading, setIsLoading] = useState(true);
+  const [sesion, setSesion] = useState<SESION_DETALLE>()
+  const [colaboradoresAsignados, setColaboradoresAsignados] = useState<COLABORADORES_SESION[]>([])
+  const [loadingDownload, setLoadingDownload] = useState(false);
+
+  useEffect(() => {
+    if (!user || !user.PERSONA_ID) {
+      setIsLoading(false);
+      return; 
+    }
+
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const { SESION, COLABORADORES } = await obtenerDetalleSesion(sesionId)
+        setSesion(SESION)
+        setColaboradoresAsignados(COLABORADORES)
+      } catch (error) {
+        console.error('Error al cargar datos:', error)
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchData()
+  }, [user, sesionId, obtenerDetalleSesion])
 
   // Calculate stats
   const stats = useMemo(() => {
-    const total = colaboradores.length
-    const asistencias = colaboradores.filter((c) => c.ASISTIO === true).length
-    const examenes = colaboradores.filter((c) => c.URL_EXAMEN).length
-    const diplomas = colaboradores.filter((c) => c.URL_DIPLOMA).length
-    const aprobados = colaboradores.filter((c) => c.APROBADO === true).length
+    const total = colaboradoresAsignados.length
+    const asistencias = colaboradoresAsignados.filter((c) => c.ASISTIO === true).length
+    const examenes = colaboradoresAsignados.filter((c) => c.URL_EXAMEN).length
+    const diplomas = colaboradoresAsignados.filter((c) => c.URL_DIPLOMA).length
+    const aprobados = colaboradoresAsignados.filter((c) => c.APROBADO === true).length
 
     return { total, asistencias, examenes, diplomas, aprobados }
-  }, [colaboradores])
+  }, [colaboradoresAsignados])
 
-  if (!capacitacion) {
+  const handleDownload = async () => {
+    const attendanceInfo = sesion?.URL_LISTA_ASISTENCIA
+    try {
+      setLoadingDownload(true);
+
+      if (!attendanceInfo) {
+        return;
+      }
+
+      if (
+        attendanceInfo.startsWith("blob:") ||
+        attendanceInfo.startsWith("C:") ||
+        attendanceInfo.startsWith("/")
+      ) {
+        window.open(attendanceInfo, "_blank");
+        return;
+      }
+
+      const signedUrl = await descargarListaAsistencia(sesion.ID_SESION);
+
+      if (signedUrl) {
+        window.open(signedUrl, "_blank");
+      }
+    } catch (error) {
+      console.error("Error al descargar la lista:", error);
+    } finally {
+      setLoadingDownload(false);
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="w-96">
+          <CardHeader>
+            <CardTitle>Cargando Detalles...</CardTitle>
+            <CardDescription>Obteniendo información de la sesion y capacitadores.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  if (!sesion) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-96">
@@ -61,15 +131,15 @@ export default function CapacitacionDetailPage() {
 
   // Helper function to determine if HR can navigate to assignment or review
   const getNavigationButtons = () => {
-    if (capacitacion.ESTADO === "PENDIENTE_ASIGNACION" || capacitacion.ESTADO === "ASIGNADA") {
+    if (sesion.ESTADO === "PENDIENTE_ASIGNACION" || sesion.ESTADO === "ASIGNADA") {
       return (
-        <Link href={`/capacitaciones/asignar/${capacitacionId}`}>
+        <Link href={`/capacitaciones/asignar/${sesion.ID_CAPACITACION}`}>
           <Button>Ir a Asignación</Button>
         </Link>
       )
-    } else if (capacitacion.ESTADO === "FINALIZADA_CAPACITADOR" || capacitacion.ESTADO === "EN_REVISION") {
+    } else if (sesion.ESTADO === "FINALIZADA_CAPACITADOR" || sesion.ESTADO === "EN_REVISION") {
       return (
-        <Link href={`/capacitaciones/revisar/${capacitacionId}`}>
+        <Link href={`/capacitaciones/revisar/${sesionId}`}>
           <Button>Ir a Revisión</Button>
         </Link>
       )
@@ -96,9 +166,9 @@ export default function CapacitacionDetailPage() {
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <h1 className="text-3xl font-bold text-foreground">Detalle de Capacitación</h1>
-                    <Badge className={getEstadoCapacitacionColor(capacitacion.ESTADO)}>{capacitacion.ESTADO}</Badge>
+                    <Badge className={getEstadoCapacitacionColor(sesion.ESTADO)}>{sesion.ESTADO}</Badge>
                   </div>
-                  <p className="text-muted-foreground">{capacitacion.NOMBRE}</p>
+                  <p className="text-muted-foreground">{sesion.CAPACITACION_NOMBRE}</p>
                 </div>
               </div>
               <div>{getNavigationButtons()}</div>
@@ -113,26 +183,26 @@ export default function CapacitacionDetailPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                   <div>
                     <Label className="text-muted-foreground">Código</Label>
-                    <p className="font-medium">{capacitacion.CODIGO_DOCUMENTO || "N/A"}</p>
+                    <p className="font-medium">{sesion.CODIGO_DOCUMENTO || "N/A"}</p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Capacitador</Label>
-                    <p className="font-medium">{capacitacion.CAPACITADOR_NOMBRE}</p>
+                    <p className="font-medium">{sesion.CAPACITADOR_NOMBRE}</p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Tipo</Label>
-                    <p className="font-medium">{capacitacion.TIPO_CAPACITACION}</p>
+                    <p className="font-medium">{sesion.TIPO_CAPACITACION}</p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Departamento</Label>
-                    {/* <p className="font-medium">{capacitacion.DEPARTAMENTO}</p> */}
+                    <p className="font-medium">{sesion.DEPARTAMENTO}</p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Fecha de Inicio</Label>
                     <p className="font-medium flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
-                      {capacitacion.FECHA_INICIO
-                        ? new Date(capacitacion.FECHA_INICIO).toLocaleDateString("es-GT")
+                      {sesion.FECHA_INICIO
+                        ? new Date(sesion.FECHA_INICIO).toLocaleDateString("es-GT")
                         : "Sin fecha"}
                     </p>
                   </div>
@@ -140,16 +210,16 @@ export default function CapacitacionDetailPage() {
                     <Label className="text-muted-foreground">Horario</Label>
                     <p className="font-medium flex items-center gap-2">
                       <Clock className="h-4 w-4" />
-                      {capacitacion.HORARIO_FORMATO}
+                      {sesion.HORARIO_FORMATO_12H}
                     </p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Duración</Label>
-                    <p className="font-medium">{capacitacion.DURACION_FORMATO}</p>
+                    <p className="font-medium">{sesion.DURACION_FORMATO}</p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Nota Mínima</Label>
-                    <p className="font-medium">{capacitacion.NOTA_MINIMA || "N/A"}</p>
+                    <p className="font-medium">{sesion.NOTA_MINIMA || "N/A"}</p>
                   </div>
                 </div>
               </CardContent>
@@ -161,7 +231,7 @@ export default function CapacitacionDetailPage() {
                 <CardTitle>Objetivo</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">{capacitacion.OBJETIVO}</p>
+                <p className="text-muted-foreground">{sesion.OBJETIVO}</p>
               </CardContent>
             </Card>
 
@@ -191,7 +261,7 @@ export default function CapacitacionDetailPage() {
                 </CardContent>
               </Card>
 
-              {capacitacion.APLICA_EXAMEN && (
+              {sesion.APLICA_EXAMEN && (
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium">Exámenes</CardTitle>
@@ -204,7 +274,7 @@ export default function CapacitacionDetailPage() {
                 </Card>
               )}
 
-              {capacitacion.APLICA_DIPLOMA && (
+              {sesion.APLICA_DIPLOMA && (
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium">Diplomas</CardTitle>
@@ -243,12 +313,13 @@ export default function CapacitacionDetailPage() {
                         <TableHead>Departamento</TableHead>
                         <TableHead>Estado</TableHead>
                         <TableHead>Asistencia</TableHead>
-                        {capacitacion.APLICA_EXAMEN && <TableHead>Nota</TableHead>}
-                        {capacitacion.APLICA_DIPLOMA && <TableHead>Diploma</TableHead>}
+                        {sesion.APLICA_EXAMEN && <TableHead>Nota</TableHead>}
+                        {sesion.APLICA_EXAMEN && <TableHead>Examen</TableHead>}
+                        {sesion.APLICA_DIPLOMA && <TableHead>Diploma</TableHead>}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {colaboradores.length === 0 ? (
+                      {colaboradoresAsignados.length === 0 ? (
                         <TableRow>
                           <TableCell colSpan={6} className="text-center py-8">
                             <BookOpen className="h-8 w-8 mx-auto mb-2 opacity-50" />
@@ -256,7 +327,7 @@ export default function CapacitacionDetailPage() {
                           </TableCell>
                         </TableRow>
                       ) : (
-                        colaboradores.map((col) => (
+                        colaboradoresAsignados.map((col) => (
                           <TableRow key={col.ID_COLABORADOR}>
                             <TableCell>
                               <div>
@@ -279,7 +350,7 @@ export default function CapacitacionDetailPage() {
                                 <span className="text-muted-foreground">-</span>
                               )}
                             </TableCell>
-                            {capacitacion.APLICA_EXAMEN && (
+                            {sesion.APLICA_EXAMEN && (
                               <TableCell>
                                 {col.NOTA_OBTENIDA !== null ? (
                                   <span className="font-medium">{col.NOTA_OBTENIDA}</span>
@@ -288,7 +359,16 @@ export default function CapacitacionDetailPage() {
                                 )}
                               </TableCell>
                             )}
-                            {capacitacion.APLICA_DIPLOMA && (
+                            {sesion.APLICA_EXAMEN && (
+                              <TableCell>
+                                {col.URL_EXAMEN ? (
+                                  <CheckCircle2 className="h-5 w-5 text-green-600" />
+                                ) : (
+                                  <span className="text-muted-foreground">-</span>
+                                )}
+                              </TableCell>
+                            )}
+                            {sesion.APLICA_DIPLOMA && (
                               <TableCell>
                                 {col.URL_DIPLOMA ? (
                                   <CheckCircle2 className="h-5 w-5 text-green-600" />
@@ -306,14 +386,32 @@ export default function CapacitacionDetailPage() {
               </CardContent>
             </Card>
 
+            {/* Asistencia */}
+            <Card>
+              <CardHeader>
+                <CardTitle>Listado de asistencia</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Button
+                  variant="link"
+                  onClick={handleDownload}
+                  disabled={loadingDownload}
+                  className="h-auto p-0 text-sm cursor-pointer dark:text-blue-800 dark:font-bold"
+                >
+                  <Eye className="h-3 w-3 mr-1" />
+                  Ver documento
+                </Button>
+              </CardContent>
+            </Card>
+
             {/* Observations */}
-            {capacitacion.OBSERVACIONES && (
+            {sesion.OBSERVACIONES && (
               <Card>
                 <CardHeader>
                   <CardTitle>Observaciones</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">{capacitacion.OBSERVACIONES}</p>
+                  <p className="text-muted-foreground">{sesion.OBSERVACIONES}</p>
                 </CardContent>
               </Card>
             )}

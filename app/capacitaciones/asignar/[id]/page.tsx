@@ -199,6 +199,7 @@ export default function AsignarCapacitacionPage() {
       grupoObjetivo: grupoObjetivo,
       observaciones: observaciones,
       usuario: user.USERNAME,
+      objetivo: objetivo,
     };
 
     try {
