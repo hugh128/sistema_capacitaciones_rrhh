@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Info, Users, FileText, Award } from "lucide-react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
-import type { ColaboradorAsistenciaData, COLABORADORES_SESION, SESION_DETALLE } from "@/lib/mis-capacitaciones/capacitaciones-types"
+import type { ColaboradorAsistenciaData, COLABORADORES_SESION, FileState, SESION_DETALLE } from "@/lib/mis-capacitaciones/capacitaciones-types"
 import { TrainingHeader } from "@/components/mis-capacitaciones/training-header"
 import { InfoTab } from "@/components/mis-capacitaciones/info-tab"
 import { ParticipantsTab } from "@/lib/mis-capacitaciones/participants-tab"
@@ -19,10 +19,6 @@ import { RequirePermission } from "@/components/RequirePermission"
 import { useCapacitaciones } from "@/hooks/useCapacitaciones"
 import { AppHeader } from "@/components/app-header"
 import { Toaster } from "react-hot-toast"
-
-export interface FileState {
-    [colaboradorId: number]: File | null;
-}
 
 export default function TrainerCapacitacionDetailPage() {
   const { user } = useAuth()

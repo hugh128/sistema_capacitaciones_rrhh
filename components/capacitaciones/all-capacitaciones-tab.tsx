@@ -8,10 +8,10 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Calendar, Clock, Users, Search, Filter, Eye, BookOpen } from "lucide-react"
 import Link from "next/link"
-import { type Capacitacion, getEstadoCapacitacionColor } from "@/lib/capacitaciones/capacitaciones-types"
+import { ApiCapacitacionSesion, getEstadoCapacitacionColor } from "@/lib/capacitaciones/capacitaciones-types"
 
 interface AllCapacitacionesTabProps {
-  capacitaciones: Capacitacion[]
+  capacitaciones: ApiCapacitacionSesion[]
 }
 
 export function AllCapacitacionesTab({ capacitaciones }: AllCapacitacionesTabProps) {
@@ -27,7 +27,7 @@ export function AllCapacitacionesTab({ capacitaciones }: AllCapacitacionesTabPro
   const capacitacionesFiltradas = useMemo(() => {
     return capacitaciones.filter((cap) => {
       const matchesSearch =
-        cap.NOMBRE.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        cap.CAPACITACION_NOMBRE.toLowerCase().includes(searchTerm.toLowerCase()) ||
         cap.CODIGO_DOCUMENTO?.toLowerCase().includes(searchTerm.toLowerCase())
       const matchesEstado = estadoFilter === "TODOS" || cap.ESTADO === estadoFilter
       const matchesCapacitador = capacitadorFilter === "TODOS" || cap.CAPACITADOR_NOMBRE === capacitadorFilter
@@ -76,11 +76,13 @@ export function AllCapacitacionesTab({ capacitaciones }: AllCapacitacionesTabPro
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="TODOS">Todos los capacitadores</SelectItem>
-                {capacitadores.map((cap) => (
-                  <SelectItem key={cap} value={cap}>
-                    {cap}
-                  </SelectItem>
-                ))}
+                {capacitadores
+                  .filter((cap): cap is string => cap !== null && cap !== undefined)
+                  .map((cap) => (
+                    <SelectItem key={cap} value={cap}>
+                      {cap}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
           </div>
@@ -99,7 +101,7 @@ export function AllCapacitacionesTab({ capacitaciones }: AllCapacitacionesTabPro
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 space-y-3">
                         <div className="flex items-center gap-2 flex-wrap">
-                          <h3 className="font-semibold text-lg text-foreground">{cap.NOMBRE}</h3>
+                          <h3 className="font-semibold text-lg text-foreground">{cap.CAPACITACION_NOMBRE}</h3>
                           <Badge className={getEstadoCapacitacionColor(cap.ESTADO)}>{cap.ESTADO}</Badge>
                           <Badge variant="outline">{cap.TIPO_CAPACITACION}</Badge>
                         </div>
@@ -130,7 +132,7 @@ export function AllCapacitacionesTab({ capacitaciones }: AllCapacitacionesTabPro
                           </div>
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <Users className="h-4 w-4" />
-                            <span>{cap.TOTAL_COLABORADORES_PENDIENTES} participantes</span>
+                            <span>{cap.TOTAL_COLABORADORES} participantes</span>
                           </div>
                         </div>
                       </div>

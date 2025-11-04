@@ -1,6 +1,6 @@
 import { apiClient } from "@/lib/api-client";
 import { UsuarioLogin } from "@/lib/auth";
-import type { AsignarCapacitacion, AsignarSesion, Capacitacion } from "@/lib/capacitaciones/capacitaciones-types";
+import type { ApiCapacitacionSesion, AsignarCapacitacion, AsignarSesion, Capacitacion } from "@/lib/capacitaciones/capacitaciones-types";
 import type { ColaboradorAsistenciaData } from "@/lib/mis-capacitaciones/capacitaciones-types";
 import { handleApiError } from "@/utils/error-handler";
 import { useCallback, useEffect, useState } from "react";
@@ -8,6 +8,7 @@ import toast from "react-hot-toast";
 
 export function useCapacitaciones(user: UsuarioLogin | null) {
   const [capacitacionesPendientes, setCapacitacionesPendientes] = useState<Capacitacion[]>([]);
+  const [capacitaciones, setCapacitaciones] = useState<ApiCapacitacionSesion[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMutating, setIsMutating] = useState(false);
@@ -33,6 +34,26 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     }
   }, [user]);
 
+  const obtenerCapacitaciones = useCallback(async () => {
+    if (!user) {
+      setCapacitaciones([]);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+
+    try {
+      const { data } = await apiClient.get<ApiCapacitacionSesion[]>('/capacitaciones/todas');
+      setCapacitaciones(data);
+    } catch (err) {
+      const baseMessage = "Error al cargar capacitaciones.";
+      setError(baseMessage);
+      handleApiError(err, baseMessage)
+    } finally {
+      setLoading(false);
+    }
+  }, [user]);
 
   const obtenerDetallesCapacitacion = useCallback(async (idCapacitacion: number) => {  
     if (!user) {
@@ -54,7 +75,6 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
       setIsMutating(false);
     }
   }, [user]);
-
 
   const obtenerCapacitadores = useCallback(async () => {  
     if (!user) {
@@ -143,7 +163,6 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     }
   }, [user]);
 
-
   const obtenerCapacitacionesPorCapacitador = useCallback(async (idCapacitador: number) => {  
     if (!user) {
       toast.error("Usuario no autenticado.");
@@ -163,7 +182,6 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     }
   }, [user]);
 
-
   const obtenerDetalleSesionCapacitador = useCallback(async (idSesion: number, idCapacitador: number) => {  
     if (!user) {
       toast.error("Usuario no autenticado.");
@@ -180,6 +198,27 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
       const baseMessage = "Error al obtener capacitaciones.";
       setError(baseMessage);
       handleApiError(err, baseMessage);
+    }
+  }, [user]);
+
+  const obtenerCapacitacionEnRevision = useCallback(async (idSesion: number) => {  
+    if (!user) {
+      toast.error("Usuario no autenticado.");
+      return;
+    }
+
+    setIsMutating(true);
+    setError(null);
+
+    try {
+      const { data } = await apiClient.get(`/capacitaciones/${idSesion}/en-revision`);
+      return data;
+    } catch (err) {
+      const baseMessage = "Error al obtener capacitaciones.";
+      setError(baseMessage);
+      handleApiError(err, baseMessage);
+    } finally {
+      setIsMutating(false);
     }
   }, [user]);
 
@@ -303,11 +342,68 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     }
   }, [user]);
 
-  useEffect(() => {
-    if (user) {
-      refreshCapacitacionesPendientes();
+  const aprobarAsistencia = useCallback(async (
+    idSesion: number,
+    colaboradores: ColaboradorAsistenciaData[],
+    usuario: string
+  ) => {
+    if (!user) {
+      toast.error("Usuario no autenticado.");
+      return;
     }
-  }, [user, refreshCapacitacionesPendientes]);
+
+    setIsMutating(true);
+    setError(null);
+
+    try {
+      const body = {
+        colaboradores,
+        usuario
+      };
+
+      const response = await apiClient.put(
+        `/capacitaciones/${idSesion}/aprobar/asistencias`,
+        body
+      );
+
+      toast.success("Asistencias registradas exitosamente.");
+      return response.data;
+    } catch (err) {
+      const baseMessage = "Error al finalizar sesión.";
+      setError(baseMessage);
+      handleApiError(err, baseMessage);
+    } finally {
+      setIsMutating(false);
+    }
+  }, [user]);
+
+
+  const aprobarSesion = useCallback(async (idSesion: number, usuario: string, observaciones: string) => {  
+    if (!user) {
+      toast.error("Usuario no autenticado.");
+      return;
+    }
+
+    setIsMutating(true);
+    setError(null);
+    let successMessage = "";
+
+    const payload = { idSesion, usuario, observaciones }
+
+    try {
+      await apiClient.put(`/capacitaciones/${idSesion}/sesion/aprobar`, payload);
+      successMessage = "Sesion aprobada exitosamente.";
+      
+      toast.success(successMessage);
+    } catch (err) {
+      const baseMessage = "Error al aprobar sesion.";
+      setError(baseMessage);
+      handleApiError(err, baseMessage);
+    } finally {
+      setIsMutating(false);
+    }
+  }, [user]);
+
 
   const descargarListaAsistencia = useCallback(async (idSesion: number): Promise<string> => {
     try {
@@ -324,33 +420,37 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     }
   }, []);
 
-  const descargarExamen = useCallback(async (idSesion: number, idColaborador: number) => {
+  const descargarExamen = useCallback(async (idSesion: number, idColaborador: number): Promise<string> => {
     try {
       const { data } = await apiClient.get(
         `/capacitaciones/${idSesion}/colaboradores/${idColaborador}/examen/descargar`
       );
       if (data?.url) {
-        window.open(data.url, "_blank");
+        return data.url
       } else {
         toast.error("No se pudo generar la URL del examen.");
+        throw new Error("No se pudo generar la URL de descarga.");
       }
     } catch (err) {
       handleApiError(err, "Error al descargar el examen.");
+      throw err;
     }
   }, []);
 
-  const descargarDiploma = useCallback(async (idSesion: number, idColaborador: number) => {
+  const descargarDiploma = useCallback(async (idSesion: number, idColaborador: number): Promise<string> => {
     try {
       const { data } = await apiClient.get(
         `/capacitaciones/${idSesion}/colaboradores/${idColaborador}/diploma/descargar`
       );
       if (data?.url) {
-        window.open(data.url, "_blank");
+        return data.url
       } else {
         toast.error("No se pudo generar la URL del diploma.");
+        throw new Error("No se pudo generar la URL de descarga.");
       }
     } catch (err) {
       handleApiError(err, "Error al descargar el diploma.");
+      throw err;
     }
   }, []);
 
@@ -408,7 +508,15 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     }
   }, [user]);
 
+  useEffect(() => {
+    if (user) {
+      refreshCapacitacionesPendientes();
+      obtenerCapacitaciones();
+    }
+  }, [user, refreshCapacitacionesPendientes, obtenerCapacitaciones]);
+
   return {
+    capacitaciones,
     capacitacionesPendientes,
     loading,
     error,
@@ -428,5 +536,8 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     descargarDiploma,
     descargarPlantillaAsistencia,
     descargarArchivoPorRuta,
+    obtenerCapacitacionEnRevision,
+    aprobarAsistencia,
+    aprobarSesion,
   }
 }

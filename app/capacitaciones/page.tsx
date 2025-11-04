@@ -10,7 +10,6 @@ import { MetricsCards } from "@/components/capacitaciones/metrics-cards"
 import { PendingAssignmentsTab } from "@/components/capacitaciones/pending-assignments-tab"
 import { PendingReviewsTab } from "@/components/capacitaciones/pending-reviews-tab"
 import { AllCapacitacionesTab } from "@/components/capacitaciones/all-capacitaciones-tab"
-import { mockCapacitaciones } from "@/lib/mis-capacitaciones/capacitaciones-mock-data"
 import { RequirePermission } from "@/components/RequirePermission"
 import { useCapacitaciones } from "@/hooks/useCapacitaciones"
 import { Toaster } from "react-hot-toast"
@@ -18,18 +17,28 @@ import { Toaster } from "react-hot-toast"
 export default function GestionCapacitacionesPage() {
   const { user } = useAuth()
   const {
-    capacitacionesPendientes,
+    capacitaciones,
   } = useCapacitaciones(user);
+
+  // Separar por estado
+  const pendientesAsignacion = useMemo(() => {
+    return capacitaciones.filter(
+      (c) => c.ESTADO === "PENDIENTE_ASIGNACION"
+    )
+  }, [capacitaciones])
+
+  const pendientesRevision = useMemo(() => {
+    return capacitaciones.filter(
+      (c) => c.ESTADO === "FINALIZADA_CAPACITADOR"
+    )
+  }, [capacitaciones])
 
   // Calculate metrics
   const metrics = useMemo(() => {
-    const total = mockCapacitaciones.length
-    const pendientesAsignacion = mockCapacitaciones.filter(
-      (c) => c.ESTADO === "PENDIENTE_ASIGNACION" || c.ESTADO === "CREADA",
-    ).length
-    const enProceso = mockCapacitaciones.filter((c) => c.ESTADO === "EN_PROCESO").length
-    const pendientesRevision = mockCapacitaciones.filter((c) => c.ESTADO === "FINALIZADA_CAPACITADOR").length
-    const finalizadasEsteMes = mockCapacitaciones.filter((c) => {
+    const total = capacitaciones.length
+
+    const enProceso = capacitaciones.filter(c => c.ESTADO === "EN_PROCESO").length
+    const finalizadasEsteMes = capacitaciones.filter(c => {
       if (c.ESTADO !== "FINALIZADA") return false
       if (!c.FECHA_INICIO) return false
       const fecha = new Date(c.FECHA_INICIO)
@@ -37,25 +46,21 @@ export default function GestionCapacitacionesPage() {
       return fecha.getMonth() === hoy.getMonth() && fecha.getFullYear() === hoy.getFullYear()
     }).length
 
-    const totalParticipantes = mockCapacitaciones.reduce((sum, c) => sum + c.TOTAL_COLABORADORES_PENDIENTES, 0)
-    const asistenciaPromedio = 85
-    const aprobacionPromedio = 92
+    const totalParticipantes = capacitaciones.reduce((sum, c) => sum + (c.TOTAL_COLABORADORES ?? 0), 0)
+    const asistenciaPromedio = capacitaciones.reduce((sum, c) => sum + (c.TOTAL_ASISTENCIAS ?? 0), 0) / total || 0
+    const aprobacionPromedio = capacitaciones.reduce((sum, c) => sum + (c.TOTAL_APROBADOS ?? 0), 0) / total || 0
 
     return {
       total,
-      pendientesAsignacion,
+      pendientesAsignacion: pendientesAsignacion.length,
       enProceso,
-      pendientesRevision,
+      pendientesRevision: pendientesRevision.length,
       finalizadasEsteMes,
       totalParticipantes,
       asistenciaPromedio,
-      aprobacionPromedio,
+      aprobacionPromedio
     }
-  }, [])
-
-  const pendientesRevision = useMemo(() => {
-    return mockCapacitaciones.filter((c) => c.ESTADO === "FINALIZADA_CAPACITADOR")
-  }, [])
+  }, [capacitaciones, pendientesAsignacion.length, pendientesRevision.length])
 
   if (!user || !user.ROLES.some((role) => role.NOMBRE === "RRHH")) {
     return (
@@ -97,14 +102,14 @@ export default function GestionCapacitacionesPage() {
             {/* Main Tabs */}
             <Tabs defaultValue="pendientes" className="w-full">
               <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="pendientes">Pendientes de Asignar ({capacitacionesPendientes.length})</TabsTrigger>
+                <TabsTrigger value="pendientes">Pendientes de Asignar ({pendientesAsignacion.length})</TabsTrigger>
                 <TabsTrigger value="revision">Pendientes de Revisión ({pendientesRevision.length})</TabsTrigger>
                 <TabsTrigger value="todas">Todas las Capacitaciones</TabsTrigger>
               </TabsList>
 
               <TabsContent value="pendientes">
                 <PendingAssignmentsTab
-                  capacitaciones={capacitacionesPendientes}
+                  capacitaciones={pendientesAsignacion}
                 />
               </TabsContent>
 
@@ -113,7 +118,7 @@ export default function GestionCapacitacionesPage() {
               </TabsContent>
 
               <TabsContent value="todas">
-                <AllCapacitacionesTab capacitaciones={mockCapacitaciones} />
+                <AllCapacitacionesTab capacitaciones={capacitaciones} />
               </TabsContent>
             </Tabs>
           </main>

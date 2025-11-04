@@ -11,6 +11,8 @@ export type EstadoCapacitacion =
   | "PARCIALMENTE_COMPLETADA"
   | "FINALIZADA"
   | "CANCELADA"
+  | "FINALIZADA_CAPACITADOR"
+  | "PROGRAMADA"
 
 export type EstadoSesion =
   | "PROGRAMADA"
@@ -256,12 +258,14 @@ export function getEstadoCapacitacionColor(estado: EstadoCapacitacion): string {
   const colors: Record<EstadoCapacitacion, string> = {
     CREADA: "bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200",
     PENDIENTE_ASIGNACION: "bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200",
+    FINALIZADA_CAPACITADOR: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
     ASIGNADA: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
     EN_PROCESO: "bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200",
     EN_REVISION: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200",
     PARCIALMENTE_COMPLETADA: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200",
     FINALIZADA: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
     CANCELADA: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+    PROGRAMADA: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
   }
   return colors[estado]
 }
@@ -291,10 +295,12 @@ export function calcularEstadoColaborador(colaborador: ColaboradorCapacitacion):
 export function getEstadoCapacitacionDescripcion(estado: EstadoCapacitacion): string {
   const descripciones: Record<EstadoCapacitacion, string> = {
     CREADA: "Capacitación creada recientemente",
+    PROGRAMADA: "Asignado a un capacitador",
     PENDIENTE_ASIGNACION: "Esperando asignación de sesiones y colaboradores",
     ASIGNADA: "Sesiones asignadas, esperando inicio",
     EN_PROCESO: "Capacitación en curso",
     EN_REVISION: "En revisión por RRHH",
+    FINALIZADA_CAPACITADOR: "Finalizado por capacitador",
     PARCIALMENTE_COMPLETADA: "Algunas sesiones completadas",
     FINALIZADA: "Proceso completado",
     CANCELADA: "Cancelada",
@@ -326,3 +332,74 @@ export function getEstadoColaboradorColor(estado: EstadoColaborador): string {
   return colors[estado]
 }
 
+
+export interface ApiCapacitacionSesion {
+  ID_SESION: number | null;
+  ID_CAPACITACION: number;
+  TIPO_REGISTRO: "SESION" | "CAPACITACION_SIN_SESION";
+  CODIGO_DOCUMENTO: string | null;
+  CAPACITACION_NOMBRE: string;
+  OBJETIVO: string | null;
+  VERSION: number | null;
+  ES_SISTEMA_DOCUMENTAL: boolean;
+  TIPO_CAPACITACION: string;
+  MODALIDAD: string;
+  NUMERO_SESION: number | null;
+  NOMBRE_SESION: string | null;
+  GRUPO_OBJETIVO: string | null;
+  CAPACITADOR_ID: number | null;
+  CAPACITADOR_NOMBRE: string | null;
+  CAPACITADOR_CORREO: string | null;
+  CAPACITADOR_TELEFONO: string | null;
+  FECHA_PROGRAMADA: string | null;
+  FECHA_INICIO: string | null;
+  HORA_INICIO: string | null;
+  HORA_FIN: string | null;
+  DURACION_MINUTOS: number | null;
+  FECHA_FORMATO: string | null;
+  FECHA_FORMATO_LARGO: string | null;
+  HORARIO_FORMATO: string | null;
+  HORARIO_FORMATO_12H: string | null;
+  DURACION_FORMATO: string | null;
+  APLICA_EXAMEN: boolean;
+  NOTA_MINIMA: number | null;
+  APLICA_DIPLOMA: boolean;
+  ESTADO: EstadoCapacitacion;
+  ESTADO_CAPACITACION: string;
+  ESTADO_SESION: string | null;
+  URL_LISTA_ASISTENCIA: string | null;
+  OBSERVACIONES_SESION: string | null;
+  OBSERVACIONES_CAPACITACION: string | null;
+  ID_PLAN: number | null;
+  ID_PROGRAMA: number | null;
+  ID_DOCUMENTO: number | null;
+  ID_DETALLE_PROGRAMA: number | null;
+  TIPO_ORIGEN: string;
+  NOMBRE_ORIGEN: string;
+  ID_DEPARTAMENTO: number | null;
+  DEPARTAMENTO: string | null;
+  DEPARTAMENTO_CODIGO: string | null;
+  TEMAS: string | null;
+  TOTAL_COLABORADORES: number;
+  TOTAL_ASISTENCIAS: number;
+  TOTAL_AUSENCIAS: number;
+  PENDIENTES_REGISTRAR: number;
+  TOTAL_APROBADOS: number;
+  TOTAL_REPROBADOS: number;
+  PROMEDIO_NOTAS: number | null;
+  PORCENTAJE_COMPLETADO: number;
+  COLABORADORES_SIN_SESION: number;
+  TOTAL_SESIONES_CREADAS: number;
+  ESTADO_DESCRIPTIVO: string;
+  NECESITA_CREAR_SESION: number;
+  PUEDE_INICIAR: number;
+  PUEDE_FINALIZAR: number;
+  REQUIERE_REVISION: number;
+  DIAS_DESDE_SESION: number | null;
+  DIAS_EN_REVISION: number | null;
+  FECHA_CREACION_SESION: string | null;
+  FECHA_MODIFICACION_SESION: string | null;
+  USUARIO_CREACION_SESION: string | null;
+  FECHA_CREACION_CAPACITACION: string;
+  FECHA_MODIFICACION_CAPACITACION: string | null;
+}

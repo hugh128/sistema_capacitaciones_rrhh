@@ -202,6 +202,8 @@ export interface COLABORADORES_SESION {
   FECHA_ASIGNACION: string;
   REQUIERE_REGISTRAR_ASISTENCIA: number;
   REQUIERE_EVALUAR: number;
+  REQUIERE_DIPLOMA?: number;
+  ESTADO_COLABORADOR: EstadoColaborador;
 }
 
 export interface ColaboradorAsistenciaData {
@@ -211,6 +213,10 @@ export interface ColaboradorAsistenciaData {
   observaciones?: string;
   archivoExamen?: File;
   archivoDiploma?: File;
+}
+
+export interface FileState {
+    [colaboradorId: number]: File | null;
 }
 
 // Helper functions

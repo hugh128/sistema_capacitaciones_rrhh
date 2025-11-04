@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Sidebar } from "@/components/sidebar"
 import { AppHeader } from "@/components/app-header"
@@ -31,91 +31,300 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { ArrowLeft, CheckCircle2, XCircle, AlertCircle, Download, Eye, Calendar, Clock, Edit } from "lucide-react"
+import { ArrowLeft, CheckCircle2, XCircle, AlertCircle, Eye, Calendar, Clock, Edit, MinusCircle, GraduationCap, FileText } from "lucide-react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
-import { mockCapacitaciones, getColaboradoresByCapacitacion } from "@/lib/mis-capacitaciones/capacitaciones-mock-data"
-import { getEstadoColor, getEstadoColaboradorColor } from "@/lib/capacitaciones/capacitaciones-types"
-import type { ColaboradorCapacitacion } from "@/lib/capacitaciones/capacitaciones-types"
+import { getEstadoCapacitacionColor, getEstadoColaboradorColor } from "@/lib/capacitaciones/capacitaciones-types"
 import { RequirePermission } from "@/components/RequirePermission"
+import { useCapacitaciones } from "@/hooks/useCapacitaciones"
+import { ColaboradorAsistenciaData, COLABORADORES_SESION, EstadoColaborador, SESION_DETALLE } from "@/lib/mis-capacitaciones/capacitaciones-types"
 
 export default function RevisarCapacitacionPage() {
   const { user } = useAuth()
   const params = useParams()
   const router = useRouter()
-  const capacitacionId = Number(params.id)
+  const sesionId = Number(params.id)
 
-  const capacitacion = useMemo(() => {
-    return mockCapacitaciones.find((c) => c.ID_CAPACITACION === capacitacionId)
-  }, [capacitacionId])
+  const {
+    obtenerCapacitacionEnRevision,
+    descargarListaAsistencia,
+    descargarExamen,
+    descargarDiploma,
+    aprobarAsistencia,
+    aprobarSesion,
+  } = useCapacitaciones(user);
 
-  const colaboradores = useMemo(() => {
-    return getColaboradoresByCapacitacion(capacitacionId)
-  }, [capacitacionId])
+  const [isLoading, setIsLoading] = useState(true);
+  const [sesion, setSesion] = useState<SESION_DETALLE>()
+  const [colaboradoresAsignados, setColaboradoresAsignados] = useState<COLABORADORES_SESION[]>([])
+  const [asistenciaState, setAsistenciaState] = useState<Record<number, boolean>>({})
+  const [notasState, setNotasState] = useState<Record<number, number | null>>({})
+  const [loadingDownload, setLoadingDownload] = useState(false);
 
   const [observacionesRRHH, setObservacionesRRHH] = useState("")
-  const [editingColaborador, setEditingColaborador] = useState<ColaboradorCapacitacion | null>(null)
+  const [editingColaborador, setEditingColaborador] = useState<COLABORADORES_SESION | null>(null)
   const [editAsistio, setEditAsistio] = useState<boolean | null>(null)
   const [editNota, setEditNota] = useState("")
   const [editObservaciones, setEditObservaciones] = useState("")
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+
+  useEffect(() => {
+    if (!user || !user.PERSONA_ID) {
+      setIsLoading(false);
+      return; 
+    }
+
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const { SESION, COLABORADORES } = await obtenerCapacitacionEnRevision(sesionId)
+        setSesion(SESION)
+        setColaboradoresAsignados(COLABORADORES)
+
+        // Inicializar los estados desde la data que viene del backend
+        const initialAsistencia: Record<number, boolean> = {};
+        const initialNotas: Record<number, number | null> = {};
+        const initialExamenes: Record<number, boolean> = {};
+        const initialDiplomas: Record<number, boolean> = {};
+
+        COLABORADORES.forEach((col: COLABORADORES_SESION) => {
+          initialAsistencia[col.ID_COLABORADOR] = col.ASISTIO ?? false;
+          initialNotas[col.ID_COLABORADOR] = col.NOTA_OBTENIDA ?? null;
+          initialExamenes[col.ID_COLABORADOR] = !!col.URL_EXAMEN;
+          initialDiplomas[col.ID_COLABORADOR] = !!col.URL_DIPLOMA;
+        });
+
+        setAsistenciaState(initialAsistencia);
+        setNotasState(initialNotas);
+      } catch (error) {
+        console.error('Error al cargar datos:', error)
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchData()
+  }, [user, sesionId, obtenerCapacitacionEnRevision, setAsistenciaState, setNotasState])
 
   // Calculate stats
   const stats = useMemo(() => {
-    const total = colaboradores.length
-    const asistencias = colaboradores.filter((c) => c.ASISTIO === true).length
-    const examenes = colaboradores.filter((c) => c.URL_EXAMEN).length
-    const diplomas = colaboradores.filter((c) => c.URL_DIPLOMA).length
-    const aprobados = colaboradores.filter((c) => c.APROBADO === true).length
+    const total = colaboradoresAsignados.length
+    const asistencias = colaboradoresAsignados.filter((c) => c.ASISTIO === true).length
+    const examenes = colaboradoresAsignados.filter((c) => c.URL_EXAMEN).length
+    const diplomas = colaboradoresAsignados.filter((c) => c.URL_DIPLOMA).length
+    const aprobados = colaboradoresAsignados.filter((c) => c.APROBADO === true).length
 
     return { total, asistencias, examenes, diplomas, aprobados }
-  }, [colaboradores])
+  }, [colaboradoresAsignados])
 
   // Validation checks
   const validations = useMemo(() => {
-    if (!capacitacion) return { allAttendance: false, allExams: false, allDiplomas: false, hasAttendanceList: false }
+    if (!sesion) return { allAttendance: false, allExams: false, allDiplomas: false, hasAttendanceList: false }
 
-    const allAttendance = colaboradores.every((c) => c.ASISTIO !== null)
-    const allExams = capacitacion.APLICA_EXAMEN
-      ? colaboradores.filter((c) => c.ASISTIO).every((c) => c.URL_EXAMEN)
+    const allAttendance = colaboradoresAsignados.every((c) => c.ASISTIO !== null)
+    const allExams = sesion.APLICA_EXAMEN
+      ? colaboradoresAsignados.filter((c) => c.ASISTIO).every((c) => c.URL_EXAMEN)
       : true
-    const allDiplomas = capacitacion.APLICA_DIPLOMA
-      ? colaboradores.filter((c) => c.APROBADO).every((c) => c.URL_DIPLOMA)
+    const allDiplomas = sesion.APLICA_DIPLOMA
+      ? colaboradoresAsignados.filter((c) => c.APROBADO).every((c) => c.URL_DIPLOMA)
       : true
-    const hasAttendanceList = !!capacitacion.URL_LISTA_ASISTENCIA
+    const hasAttendanceList = !!sesion.URL_LISTA_ASISTENCIA
 
     return { allAttendance, allExams, allDiplomas, hasAttendanceList }
-  }, [capacitacion, colaboradores])
+  }, [sesion, colaboradoresAsignados])
 
   const canApprove = useMemo(() => {
     return validations.allAttendance && validations.allExams && validations.allDiplomas
   }, [validations])
 
-  const handleGuardarEdicion = () => {
-    if (!editingColaborador) return
+  const handleDownload = async () => {
+    const attendanceInfo = sesion?.URL_LISTA_ASISTENCIA
+    try {
+      setLoadingDownload(true);
 
-    // Validate nota if exam applies
-    if (capacitacion?.APLICA_EXAMEN && editNota) {
-      const nota = Number(editNota)
+      if (!attendanceInfo) {
+        return;
+      }
+
+      if (
+        attendanceInfo.startsWith("blob:") ||
+        attendanceInfo.startsWith("C:") ||
+        attendanceInfo.startsWith("/")
+      ) {
+        window.open(attendanceInfo, "_blank");
+        return;
+      }
+
+      const signedUrl = await descargarListaAsistencia(sesion.ID_SESION);
+
+      if (signedUrl) {
+        window.open(signedUrl, "_blank");
+      }
+    } catch (error) {
+      console.error("Error al descargar la lista:", error);
+    } finally {
+      setLoadingDownload(false);
+    }
+  };
+
+  const handleDownloadExamen = async (colaboradorId: number) => {
+    try {
+      setLoadingDownload(true);
+      if (!sesion) return;
+      const signedUrl = await descargarExamen(sesion.ID_SESION, colaboradorId);
+      if (signedUrl) {
+        window.open(signedUrl, "_blank");
+      }
+    } catch (error) {
+      console.error("Error al descargar el examen:", error);
+      alert("Error al descargar el examen. Revisa la consola para más detalles.");
+    } finally {
+      setLoadingDownload(false);
+    }
+  };
+
+  const handleDownloadDiploma = async (colaboradorId: number) => {
+    try {
+      setLoadingDownload(true);
+      if (!sesion) return;
+      const signedUrl = await descargarDiploma(sesion.ID_SESION, colaboradorId);
+      if (signedUrl) {
+        window.open(signedUrl, "_blank");
+      }
+    } catch (error) {
+      console.error("Error al descargar el diploma:", error);
+      alert("Error al descargar el diploma. Revisa la consola para más detalles.");
+    } finally {
+      setLoadingDownload(false);
+    }
+  };
+
+  const getEstadoColaboradorDynamic = (colaboradorId: number): EstadoColaborador => {
+    const asistio = asistenciaState[colaboradorId];
+    const nota = notasState[colaboradorId];
+
+    if (asistio === undefined || asistio === null) {
+      return "PENDIENTE";
+    }
+
+    if (asistio === false) {
+      return "NO_ASISTIO";
+    }
+
+    if (!sesion?.APLICA_EXAMEN) {
+      return "APROBADO";
+    }
+
+    if (nota === null || nota === undefined) {
+      return "PENDIENTE";
+    }
+
+    const notaMinima = sesion?.NOTA_MINIMA || 60;
+    return nota >= notaMinima ? "APROBADO" : "REPROBADO";
+  };
+
+  const handleGuardarEdicion = () => {
+    if (!editingColaborador) return;
+
+    if (sesion?.APLICA_EXAMEN && editNota) {
+      const nota = Number(editNota);
       if (isNaN(nota) || nota < 0 || nota > 100) {
-        alert("Ingresa una nota válida entre 0 y 100")
-        return
+        alert("Ingresa una nota válida entre 0 y 100");
+        return;
       }
     }
 
-    alert(
-      `Datos actualizados para ${editingColaborador.NOMBRE_COMPLETO}:\n` +
-        `Asistencia: ${editAsistio === true ? "Asistió" : editAsistio === false ? "No asistió" : "Sin marcar"}\n` +
-        `Nota: ${editNota || "Sin nota"}\n` +
-        `Observaciones: ${editObservaciones || "Sin observaciones"}`,
-    )
+    setAsistenciaState((prev) => ({
+      ...prev,
+      [editingColaborador.ID_COLABORADOR]: editAsistio ?? false,
+    }));
 
-    // Reset editing state
-    setEditingColaborador(null)
-    setEditAsistio(null)
-    setEditNota("")
-    setEditObservaciones("")
+    setNotasState((prev) => ({
+      ...prev,
+      [editingColaborador.ID_COLABORADOR]: editNota ? Number(editNota) : null,
+    }));
 
-    // In real app, this would be an API call to update the data
+    setColaboradoresAsignados((prev) =>
+      prev.map((c) =>
+        c.ID_COLABORADOR === editingColaborador.ID_COLABORADOR
+          ? {
+              ...c,
+              ASISTIO: editAsistio,
+              NOTA_OBTENIDA: editNota ? Number(editNota) : null,
+              OBSERVACIONES: editObservaciones,
+              ESTADO: getEstadoColaboradorDynamic(editingColaborador.ID_COLABORADOR),
+            }
+          : c
+      )
+    );
+
+    setIsEditDialogOpen(false);
+    setEditingColaborador(null);
+    setEditNota("");
+    setEditObservaciones("");
+  };
+
+  const handleAprobar = async () => {
+    if (!user) return;
+
+    if (!canApprove) {
+      console.log("No se puede aprobar. Hay validaciones pendientes.");
+      return;
+    }
+
+    const colaboradoresParaAPI = colaboradoresAsignados
+      .filter(col => asistenciaState[col.ID_COLABORADOR])
+      .map(col => ({
+        idColaborador: col.ID_COLABORADOR,
+        asistio: asistenciaState[col.ID_COLABORADOR],
+        notaObtenida: notasState[col.ID_COLABORADOR] ?? null,
+        observaciones: editObservaciones,
+      }));
+
+    try {
+      const res = await aprobarAsistencia(
+        sesionId,
+        colaboradoresParaAPI,
+        user.USERNAME
+      );
+
+      if (res) {
+        await aprobarSesion(
+          sesionId,
+          user.USERNAME,
+          observacionesRRHH
+        );
+
+        router.push("/capacitaciones");
+      }
+    } catch (error) {
+      console.error("Error al finalizar la sesión:", error);
+    }
+  };
+/*   const handleDevolver = () => {
+    if (!observacionesRRHH.trim()) {
+      alert("Agrega observaciones para devolver al capacitador")
+      return
+    }
+    alert("Capacitación devuelta al capacitador con observaciones")
+    router.push("/capacitaciones")
+    // In real app, this would be an API call
+  } */
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="w-96">
+          <CardHeader>
+            <CardTitle>Cargando Detalles...</CardTitle>
+            <CardDescription>Obteniendo información de la sesion y capacitadores.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </CardContent>
+        </Card>
+      </div>
+    );
   }
 
   if (!user || !user.ROLES.some((role) => role.NOMBRE === "RRHH")) {
@@ -131,7 +340,7 @@ export default function RevisarCapacitacionPage() {
     )
   }
 
-  if (!capacitacion) {
+  if (!sesion) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-96">
@@ -149,28 +358,7 @@ export default function RevisarCapacitacionPage() {
     )
   }
 
-  const handleAprobar = () => {
-    if (!canApprove) {
-      alert("No se puede aprobar. Hay validaciones pendientes.")
-      return
-    }
-    alert("Capacitación aprobada y finalizada exitosamente")
-    router.push("/capacitaciones")
-    // In real app, this would be an API call
-  }
-
-  const handleDevolver = () => {
-    if (!observacionesRRHH.trim()) {
-      alert("Agrega observaciones para devolver al capacitador")
-      return
-    }
-    alert("Capacitación devuelta al capacitador con observaciones")
-    router.push("/capacitaciones")
-    // In real app, this would be an API call
-  }
-
   return (
-
     <RequirePermission requiredPermissions={["manage_trainings"]}>
       <div className="flex h-screen bg-background">
         <Sidebar />
@@ -190,9 +378,9 @@ export default function RevisarCapacitacionPage() {
                 <div>
                   <div className="flex items-center gap-2 mb-1">
                     <h1 className="text-3xl font-bold text-foreground">Revisar Capacitación</h1>
-                    <Badge className={getEstadoColor(capacitacion.ESTADO)}>{capacitacion.ESTADO}</Badge>
+                    <Badge className={getEstadoCapacitacionColor(sesion.ESTADO)}>{sesion.ESTADO}</Badge>
                   </div>
-                  <p className="text-muted-foreground">{capacitacion.NOMBRE}</p>
+                  <p className="text-xl">{sesion.CAPACITACION_NOMBRE}</p>
                 </div>
               </div>
             </div>
@@ -206,14 +394,14 @@ export default function RevisarCapacitacionPage() {
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                   <div>
                     <Label className="text-muted-foreground">Capacitador</Label>
-                    <p className="font-medium">{capacitacion.CAPACITADOR_NOMBRE}</p>
+                    <p className="font-medium">{sesion.CAPACITADOR_NOMBRE}</p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Fecha</Label>
                     <p className="font-medium flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
-                      {capacitacion.FECHA_INICIO
-                        ? new Date(capacitacion.FECHA_INICIO).toLocaleDateString("es-GT")
+                      {sesion.FECHA_INICIO
+                        ? new Date(sesion.FECHA_INICIO).toLocaleDateString("es-GT")
                         : "Sin fecha"}
                     </p>
                   </div>
@@ -221,12 +409,12 @@ export default function RevisarCapacitacionPage() {
                     <Label className="text-muted-foreground">Horario</Label>
                     <p className="font-medium flex items-center gap-2">
                       <Clock className="h-4 w-4" />
-                      {capacitacion.HORARIO_FORMATO}
+                      {sesion.HORARIO_FORMATO_12H}
                     </p>
                   </div>
                   <div>
                     <Label className="text-muted-foreground">Duración</Label>
-                    <p className="font-medium">{capacitacion.DURACION_FORMATO}</p>
+                    <p className="font-medium">{sesion.DURACION_FORMATO}</p>
                   </div>
                 </div>
               </CardContent>
@@ -255,7 +443,7 @@ export default function RevisarCapacitacionPage() {
                 </CardContent>
               </Card>
 
-              {capacitacion.APLICA_EXAMEN && (
+              {sesion.APLICA_EXAMEN && (
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium">Exámenes</CardTitle>
@@ -268,7 +456,7 @@ export default function RevisarCapacitacionPage() {
                 </Card>
               )}
 
-              {capacitacion.APLICA_DIPLOMA && (
+              {sesion.APLICA_DIPLOMA && (
                 <Card>
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm font-medium">Diplomas</CardTitle>
@@ -314,7 +502,7 @@ export default function RevisarCapacitacionPage() {
                     </div>
                   </div>
 
-                  {capacitacion.APLICA_EXAMEN && (
+                  {sesion.APLICA_EXAMEN && (
                     <div className="flex items-center gap-3 p-3 border rounded-lg">
                       {validations.allExams ? (
                         <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0" />
@@ -330,7 +518,7 @@ export default function RevisarCapacitacionPage() {
                     </div>
                   )}
 
-                  {capacitacion.APLICA_DIPLOMA && (
+                  {sesion.APLICA_DIPLOMA && (
                     <div className="flex items-center gap-3 p-3 border rounded-lg">
                       {validations.allDiplomas ? (
                         <CheckCircle2 className="h-6 w-6 text-green-600 flex-shrink-0" />
@@ -355,7 +543,12 @@ export default function RevisarCapacitacionPage() {
                     <div>
                       <p className="font-medium">Lista de asistencia subida</p>
                       {validations.hasAttendanceList && (
-                        <Button variant="link" className="h-auto p-0 text-sm cursor-pointer dark:text-blue-800 dark:font-bold">
+                        <Button
+                          variant="link"
+                          onClick={handleDownload}
+                          disabled={loadingDownload}
+                          className="h-auto p-0 text-sm cursor-pointer dark:text-blue-800 dark:font-bold"
+                        >
                           <Eye className="h-3 w-3 mr-1" />
                           Ver documento
                         </Button>
@@ -381,13 +574,13 @@ export default function RevisarCapacitacionPage() {
                         <TableHead>Departamento</TableHead>
                         <TableHead>Estado</TableHead>
                         <TableHead>Asistencia</TableHead>
-                        {capacitacion.APLICA_EXAMEN && <TableHead>Nota</TableHead>}
+                        {sesion.APLICA_EXAMEN && <TableHead>Nota</TableHead>}
                         <TableHead>Documentos</TableHead>
                         <TableHead>Acciones</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {colaboradores.map((col) => (
+                      {colaboradoresAsignados.map((col) => (
                         <TableRow key={col.ID_COLABORADOR}>
                           <TableCell>
                             <div>
@@ -397,8 +590,8 @@ export default function RevisarCapacitacionPage() {
                           </TableCell>
                           <TableCell>{col.DEPARTAMENTO}</TableCell>
                           <TableCell>
-                            <Badge className={getEstadoColaboradorColor(col.ESTADO_COLABORADOR)}>
-                              {col.ESTADO_COLABORADOR}
+                            <Badge className={getEstadoColaboradorColor(getEstadoColaboradorDynamic(col.ID_COLABORADOR))}>
+                              {getEstadoColaboradorDynamic(col.ID_COLABORADOR)}
                             </Badge>
                           </TableCell>
                           <TableCell>
@@ -410,7 +603,7 @@ export default function RevisarCapacitacionPage() {
                               <AlertCircle className="h-5 w-5 text-gray-400" />
                             )}
                           </TableCell>
-                          {capacitacion.APLICA_EXAMEN && (
+                          {sesion.APLICA_EXAMEN && (
                             <TableCell>
                               {col.NOTA_OBTENIDA !== null ? (
                                 <span className="font-medium">{col.NOTA_OBTENIDA}</span>
@@ -420,21 +613,70 @@ export default function RevisarCapacitacionPage() {
                             </TableCell>
                           )}
                           <TableCell>
-                            <div className="flex gap-1">
-                              {col.URL_EXAMEN && (
-                                <Button size="sm" variant="outline" title="Descargar examen">
-                                  <Download className="h-3 w-3" />
-                                </Button>
+                            <div className="flex gap-1 text-sm">
+                              {sesion.APLICA_EXAMEN && (
+                                <div className="flex items-center gap-1">
+                                  {col.URL_EXAMEN ? (
+                                    <Button
+                                      size="icon"
+                                      variant="outline"
+                                      title="Descargar Examen"
+                                      onClick={() => handleDownloadExamen(col.ID_COLABORADOR)}
+                                      disabled={loadingDownload}
+                                      className="h-9 w-9 text-blue-600 hover:text-blue-700"
+                                    >
+                                      <FileText className="h-4 w-4" />
+                                    </Button>
+                                  ) : (
+                                    <span
+                                      className="flex items-center text-muted-foreground text-xs gap-1"
+                                      title="Examen pendiente"
+                                    >
+                                      <Clock className="h-3 w-3 text-amber-500" /> Examen pendiente
+                                    </span>
+                                  )}
+                                </div>
                               )}
-                              {col.URL_DIPLOMA && (
-                                <Button size="sm" variant="outline" title="Descargar diploma">
-                                  <Download className="h-3 w-3" />
-                                </Button>
+
+                              {sesion.APLICA_DIPLOMA && col.APROBADO && (
+                                <div className="flex items-center gap-1">
+                                  {col.URL_DIPLOMA ? (
+                                    <Button
+                                      size="icon"
+                                      variant="outline"
+                                      title="Descargar Diploma"
+                                      onClick={() => handleDownloadDiploma(col.ID_COLABORADOR)}
+                                      disabled={loadingDownload}
+                                      className="h-9 w-9 text-emerald-600 hover:text-emerald-700"
+                                    >
+                                      <GraduationCap className="h-4 w-4" />
+                                    </Button>
+                                  ) : (
+                                    <span
+                                      className="flex items-center text-muted-foreground text-xs gap-1"
+                                      title="Diploma pendiente"
+                                    >
+                                      <Clock className="h-3 w-3 text-amber-500" /> Diploma pendiente
+                                    </span>
+                                  )}
+                                </div>
+                              )}
+
+                              {sesion.APLICA_DIPLOMA && col.ASISTIO && !col.APROBADO && (
+                                <span
+                                  className="flex items-center text-muted-foreground text-xs gap-1"
+                                  title="No aplica diploma por no haber aprobado o no cumplir requisitos"
+                                >
+                                  <MinusCircle className="h-3 w-3 text-red-500" /> No aplica diploma
+                                </span>
                               )}
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Dialog>
+                            <Dialog
+                              open={isEditDialogOpen && editingColaborador?.ID_COLABORADOR === col.ID_COLABORADOR}
+                              onOpenChange={setIsEditDialogOpen}
+                            >
                               <DialogTrigger asChild>
                                 <Button
                                   size="sm"
@@ -444,77 +686,84 @@ export default function RevisarCapacitacionPage() {
                                     setEditAsistio(col.ASISTIO)
                                     setEditNota(col.NOTA_OBTENIDA?.toString() || "")
                                     setEditObservaciones(col.OBSERVACIONES || "")
+                                    setIsEditDialogOpen(true)
                                   }}
                                 >
                                   <Edit className="h-4 w-4" />
                                 </Button>
                               </DialogTrigger>
-                              <DialogContent className="max-w-md">
-                                <DialogHeader>
-                                  <DialogTitle>Editar Participante</DialogTitle>
-                                  <DialogDescription>{col.NOMBRE_COMPLETO}</DialogDescription>
-                                </DialogHeader>
-                                <div className="space-y-4">
-                                  <div>
-                                    <Label>Asistencia</Label>
-                                    <div className="flex gap-2 mt-2">
-                                      <Button
-                                        variant={editAsistio === true ? "default" : "outline"}
-                                        className="flex-1"
-                                        onClick={() => setEditAsistio(true)}
-                                      >
-                                        <CheckCircle2 className="h-4 w-4 mr-2" />
-                                        Asistió
-                                      </Button>
-                                      <Button
-                                        variant={editAsistio === false ? "destructive" : "outline"}
-                                        className="flex-1"
-                                        onClick={() => setEditAsistio(false)}
-                                      >
-                                        <XCircle className="h-4 w-4 mr-2" />
-                                        No asistió
-                                      </Button>
-                                    </div>
-                                  </div>
 
-                                  {capacitacion.APLICA_EXAMEN && (
-                                    <div>
-                                      <Label>Nota Obtenida (0-100)</Label>
-                                      <Input
-                                        type="number"
-                                        min="0"
-                                        max="100"
-                                        value={editNota}
-                                        onChange={(e) => setEditNota(e.target.value)}
-                                        placeholder="Ingresa la nota"
-                                        className="mt-2"
-                                      />
-                                      {capacitacion.NOTA_MINIMA && (
-                                        <p className="text-xs text-muted-foreground mt-1">
-                                          Nota mínima para aprobar: {capacitacion.NOTA_MINIMA}
-                                        </p>
+                                {editingColaborador?.ID_COLABORADOR === col.ID_COLABORADOR && (
+                                  <DialogContent className="max-w-md">
+                                    <DialogHeader>
+                                      <DialogTitle>Editar Participante</DialogTitle>
+                                      <DialogDescription>{col.NOMBRE_COMPLETO}</DialogDescription>
+                                    </DialogHeader>
+                                    <div className="space-y-4">
+                                      <div>
+                                        <Label>Asistencia</Label>
+                                        <div className="flex gap-2 mt-2">
+                                          <Button
+                                            variant={editAsistio === true ? "default" : "outline"}
+                                            className="flex-1"
+                                            onClick={() => setEditAsistio(true)}
+                                          >
+                                            <CheckCircle2 className="h-4 w-4 mr-2" />
+                                            Asistió
+                                          </Button>
+                                          <Button
+                                            variant={editAsistio === false ? "destructive" : "outline"}
+                                            className="flex-1"
+                                            onClick={() => {
+                                              setEditAsistio(false)
+                                              setEditNota("")
+                                            }}
+                                          >
+                                            <XCircle className="h-4 w-4 mr-2" />
+                                            No asistió
+                                          </Button>
+                                        </div>
+                                      </div>
+
+                                      {sesion.APLICA_EXAMEN && (
+                                        <div>
+                                          <Label>Nota Obtenida (0-100)</Label>
+                                          <Input
+                                            type="number"
+                                            min="0"
+                                            max="100"
+                                            value={editNota}
+                                            onChange={(e) => setEditNota(e.target.value)}
+                                            placeholder="Ingresa la nota"
+                                            className="mt-2"
+                                          />
+                                          {sesion.NOTA_MINIMA && (
+                                            <p className="text-xs text-muted-foreground mt-1">
+                                              Nota mínima para aprobar: {sesion.NOTA_MINIMA}
+                                            </p>
+                                          )}
+                                        </div>
                                       )}
-                                    </div>
-                                  )}
 
-                                  <div>
-                                    <Label>Observaciones</Label>
-                                    <Textarea
-                                      value={editObservaciones}
-                                      onChange={(e) => setEditObservaciones(e.target.value)}
-                                      placeholder="Observaciones sobre el participante..."
-                                      rows={3}
-                                      className="mt-2"
-                                    />
-                                  </div>
-                                </div>
-                                <DialogFooter>
-                                  <Button variant="outline" onClick={() => setEditingColaborador(null)}>
-                                    Cancelar
-                                  </Button>
-                                  <Button onClick={handleGuardarEdicion}>Guardar Cambios</Button>
-                                </DialogFooter>
-                              </DialogContent>
+                                      <div>
+                                        <Label>Observaciones</Label>
+                                        <Textarea
+                                          value={editObservaciones}
+                                          onChange={(e) => setEditObservaciones(e.target.value)}
+                                          placeholder="Observaciones sobre el participante..."
+                                          rows={3}
+                                          className="mt-2"
+                                        />
+                                      </div>
+                                    </div>
+                                    <DialogFooter>
+                                      <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}> {/* Cierra el Dialog */}
+                                        Cancelar
+                                      </Button>
+                                      <Button onClick={handleGuardarEdicion}>Guardar Cambios</Button>
+                                    </DialogFooter>
+                                  </DialogContent>
+                                )}
                             </Dialog>
                           </TableCell>
                         </TableRow>
@@ -526,13 +775,13 @@ export default function RevisarCapacitacionPage() {
             </Card>
 
             {/* Observations from Trainer */}
-            {capacitacion.OBSERVACIONES && (
+            {sesion.OBSERVACIONES && (
               <Card>
                 <CardHeader>
                   <CardTitle>Observaciones del Capacitador</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">{capacitacion.OBSERVACIONES}</p>
+                  <p className="text-muted-foreground">{sesion.OBSERVACIONES}</p>
                 </CardContent>
               </Card>
             )}
@@ -579,7 +828,7 @@ export default function RevisarCapacitacionPage() {
                     </AlertDialogContent>
                   </AlertDialog>
 
-                  <AlertDialog>
+{/*                   <AlertDialog>
                     <AlertDialogTrigger asChild>
                       <Button size="lg" variant="outline" className="flex-1 bg-transparent">
                         <XCircle className="h-5 w-5 mr-2" />
@@ -599,7 +848,7 @@ export default function RevisarCapacitacionPage() {
                         <AlertDialogAction onClick={handleDevolver}>Devolver</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
-                  </AlertDialog>
+                  </AlertDialog> */}
                 </div>
 
                 {!canApprove && (
