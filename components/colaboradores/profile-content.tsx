@@ -9,6 +9,10 @@ import {
   XCircle,
   Clock,
   Check,
+  BookOpen,
+  FolderKanban,
+  FilePenLine,
+  ChartArea,
 } from "lucide-react"
 import DocumentCard from "./document-card"
 import type { CapacitacionColaborador, Colaborador, DocumentoColaborador, HistorialColaborador, ResumenColaborador } from "@/lib/colaboradores/type"
@@ -305,9 +309,12 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
             </div>
 
             {capacitaciones.length === 0 && (
-                 <div className="text-center py-10 text-muted-foreground">
-                    No se han encontrado capacitaciones del colaborador.
+              <div className="text-center py-10 text-muted-foreground">
+                <div className="h-20 w-20 rounded-full bg-muted mx-auto mb-4 flex items-center justify-center">
+                  <BookOpen className="h-10 w-10 opacity-50" />
                 </div>
+                <p className="text-lg font-medium">No se encontraron capacitaciones</p>
+              </div>
             )}
           </div>
         )
@@ -335,8 +342,12 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
               </div>
             ) : (
               <div className="text-center py-10 text-muted-foreground">
-                No se han encontrado exámenes realizados para este colaborador.
+                <div className="h-20 w-20 rounded-full bg-muted mx-auto mb-4 flex items-center justify-center">
+                  <FilePenLine className="h-10 w-10 opacity-50" />
+                </div>
+                <p className="text-lg font-medium">No se han encontrado exámenes realizados para este colaborador.</p>
               </div>
+
             )}
           </div>
         )
@@ -401,9 +412,12 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
             </div>
             
             {documentosRelevantes.length === 0 && (
-                 <div className="text-center py-10 text-muted-foreground">
-                    No se han encontrado documentos de Asistencia o Diplomas.
+              <div className="text-center py-10 text-muted-foreground">
+                <div className="h-20 w-20 rounded-full bg-muted mx-auto mb-4 flex items-center justify-center">
+                  <FolderKanban className="h-10 w-10 opacity-50" />
                 </div>
+                <p className="text-lg font-medium">No se han encontrado documentos de Asistencia o Diplomas.</p>
+              </div>
             )}
           </div>
         )
@@ -452,6 +466,16 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
                 ))}
               </div>
             </div>
+
+            {historialColaborador.length === 0 && (
+              <div className="text-center py-10 text-muted-foreground">
+                <div className="h-20 w-20 rounded-full bg-muted mx-auto mb-4 flex items-center justify-center">
+                  <ChartArea className="h-10 w-10 opacity-50" />
+                </div>
+                <p className="text-lg font-medium">No se ha encontrado historial de colaborador.</p>
+              </div>
+            )}
+
           </div>
         )
       default:

@@ -17,10 +17,10 @@ export default function RolesPage() {
       <div className="flex h-screen bg-background">
         <Sidebar />
 
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col overflow-hidden">
           <AppHeader title="Gestión de Roles y Permisos" subtitle="Administra roles, permisos y categorías del sistema" />
 
-          <main className="flex-1 overflow-y-auto p-4 sm:p-6 md:ml-0 custom-scrollbar">
+          <main className="flex-1 overflow-y-auto p-6 custom-scrollbar">
             <div className="max-w-7xl mx-auto">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">

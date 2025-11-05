@@ -2,8 +2,7 @@
 
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Bell, Search, Plus, User } from "lucide-react"
+import { Plus, User } from "lucide-react"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -48,39 +47,40 @@ export function AppHeader({ title, subtitle, showActions = true }: AppHeaderProp
     return null
   }
 
-
   return (
-    <header className="border-b border-border bg-card">
-      <div className="flex items-center justify-between px-6 py-4">
-        <div>
-          <h1 className="text-2xl font-bold text-card-foreground">{title}</h1>
-          {subtitle && <p className="text-sm text-muted-foreground">{subtitle}</p>}
+    <header className="sticky top-0 z-10 border-b border-border bg-card">
+      <div className="flex items-center justify-between px-4 sm:px-4 py-3 sm:py-4 ml-7 md:ml-0">
+        
+        <div className="min-w-0 pr-4">
+          <h1 className="text-xl sm:text-2xl font-bold text-card-foreground truncate">{title}</h1>
+          {subtitle && <p className="text-sm text-muted-foreground hidden sm:block">{subtitle}</p>}
         </div>
 
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-2 sm:gap-4 flex-shrink-0">
           {showActions && (
             <>
-{/*               <Button variant="outline" size="sm">
-                <Bell className="h-4 w-4" />
-              </Button> */}
-
               {user.ROLES.some((role) => ["RRHH", "Capacitador"].includes(role.NOMBRE)) && (
-                getNavigationButtons()
+                <div className="hidden sm:block"> 
+                  {getNavigationButtons()}
+                </div>
               )}
             </>
           )}
 
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button variant="ghost" className="flex items-center gap-2 px-3">
+              <Button 
+                variant="ghost" 
+                className="flex items-center gap-2 px-2 sm:px-3" 
+              >
                 <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
                   <span className="text-sm font-medium text-primary-foreground">
                     {user.NOMBRE.charAt(0)}
                     {user.APELLIDO.charAt(0)}
                   </span>
                 </div>
-                <div className="text-left">
-                  <p className="text-sm font-medium">
+                <div className="text-left hidden sm:block"> 
+                  <p className="text-sm font-medium truncate">
                     {user.NOMBRE} {user.APELLIDO}
                   </p>
                   <p className="text-xs text-muted-foreground">{user.ROLES[0]?.NOMBRE}</p>
@@ -88,7 +88,15 @@ export function AppHeader({ title, subtitle, showActions = true }: AppHeaderProp
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel>Mi Cuenta</DropdownMenuLabel>
+              <DropdownMenuLabel>
+                <div className="block sm:hidden">
+                    {user.NOMBRE} {user.APELLIDO}
+                    <p className="text-xs text-muted-foreground">{user.ROLES[0]?.NOMBRE}</p>
+                </div>
+                <div className="hidden sm:block">
+                    Mi Cuenta
+                </div>
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem>
                 <User className="mr-2 h-4 w-4" />

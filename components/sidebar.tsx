@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { usePathname } from 'next/navigation'
 import { useAuth } from "@/contexts/auth-context"
 import { useTheme } from "@/contexts/theme-context"
@@ -57,16 +57,42 @@ const MAIN_MENU_CONFIG: MenuItem[] = [
 
   { icon: Code2, label: "Codigos", href: "/codigos", requiredPermissions: ["codes"] },  
 
-  { icon: Shield, label: "Auditoría", href: "/auditoria", requiredPermissions: ["view_audit"] },
+/*   { icon: Shield, label: "Auditoría", href: "/auditoria", requiredPermissions: ["view_audit"] }, */
   { icon: Settings, label: "Configuración", href: "/configuracion", requiredPermissions: ["manage_config"] },
 ];
 
 export function Sidebar({ className }: SidebarProps) {
   const { user, logout, loggingOut } = useAuth()
   const { theme, toggleTheme } = useTheme()
-  const [collapsed, setCollapsed] = useState(false)
+
+  const [collapsed, setCollapsed] = useState(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem('sidebarCollapsed') === 'true';
+    }
+    return false;
+  })
+
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const currentPath = usePathname()
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      localStorage.setItem('sidebarCollapsed', String(collapsed));
+    }
+  }, [collapsed])
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const handleResize = () => {
+      if (window.innerWidth >= 768 && mobileMenuOpen) {
+        setMobileMenuOpen(false);
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, [mobileMenuOpen]);
 
   const getMenuItems = () => {
     if (!user) {
@@ -91,7 +117,7 @@ export function Sidebar({ className }: SidebarProps) {
       variant="ghost"
       size="sm"
       onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-      className="md:hidden fixed top-4 left-4 z-50 bg-sidebar text-sidebar-foreground hover:bg-sidebar-accent"
+      className="md:hidden fixed top-4 left-1 z-20 bg-sidebar text-sidebar-foreground hover:bg-sidebar-accent"
     >
       {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
     </Button>
@@ -111,7 +137,7 @@ export function Sidebar({ className }: SidebarProps) {
           "fixed md:relative z-50 md:z-auto",
           "md:flex",
           mobileMenuOpen ? "flex" : "hidden md:flex",
-          collapsed ? "w-16" : "w-64",
+          mobileMenuOpen ? "w-64" : (collapsed ? "w-16" : "w-64"),
           className,
         )}
       >
@@ -120,7 +146,7 @@ export function Sidebar({ className }: SidebarProps) {
           <div
             className={cn(
               "flex items-center justify-center w-full transition-all duration-300 h-20",
-              collapsed ? "opacity-0 scale-95" : "opacity-100 scale-100"
+              collapsed && !mobileMenuOpen ? "opacity-0 scale-95" : "opacity-100 scale-100"
             )}
           >
             <div className="flex items-center justify-center">
@@ -168,17 +194,21 @@ export function Sidebar({ className }: SidebarProps) {
             
             return (
               <div key={index}>
-                <Link href={item.href} onClick={() => setMobileMenuOpen(false)}>
+                <Link
+                  href={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  title={collapsed && !mobileMenuOpen ? item.label : undefined} 
+                >
                   <Button
                     variant="ghost"
                     className={cn(
                       "w-full justify-start gap-3 text-sidebar-foreground hover:bg-accent hover:text-sidebar-accent-foreground cursor-pointer",
-                      collapsed && "justify-center px-2",
+                      collapsed && !mobileMenuOpen ? "justify-center px-2" : "", 
                       isActive && "bg-sidebar-foreground/12"
                     )}
                   >
                     <Icon className="w-4 h-4 flex-shrink-0" />
-                    {!collapsed && <span className="truncate">{item.label}</span>}
+                    {(!collapsed || mobileMenuOpen) && <span className="truncate">{item.label}</span>} 
                   </Button>
                 </Link>
               </div>
@@ -190,22 +220,23 @@ export function Sidebar({ className }: SidebarProps) {
         <div
           className={cn(
             "p-4 border-t border-sidebar-border space-y-2 transition-all duration-300",
-            collapsed && "px-2"
-          )}        
+            collapsed && !mobileMenuOpen && "px-2" 
+          )}    
         >
           <Button
             variant="ghost"
             onClick={toggleTheme}
             className={cn(
-              "w-full justify-start gap-3 text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-              collapsed && "justify-center px-2",
+              "w-full justify-start gap-3 text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-accent cursor-pointer",
+              collapsed && !mobileMenuOpen && "justify-center px-2", 
             )}
+            title={collapsed ? (theme === "light" ? "Modo Oscuro" : "Modo Claro") : undefined}
           >
             {theme === "light" ? <Moon className="w-4 h-4 flex-shrink-0" /> : <Sun className="w-4 h-4 flex-shrink-0" />}
             <span
               className={cn(
                 "transition-all duration-300 ease-in-out",
-                collapsed ? "opacity-0 scale-95 translate-x-[-10px]" : "opacity-100 scale-100 translate-x-0"
+                collapsed && !mobileMenuOpen ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto" 
               )}
             >
               {theme === "light" ? "Modo Oscuro" : "Modo Claro"}
@@ -216,9 +247,10 @@ export function Sidebar({ className }: SidebarProps) {
             onClick={logout}
             disabled={loggingOut}
             className={cn(
-              "w-full justify-start gap-3 text-sidebar-foreground hover:bg-destructive hover:text-destructive-foreground",
-              collapsed && "justify-center px-2",
+              "w-full justify-start gap-3 text-sidebar-foreground hover:bg-destructive hover:text-destructive-foreground cursor-pointer",
+              collapsed && !mobileMenuOpen && "justify-center px-2",
             )}
+            title={collapsed ? "Cerrar Sesión" : undefined}
           >
             {loggingOut ? (
               <span className="flex items-center gap-2">
@@ -242,19 +274,26 @@ export function Sidebar({ className }: SidebarProps) {
                     d="M4 12a8 8 0 018-8v8H4z"
                   />
                 </svg>
-                {!collapsed && <span>Saliendo...</span>}
+                  <span
+                    className={cn(
+                      "transition-all duration-300 ease-in-out",
+                      collapsed && !mobileMenuOpen ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"
+                    )}
+                  >
+                    Saliendo...
+                  </span>
               </span>
             ) : (
               <>
                 <LogOut className="w-4 h-4 flex-shrink-0" />
-                <span
-                  className={cn(
-                    "transition-all duration-300 ease-in-out",
-                    collapsed ? "opacity-0 scale-95 translate-x-[-10px]" : "opacity-100 scale-100 translate-x-0"
-                  )}
-                >
-                  Cerrar Sesión
-                </span>
+                  <span
+                    className={cn(
+                      "transition-all duration-300 ease-in-out",
+                      collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto" 
+                    )}
+                  >
+                    Cerrar Sesión
+                  </span>
               </>
             )}
           </Button>

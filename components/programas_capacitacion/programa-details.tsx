@@ -216,7 +216,7 @@ export function ProgramaDetails({ programa, departamentos, puestos, onEdit, onBa
       {/* Training Details */}
       <Card className="border-border">
         <CardHeader className="border-b border-border">
-          <div className="flex items-center justify-between">
+          <div className="flex md:items-center justify-between flex-col md:flex-row md:space-y-0 space-y-4">
             <CardTitle>Capacitaciones del Programa ({detalles.length})</CardTitle>
             <Button
               onClick={() => setShowAddModal(true)}

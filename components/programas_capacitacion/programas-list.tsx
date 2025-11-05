@@ -94,7 +94,7 @@ export function ProgramasCapacitacionList({
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex justify-between flex-col md:flex-row md:items-center space-y-4 md:space-y-0">
         <div>
           <h1 className="text-3xl font-bold text-foreground">Programas de Capacitación</h1>
           <p className="text-muted-foreground mt-1">Gestiona los programas de capacitación de tu organización</p>
