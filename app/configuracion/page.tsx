@@ -5,13 +5,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button"
 import { Building2, Briefcase, UserCog, Settings } from "lucide-react"
 import Link from "next/link"
-import { useAuth } from "@/contexts/auth-context"
 import { AppHeader } from "@/components/app-header"
 import { RequirePermission } from "@/components/RequirePermission"
 
 export default function ConfiguracionPage() {
-  const { user } = useAuth()
-
   const configOptions = [
     {
       title: "Empresas",

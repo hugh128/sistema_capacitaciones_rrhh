@@ -60,9 +60,9 @@ export function AppHeader({ title, subtitle, showActions = true }: AppHeaderProp
         <div className="flex items-center gap-4">
           {showActions && (
             <>
-              <Button variant="outline" size="sm">
+{/*               <Button variant="outline" size="sm">
                 <Bell className="h-4 w-4" />
-              </Button>
+              </Button> */}
 
               {user.ROLES.some((role) => ["RRHH", "Capacitador"].includes(role.NOMBRE)) && (
                 getNavigationButtons()

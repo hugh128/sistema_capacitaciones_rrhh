@@ -1,6 +1,6 @@
 "use client"
 
-import { Search, Download } from "lucide-react"
+import { Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import {
@@ -18,48 +18,20 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
-import type { Collaborator } from "@/lib/colaboradores/type"
+import type { Colaborador } from "@/lib/colaboradores/type"
 import { useEffect, useMemo, useRef, useState } from "react"
+import { useDebounce } from "@/hooks/useDebounde"
+import { getProgressColor, getStatusColor } from "@/lib/colaboradores/type"
 
 type CollaboratorsListProps = {
-  collaborators: Collaborator[]
-  searchQuery: string
-  setSearchQuery: (query: string) => void
-  filterStatus: "all" | "active" | "inactive" | "on-leave"
-  setFilterStatus: (status: "all" | "active" | "inactive" | "on-leave") => void
-  onSelectCollaborator: (collaborator: Collaborator) => void
-}
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case "active":
-      return "bg-green-500 text-white"
-    case "inactive":
-      return "bg-red-500 text-white"
-    case "on-leave":
-      return "bg-yellow-500 text-white"
-    default:
-      return "bg-muted text-muted-foreground"
-  }
-}
-
-const getStatusText = (status: string) => {
-  switch (status) {
-    case "active":
-      return "Activo"
-    case "inactive":
-      return "Inactivo"
-    case "on-leave":
-      return "Permiso"
-    default:
-      return status
-  }
+  colaboradores: Colaborador[]
+  filterStatus: "all" | "activo" | "inactivo"
+  setFilterStatus: (status: "all" | "activo" | "inactivo") => void
+  onSelectCollaborator: (colaborador: Colaborador) => void
 }
 
 export default function CollaboratorsList({
-  collaborators,
-  searchQuery,
-  setSearchQuery,
+  colaboradores,
   filterStatus,
   setFilterStatus,
   onSelectCollaborator,
@@ -67,19 +39,27 @@ export default function CollaboratorsList({
   const [currentPage, setCurrentPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState(10)
 
+  const [localSearchQuery, setLocalSearchQuery] = useState("") 
+  
+  const debouncedSearchQuery = useDebounce(localSearchQuery, 300)
+
   const filteredCollaborators = useMemo(() => {
-    return collaborators.filter((collab) => {
+    return colaboradores.filter((collab) => {
+      const currentSearch = debouncedSearchQuery.toLowerCase()
+
       const matchesSearch =
-        collab.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        collab.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        collab.position.toLowerCase().includes(searchQuery.toLowerCase())
+        collab.NOMBRE_COMPLETO.toLowerCase().includes(currentSearch) ||
+        collab.EMAIL.toLowerCase().includes(currentSearch) ||
+        (collab.PUESTO && collab.PUESTO.toLowerCase().includes(currentSearch)) 
 
       const matchesStatus =
-        filterStatus === "all" ? true : collab.status === filterStatus
+        filterStatus === "all"
+          ? true
+          : collab.ESTADO.toLowerCase() === filterStatus
 
       return matchesSearch && matchesStatus
     })
-  }, [collaborators, searchQuery, filterStatus])
+  }, [colaboradores, debouncedSearchQuery, filterStatus])
 
   const totalPages = Math.max(1, Math.ceil(filteredCollaborators.length / rowsPerPage))
 
@@ -110,7 +90,7 @@ export default function CollaboratorsList({
       return
     }
     setCurrentPage(1)
-  }, [searchQuery, filterStatus])
+  }, [debouncedSearchQuery, filterStatus])
 
   return (
     <div className="flex-1 bg-card rounded-lg shadow-sm">
@@ -123,7 +103,7 @@ export default function CollaboratorsList({
               {filteredCollaborators.length} colaboradores encontrados
             </p>
           </div>
-          <div className="flex gap-2">
+{/*           <div className="flex gap-2">
             <Button
               onClick={() => alert("Descargando lista de colaboradores...")}
               variant="outline"
@@ -131,7 +111,7 @@ export default function CollaboratorsList({
               <Download className="w-4 h-4 mr-2" />
               Exportar
             </Button>
-          </div>
+          </div> */}
         </div>
 
         {/* Search and Filters */}
@@ -141,8 +121,8 @@ export default function CollaboratorsList({
             <Input
               type="text"
               placeholder="Buscar por nombre, email o puesto..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              value={localSearchQuery}
+              onChange={(e) => setLocalSearchQuery(e.target.value)}
               className="pl-10"
             />
           </div>
@@ -155,23 +135,16 @@ export default function CollaboratorsList({
               Todos
             </Button>
             <Button
-              onClick={() => setFilterStatus("active")}
-              variant={filterStatus === "active" ? "default" : "outline"}
-              className={filterStatus === "active" ? "bg-green-500 hover:bg-green-600" : ""}
+              onClick={() => setFilterStatus("activo")}
+              variant={filterStatus === "activo" ? "default" : "outline"}
+              className={filterStatus === "activo" ? "bg-green-500 hover:bg-green-600" : ""}
             >
               Activos
             </Button>
             <Button
-              onClick={() => setFilterStatus("on-leave")}
-              variant={filterStatus === "on-leave" ? "default" : "outline"}
-              className={filterStatus === "on-leave" ? "bg-yellow-500 hover:bg-yellow-600" : ""}
-            >
-              Permisos
-            </Button>
-            <Button
-              onClick={() => setFilterStatus("inactive")}
-              variant={filterStatus === "inactive" ? "default" : "outline"}
-              className={filterStatus === "inactive" ? "bg-red-500 hover:bg-red-600" : ""}
+              onClick={() => setFilterStatus("inactivo")}
+              variant={filterStatus === "inactivo" ? "default" : "outline"}
+              className={filterStatus === "inactivo" ? "bg-red-500 hover:bg-red-600" : ""}
             >
               Inactivos
             </Button>
@@ -207,52 +180,52 @@ export default function CollaboratorsList({
           <TableBody className="divide-y divide-border">
             {currentCollaborators.map((collaborator) => (
               <TableRow
-                key={collaborator.id}
+                key={collaborator.ID_COLABORADOR}
                 onClick={() => onSelectCollaborator(collaborator)}
                 className="hover:bg-muted/30 cursor-pointer transition-colors"
               >
                 <TableCell className="px-6 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-semibold">
-                      {collaborator.initials}
+                      {collaborator.INICIALES}
                     </div>
                     <div>
                       <div className="font-semibold text-foreground hover:text-primary">
-                        {collaborator.name}
+                        {collaborator.NOMBRE_COMPLETO}
                       </div>
-                      <div className="text-sm text-muted-foreground">{collaborator.email}</div>
+                      <div className="text-sm text-muted-foreground">{collaborator.EMAIL}</div>
                     </div>
                   </div>
                 </TableCell>
                 <TableCell className="px-6 py-4 text-sm text-foreground">
-                  {collaborator.position}
+                  {collaborator.PUESTO}
                 </TableCell>
                 <TableCell className="px-6 py-4 text-sm text-foreground">
-                  {collaborator.department}
+                  {collaborator.DEPARTAMENTO}
                 </TableCell>
                 <TableCell className="px-6 py-4 text-sm text-foreground">
-                  {collaborator.manager}
+                  {collaborator.ENCARGADO}
                 </TableCell>
                 <TableCell className="px-6 py-4">
                   <div className="flex items-center gap-2">
                     <div className="flex-1 bg-muted rounded-full h-2 max-w-[100px]">
                       <div
-                        className="bg-green-500 h-2 rounded-full transition-all"
-                        style={{ width: `${collaborator.completionScore}%` }}
+                        className={`h-2 rounded-full transition-all ${getProgressColor(collaborator.PORCENTAJE_CUMPLIMIENTO)}`}
+                        style={{ width: `${collaborator.PORCENTAJE_CUMPLIMIENTO}%` }}
                       />
                     </div>
                     <span className="text-sm font-semibold text-foreground">
-                      {collaborator.completionScore}%
+                      {collaborator.PORCENTAJE_CUMPLIMIENTO}%
                     </span>
                   </div>
                 </TableCell>
                 <TableCell className="px-6 py-4">
                   <span
                     className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
-                      collaborator.status
+                      collaborator.ESTADO.toLowerCase()
                     )}`}
                   >
-                    {getStatusText(collaborator.status)}
+                    {collaborator.ESTADO}
                   </span>
                 </TableCell>
               </TableRow>

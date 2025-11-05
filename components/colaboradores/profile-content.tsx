@@ -1,155 +1,87 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import {
   ChevronRight,
   X,
   FileText,
-  Download,
   CheckCircle2,
   XCircle,
   Clock,
+  Check,
 } from "lucide-react"
 import DocumentCard from "./document-card"
-import type { Collaborator } from "@/lib/colaboradores/type"
+import type { CapacitacionColaborador, Colaborador, DocumentoColaborador, HistorialColaborador, ResumenColaborador } from "@/lib/colaboradores/type"
+import { getCompletionColors } from "@/lib/colaboradores/type"
+import { useAuth } from "@/contexts/auth-context"
+import { useColaboradores } from "@/hooks/useColaboradores"
 
 type ProfileContentProps = {
-  collaborator: Collaborator
+  collaborator: Colaborador
   onBack: () => void
 }
 
 export default function ProfileContent({ collaborator, onBack }: ProfileContentProps) {
+  const { user } = useAuth()
   const [activeTab, setActiveTab] = useState("General")
-  const [showEditProfile, setShowEditProfile] = useState(false)
-  const [showAllDocuments, setShowAllDocuments] = useState(false)
-  const [showEditExperience, setShowEditExperience] = useState(false)
+  const [capacitaciones, setCapacitaciones] = useState<CapacitacionColaborador[]>([])
+  const [documentosColaborador, setDocumentosColaborador] = useState<DocumentoColaborador[]>([])
+  const [historialColaborador, setHistorialColaborador] = useState<HistorialColaborador[]>([])
+  const [resumenColaborador, setResumenColaborador] = useState<ResumenColaborador[]>([])
+  const [isLoading, setIsLoading] = useState(true);
+  const [loadingDownload, setLoadingDownload] = useState(false);
 
-  const allDocuments = {
-    examenes: [
-      { name: "examen_seguridad_industrial.pdf", type: "pdf", date: "2d ago", category: "Examen" },
-      { name: "examen_iso_9001.pdf", type: "pdf", date: "1w ago", category: "Examen" },
-      { name: "examen_buenas_practicas.pdf", type: "pdf", date: "2w ago", category: "Examen" },
-      { name: "evaluacion_quimicos.pdf", type: "pdf", date: "1m ago", category: "Examen" },
-    ],
-    documentos: [
-      { name: "induccion.pdf", type: "pdf", date: "2d ago", category: "Inducción" },
-      { name: "CertificadoSusta.pdf", type: "pdf", date: "2d ago", category: "Certificado" },
-      { name: "JuanPerez_cv.pdf", type: "pdf", date: "2d ago", category: "CV" },
-      { name: "certificado_iso.pdf", type: "pdf", date: "5d ago", category: "Certificado" },
-      { name: "diploma_buenas_practicas.pdf", type: "pdf", date: "1w ago", category: "Diploma" },
-      { name: "asistencia_enero_2024.pdf", type: "pdf", date: "1w ago", category: "Asistencia" },
-      { name: "asistencia_febrero_2024.pdf", type: "pdf", date: "2w ago", category: "Asistencia" },
-      { name: "diploma_seguridad.pdf", type: "pdf", date: "3w ago", category: "Diploma" },
-    ],
-    capacitaciones: [
-      {
-        name: "ISO 9001 Actualización",
-        status: "Completado",
-        date: "Jun 2023",
-        score: 85,
-        document: "certificado_iso_9001.pdf",
-      },
-      {
-        name: "Seguridad Industrial",
-        status: "Completado",
-        date: "Feb 2023",
-        score: 90,
-        document: "certificado_seguridad.pdf",
-      },
-      {
-        name: "Buenas Prácticas de Laboratorio",
-        status: "Completado",
-        date: "Dic 2022",
-        score: 88,
-        document: "diploma_buenas_practicas.pdf",
-      },
-      {
-        name: "Manejo de Sustancias Químicas",
-        status: "En Progreso",
-        date: "En curso",
-        score: null,
-        document: null,
-      },
-      {
-        name: "Primeros Auxilios",
-        status: "Pendiente",
-        date: "Programado Mar 2024",
-        score: null,
-        document: null,
-      },
-    ],
-    historico: [
-      {
-        date: "15 Ene 2024",
-        time: "09:30",
-        action: "Asistió a capacitación",
-        detail: "ISO 9001 Actualización - Sesión 3",
-        type: "success",
-      },
-      {
-        date: "12 Ene 2024",
-        time: "14:00",
-        action: "Completó examen",
-        detail: "Seguridad Industrial - Nota: 90",
-        type: "success",
-      },
-      {
-        date: "10 Ene 2024",
-        time: "10:00",
-        action: "Faltó a capacitación",
-        detail: "Manejo de Sustancias Químicas - Sesión 2",
-        type: "error",
-      },
-      {
-        date: "08 Ene 2024",
-        time: "09:00",
-        action: "Asistió a capacitación",
-        detail: "Manejo de Sustancias Químicas - Sesión 1",
-        type: "success",
-      },
-      {
-        date: "05 Ene 2024",
-        time: "11:30",
-        action: "Subió documento",
-        detail: "CV actualizado - JuanPerez_cv.pdf",
-        type: "info",
-      },
-      {
-        date: "20 Dic 2023",
-        time: "15:00",
-        action: "Completó capacitación",
-        detail: "Buenas Prácticas de Laboratorio - Nota: 88",
-        type: "success",
-      },
-      {
-        date: "18 Dic 2023",
-        time: "10:00",
-        action: "Asistió a examen",
-        detail: "Buenas Prácticas de Laboratorio",
-        type: "info",
-      },
-      {
-        date: "15 Dic 2023",
-        time: "09:30",
-        action: "Asistió a capacitación",
-        detail: "Buenas Prácticas de Laboratorio - Sesión Final",
-        type: "success",
-      },
-    ],
-  }
+  const {
+    obtenerCapacitacionesColaborador,
+    descargarListaAsistencia,
+    obtenerDocumentosColaborador,
+    descargarExamen,
+    descargarDiploma,
+    obtenerHistorialColaborador,
+    obtenerResumenColaborador,
+  } = useColaboradores(user)
 
-  const documents = [
-    { name: "induccion.pdf", type: "pdf", date: "2d ago" },
-    { name: "examen_seguri.pdf", type: "pdf", date: "2d ago" },
-    { name: "CertificadoSusta.pdf", type: "pdf", date: "2d ago" },
-    { name: "JuanPerez_cv.pdf", type: "pdf", date: "2d ago" },
-    { name: "certificado_iso.pdf", type: "pdf", date: "5d ago" },
-    { name: "evaluacion_2023.pdf", type: "pdf", date: "1w ago" },
-  ]
+  useEffect(() => {
+    if (!user) {
+      setIsLoading(false);
+      return; 
+    }
+
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const capacitaciones = await obtenerCapacitacionesColaborador(collaborator.ID_COLABORADOR)
+        setCapacitaciones(capacitaciones)
+
+        const documentos = await obtenerDocumentosColaborador(collaborator.ID_COLABORADOR)
+        setDocumentosColaborador(documentos)
+
+        const historial = await obtenerHistorialColaborador(collaborator.ID_COLABORADOR)
+        setHistorialColaborador(historial)
+
+        const resumen = await obtenerResumenColaborador(collaborator.ID_COLABORADOR)
+        setResumenColaborador(resumen)
+
+      } catch (error) {
+        console.error('Error al cargar las capacitaciones:', error)
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchData()
+  }, [
+    user,
+    obtenerCapacitacionesColaborador,
+    collaborator.ID_COLABORADOR,
+    obtenerDocumentosColaborador,
+    obtenerHistorialColaborador,
+    obtenerResumenColaborador,
+  ])
 
   const tabs = ["General", "Capacitaciones", "Exámenes", "Documentos", "Histórico"]
 
-  const handleDownloadAll = (docs: any[]) => {
+/*   const handleDownloadAll = (docs: any[]) => {
     docs.forEach((doc) => {
       const fileName = doc.name || doc.document
       if (fileName) {
@@ -161,112 +93,172 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
         document.body.removeChild(link)
       }
     })
-  }
+  } */
 
-  const handleDocumentClick = (docName: string) => {
-    const link = document.createElement("a")
-    link.href = `/documents/${docName}`
-    link.download = docName
-    document.body.appendChild(link)
-    link.click()
-    document.body.removeChild(link)
-  }
+  const handleDownloadAsistencia = async (sesionId: number ) => {
+    try {
+      setLoadingDownload(true);
+      const signedUrl = await descargarListaAsistencia(sesionId);
+      if (signedUrl) {
+        window.open(signedUrl, "_blank");
+      }
+    } catch (error) {
+      console.error("Error al descargar la asistencia:", error);
+      alert("Error al descargar la asistencia. Revisa la consola para más detalles.");
+    } finally {
+      setLoadingDownload(false);
+    }
+  };
+
+  const handleDownloadExamen = async (colaboradorId: number, sesionId: number) => {
+    try {
+      setLoadingDownload(true);
+      const signedUrl = await descargarExamen(sesionId, colaboradorId);
+      if (signedUrl) {
+        window.open(signedUrl, "_blank");
+      }
+    } catch (error) {
+      console.error("Error al descargar el examen:", error);
+      alert("Error al descargar el examen. Revisa la consola para más detalles.");
+    } finally {
+      setLoadingDownload(false);
+    }
+  };
+
+  const handleDownloadDiploma = async (colaboradorId: number, sesionId: number) => {
+    try {
+      setLoadingDownload(true);
+      const signedUrl = await descargarDiploma(sesionId, colaboradorId);
+      if (signedUrl) {
+        window.open(signedUrl, "_blank");
+      }
+    } catch (error) {
+      console.error("Error al descargar el diploma:", error);
+      alert("Error al descargar el diploma. Revisa la consola para más detalles.");
+    } finally {
+      setLoadingDownload(false);
+    }
+  };
 
   const renderTabContent = () => {
     switch (activeTab) {
       case "General":
+        const trainingItems = [
+          {
+            label: "Cumplimiento de Capacitación obligatoria",
+            value: `${collaborator.PORCENTAJE_CUMPLIMIENTO}%`,
+            status: null,
+          },
+          { label: "Última Capacitación", value: "ISO", status: null },
+          { label: "Próxima Capacitación", value: "Manejo de químicos", status: null },
+          { label: "Inducción", value: "", status: "cross" },
+          { label: "Seguridad Industrial", value: "", status: "check" },
+          { label: "ISO", value: "", status: "check" },
+          { label: "Buenas Prácticas de Laboratorio", value: "", status: "check" },
+          { label: "Manejo de Químicos", value: "", status: "cross" },
+        ]
+        
+        const colors = getCompletionColors(collaborator.PORCENTAJE_CUMPLIMIENTO);
+
         return (
-          <>
-            {/* Archivos Colaborador */}
-            <div className="mb-12">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-semibold text-foreground">Archivos Colaborador</h2>
-              </div>
-              <div className="grid grid-cols-4 gap-4">
-                {(showAllDocuments ? documents : documents.slice(0, 4)).map((doc, index) => (
-                  <DocumentCard key={index} {...doc} onClick={() => handleDocumentClick(doc.name)} />
-                ))}
-              </div>
-              <div className="flex justify-end mt-4">
-                <button
-                  onClick={() => setShowAllDocuments(!showAllDocuments)}
-                  className="text-xs font-semibold text-primary underline hover:text-primary/80"
-                >
-                  {showAllDocuments ? "Ver Menos" : "Ver todo"}
-                </button>
-              </div>
-            </div>
+          <div className="space-y-6"> 
+            
+            <div className="w-full">
+              <div className="bg-card rounded-lg p-6 border border-border"> 
+                <h2 className="text-xl font-semibold text-foreground mb-4">
+                  Estado Actual
+                </h2>
 
-            {/* Experiencia */}
-            <div className="mb-12">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-base font-semibold text-foreground">Experiencia</h2>
-                <button
-                  onClick={() => setShowEditExperience(true)}
-                  className="text-xs font-semibold text-primary underline hover:text-primary/80"
-                >
-                  Editar
-                </button>
-              </div>
-              <div className="pl-4 border-l-[12px] border-border rounded-lg">
-                <h3 className="text-base text-foreground mb-4">Químico Farmacéutico</h3>
-                <div className="text-base text-foreground leading-6 space-y-2">
-                  <p className="font-semibold">Responsable de:</p>
-                  <ol className="list-decimal list-inside space-y-2">
-                    <li>
-                      Análisis de Calidad: Realización de pruebas fisicoquímicas y microbiológicas para asegurar la
-                      calidad y pureza de productos farmacéuticos.
-                    </li>
-                    <li>
-                      Desarrollo y Validación de Métodos: Participación en la investigación, desarrollo y validación de
-                      nuevos métodos analíticos para control de calidad.
-                    </li>
-                    <li>
-                      Cumplimiento Normativo: Mantenimiento de registros y documentación técnica en estricto apego a las
-                      Buenas Prácticas de Laboratorio (BPL) y normativas de la industria farmacéutica.
-                    </li>
-                  </ol>
-                </div>
-              </div>
-            </div>
+                <div className="space-y-3">
+                  
+                  <div className="flex flex-col sm:flex-row space-x-2">
+                    <span className="text-muted-foreground font-medium mb-1 sm:mb-0">Puesto: </span>
+                    <span className="px-3 py-1 self-start bg-blue-100 dark:bg-blue-900 rounded-[9px] text-sm font-semibold text-blue-700 dark:text-blue-300">
+                      {collaborator.PUESTO}
+                    </span>
+                  </div>
 
-            {/* Últimas Capacitaciones y Certificaciones */}
-            <div className="pl-4 border-l-[12px] border-border rounded-lg">
-              <div className="text-base text-foreground leading-6 space-y-4">
-                <div>
-                  <p className="font-semibold mb-2">Últimas Capacitaciones:</p>
-                  <ol className="list-decimal list-inside space-y-1">
-                    <li>ISO 9001 Actualización - Jun 2023 - Nota: 85.</li>
-                    <li>Seguridad Industrial - Feb 2023 - Nota: 90.</li>
-                  </ol>
+                  <div className="flex flex-col sm:flex-row sm:space-x-2">
+                    <span className="text-muted-foreground font-medium mb-1 sm:mb-0">Jefe Inmediato: </span>
+                    <div className="flex items-center gap-2 self-start">
+                      <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 rounded-[9px] text-sm font-semibold text-blue-700 dark:text-blue-300">
+                        {collaborator.ENCARGADO}
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col sm:flex-row sm:space-x-2"> 
+                    <span className="text-muted-foreground font-medium mb-1 sm:mb-0">Fecha ingreso: </span>
+                    <span className="text-sm font-semibold text-muted-foreground">
+                      {collaborator.FECHA_INGRESO}
+                    </span>
+                  </div>
                 </div>
-                <div>
-                  <p className="font-semibold mb-2">Certificaciones Obtenidas:</p>
-                  <p>Buenas Prácticas de Laboratorio - Diploma 2022</p>
+
+                <div className="w-full h-0.5 bg-border my-4" />
+
+                <div className="bg-card border border-border rounded-lg p-6 flex flex-col items-center">
+                  <div className="relative w-20 h-20 mb-4">
+                    <div className={`absolute inset-0 rounded-full ${colors.lightClass}`} />
+                    
+                    <div
+                      className={`absolute inset-0 rounded-full border-4 ${colors.colorClass}`}
+                      style={{
+                        clipPath: `polygon(0 0, 100% 0, 100% ${collaborator.PORCENTAJE_CUMPLIMIENTO}%, 0 ${collaborator.PORCENTAJE_CUMPLIMIENTO}%)`,
+                      }}
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <span className={`text-base font-semibold ${colors.textClass}`}>
+                        {collaborator.PORCENTAJE_CUMPLIMIENTO}
+                      </span>
+                    </div>
+                  </div>
+                  <p className="text-base font-semibold text-foreground mb-1">
+                    % de cumplimiento
+                  </p>
                 </div>
-                <div>
-                  <p className="font-semibold mb-2">Certificaciones Obtenidas:</p>
-                  <p>Manejo de Sustancias Químicas - Pendiente Revisión</p>
+              </div>
+
+              {/* --- Resumen del Estado de Capacitación --- */}
+              <div className="bg-card border-2 border-border rounded-lg p-6 mt-6"> 
+                <h2 className="text-base font-semibold text-foreground mb-6">
+                  Resumen del Estado de Capacitación
+                </h2>
+                <div className="space-y-4">
+                  {resumenColaborador.map((item, index) => (
+                    <div key={index} className="flex items-center justify-between">
+                      <span className="text-base text-foreground">{item.ETIQUETA}</span>
+                      {item.VALOR && (
+                        <span className="text-base text-muted-foreground">{item.VALOR}</span>
+                      )}
+                      {item.ESTADO === "check" && (
+                        <Check className="w-4 h-4 text-green-500" strokeWidth={3} />
+                      )}
+                      {item.ESTADO === "cross" && (
+                        <X className="w-4 h-4 text-red-500" strokeWidth={3} />
+                      )}
+                    </div>
+                  ))}
                 </div>
               </div>
             </div>
-          </>
+          </div>
         )
       case "Capacitaciones":
         return (
           <div>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-foreground">Todas las Capacitaciones</h2>
-              <button
+{/*               <button
                 onClick={() => handleDownloadAll(allDocuments.capacitaciones.filter((c) => c.document))}
                 className="flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition-colors"
               >
                 <Download className="w-4 h-4" />
                 Descargar Todos
-              </button>
+              </button> */}
             </div>
             <div className="space-y-4">
-              {allDocuments.capacitaciones.map((capacitacion, index) => (
+              {capacitaciones.map((capacitacion, index) => (
                 <div
                   key={index}
                   className="bg-card rounded-lg p-6 border border-border hover:border-primary transition-colors"
@@ -274,94 +266,145 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
                   <div className="flex items-start justify-between">
                     <div className="flex-1">
                       <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-base font-semibold text-foreground">{capacitacion.name}</h3>
+                        <h3 className="text-base font-semibold text-foreground">{capacitacion.NOMBRE_CAPACITACION}</h3>
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-semibold ${
-                            capacitacion.status === "Completado"
+                            capacitacion.ESTADO === "Completado"
                               ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
-                              : capacitacion.status === "En Progreso"
+                              : capacitacion.ESTADO === "En Progreso"
                                 ? "bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300"
                                 : "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
                           }`}
                         >
-                          {capacitacion.status}
+                          {capacitacion.ESTADO}
                         </span>
                       </div>
                       <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                        <span>{capacitacion.date}</span>
-                        {capacitacion.score && (
+                        <span>{capacitacion.FECHA}</span>
+                        {capacitacion.NOTA && (
                           <>
                             <div className="w-px h-4 bg-border" />
-                            <span>Nota: {capacitacion.score}</span>
+                            <span>Nota: {capacitacion.NOTA}</span>
                           </>
                         )}
                       </div>
                     </div>
-                    {capacitacion.document && (
+                    {capacitacion.ASISTENCIA && (
                       <button
-                        onClick={() => handleDocumentClick(capacitacion.document!)}
+                        onClick={() => handleDownloadAsistencia(capacitacion.ID_SESION)}
+                        disabled={loadingDownload}
                         className="flex items-center gap-2 px-4 py-2 border border-border text-foreground font-semibold rounded-lg hover:bg-muted transition-colors"
                       >
                         <FileText className="w-4 h-4" />
-                        Ver Certificado
+                        Ver Asistencia
                       </button>
                     )}
                   </div>
                 </div>
               ))}
             </div>
+
+            {capacitaciones.length === 0 && (
+                 <div className="text-center py-10 text-muted-foreground">
+                    No se han encontrado capacitaciones del colaborador.
+                </div>
+            )}
           </div>
         )
       case "Exámenes":
+        const examenes = documentosColaborador.filter(doc => doc.TIPO === "EXAMEN");
+
         return (
           <div>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-foreground">Exámenes Realizados</h2>
-              <button
-                onClick={() => handleDownloadAll(allDocuments.examenes)}
-                className="flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition-colors"
-              >
-                <Download className="w-4 h-4" />
-                Descargar Todos
-              </button>
             </div>
-            <div className="grid grid-cols-4 gap-4">
-              {allDocuments.examenes.map((doc, index) => (
-                <DocumentCard key={index} {...doc} onClick={() => handleDocumentClick(doc.name)} />
-              ))}
-            </div>
+            {examenes.length > 0 ? (
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                {examenes.map((doc, index) => (
+                  <DocumentCard
+                    key={index}
+                    name={doc.NOMBRE_DOCUMENTO}
+                    type={doc.FILE_TYPE}
+                    date={doc.FECHA_CONTEO}
+                    onClick={() => 
+                      handleDownloadExamen(doc.ID_COLABORADOR, doc.ID_SESION)
+                    }
+                  />
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-10 text-muted-foreground">
+                No se han encontrado exámenes realizados para este colaborador.
+              </div>
+            )}
           </div>
         )
       case "Documentos":
+
+        const documentosRelevantes = documentosColaborador.filter(
+          doc => doc.TIPO === "ASISTENCIA" || doc.TIPO === "DIPLOMA"
+        );
+
+        const categoriasDeseadas = ["Asistencia", "Diploma"];
+
         return (
           <div>
             <div className="flex items-center justify-between mb-6">
               <h2 className="text-lg font-semibold text-foreground">Todos los Documentos</h2>
-              <button
+{/*               <button
                 onClick={() => handleDownloadAll(allDocuments.documentos)}
                 className="flex items-center gap-2 px-4 py-2 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600 transition-colors"
               >
                 <Download className="w-4 h-4" />
                 Descargar Todos
-              </button>
+              </button> */}
             </div>
             <div className="space-y-6">
-              {["Asistencia", "Diploma", "Certificado", "CV", "Inducción"].map((category) => {
-                const categoryDocs = allDocuments.documentos.filter((doc) => doc.category === category)
+              {categoriasDeseadas.map((category) => {
+                const categoryDocs = documentosRelevantes.filter(
+                  (doc) => doc.CATEGORIA === category
+                )
+                
                 if (categoryDocs.length === 0) return null
 
                 return (
                   <div key={category}>
-                    <h3 className="text-base font-semibold text-foreground mb-3">{category}</h3>
-                    <div className="grid grid-cols-4 gap-4">
-                      {categoryDocs.map((doc, index) => (
-                        <DocumentCard key={index} {...doc} onClick={() => handleDocumentClick(doc.name)} />
-                      ))}
+                    <h3 className="text-base font-semibold text-foreground mb-3">
+                      {category}
+                    </h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                      {categoryDocs.map((doc, index) => {
+                        
+                        let downloadHandler;
+                        if (doc.TIPO === "ASISTENCIA") {
+                          downloadHandler = () => handleDownloadAsistencia(doc.ID_SESION);
+                        } else if (doc.TIPO === "DIPLOMA") {
+                          downloadHandler = () => 
+                            handleDownloadDiploma(doc.ID_COLABORADOR, doc.ID_SESION);
+                        }
+
+                        return (
+                          <DocumentCard 
+                            key={index} 
+                            name={doc.NOMBRE_DOCUMENTO}
+                            type={doc.FILE_TYPE}
+                            date={doc.FECHA_CONTEO}
+                            onClick={downloadHandler} 
+                          />
+                        )
+                      })}
                     </div>
                   </div>
                 )
               })}
             </div>
+            
+            {documentosRelevantes.length === 0 && (
+                 <div className="text-center py-10 text-muted-foreground">
+                    No se han encontrado documentos de Asistencia o Diplomas.
+                </div>
+            )}
           </div>
         )
       case "Histórico":
@@ -375,35 +418,35 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
               <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-border" />
 
               <div className="space-y-6">
-                {allDocuments.historico.map((item, index) => (
+                {historialColaborador.map((item, index) => (
                   <div key={index} className="relative flex gap-4">
                     {/* Timeline dot */}
                     <div
                       className={`relative z-10 w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 ${
-                        item.type === "success"
+                        item.TIPO === "success"
                           ? "bg-green-100 dark:bg-green-900"
-                          : item.type === "error"
+                          : item.TIPO === "error"
                             ? "bg-red-100 dark:bg-red-900"
                             : "bg-blue-100 dark:bg-blue-900"
                       }`}
                     >
-                      {item.type === "success" && (
+                      {item.TIPO === "success" && (
                         <CheckCircle2 className="w-5 h-5 text-green-600 dark:text-green-400" />
                       )}
-                      {item.type === "error" && <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />}
-                      {item.type === "info" && <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />}
+                      {item.TIPO === "error" && <XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />}
+                      {item.TIPO === "info" && <Clock className="w-5 h-5 text-blue-600 dark:text-blue-400" />}
                     </div>
 
                     {/* Content */}
                     <div className="flex-1 bg-card rounded-lg p-4 border border-border">
                       <div className="flex items-start justify-between mb-2">
-                        <h3 className="text-base font-semibold text-foreground">{item.action}</h3>
+                        <h3 className="text-base font-semibold text-foreground">{item.ACCION}</h3>
                         <div className="text-xs text-muted-foreground">
-                          <div>{item.date}</div>
-                          <div>{item.time}</div>
+                          <div>{item.FECHA}</div>
+                          <div>{item.TIEMPO}</div>
                         </div>
                       </div>
-                      <p className="text-sm text-muted-foreground">{item.detail}</p>
+                      <p className="text-sm text-muted-foreground">{item.DETALLE}</p>
                     </div>
                   </div>
                 ))}
@@ -424,7 +467,7 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
           Colaboradores
         </button>
         <ChevronRight className="w-3 h-3 text-muted-foreground" />
-        <span className="text-foreground font-semibold">{collaborator.name}</span>
+        <span className="text-foreground font-semibold">{collaborator.NOMBRE_COMPLETO}</span>
       </div>
 
       {/* Profile Header Card */}
@@ -432,33 +475,29 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
         <div className="flex items-start gap-6">
           {/* Avatar */}
           <div className="w-16 h-16 rounded-full bg-primary/20 dark:bg-primary/80 flex items-center justify-center flex-shrink-0">
-            <span className="text-[22px] font-semibold text-primary dark:text-foreground">{collaborator.initials}</span>
+            <span className="text-[22px] font-semibold text-primary dark:text-foreground">{collaborator.INICIALES}</span>
           </div>
 
           {/* Profile Info */}
           <div className="flex-1">
             <div className="flex items-center gap-4 mb-2">
-              <h1 className="text-[22px] font-semibold text-foreground">{collaborator.name}</h1>
+              <h1 className="text-[22px] font-semibold text-foreground">{collaborator.NOMBRE_COMPLETO}</h1>
               <span
                 className={`px-3 py-1 rounded-[9px] text-xs font-semibold ${
-                  collaborator.status === "active"
+                  collaborator.ESTADO.toLowerCase() === "activo"
                     ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
-                    : collaborator.status === "on-leave"
+                    : collaborator.ESTADO === "permiso"
                       ? "bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300"
                       : "bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300"
                 }`}
               >
-                {collaborator.status === "active"
-                  ? "Activo"
-                  : collaborator.status === "on-leave"
-                    ? "Permiso"
-                    : "Inactivo"}
+                {collaborator.ESTADO}
               </span>
             </div>
             <div className="flex items-center gap-6 mb-3">
-              <span className="text-base text-muted-foreground">{collaborator.email}</span>
+              <span className="text-base text-muted-foreground">{collaborator.EMAIL}</span>
               <div className="w-px h-5 bg-border" />
-              <span className="text-base text-muted-foreground">{collaborator.phone}</span>
+              <span className="text-base text-muted-foreground">Tel: {collaborator.TELEFONO}</span>
             </div>
           </div>
         </div>
@@ -489,110 +528,6 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
         {/* Content */}
         <div className="p-8">{renderTabContent()}</div>
       </div>
-
-      {/* Edit Profile Modal */}
-      {showEditProfile && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card rounded-lg p-8 max-w-md w-full mx-4">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-foreground">Editar Perfil</h2>
-              <button onClick={() => setShowEditProfile(false)}>
-                <X className="w-5 h-5 text-foreground" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-foreground mb-2">Nombre</label>
-                <input
-                  type="text"
-                  defaultValue={collaborator.name}
-                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:border-primary bg-background text-foreground"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-foreground mb-2">Email</label>
-                <input
-                  type="email"
-                  defaultValue={collaborator.email}
-                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:border-primary bg-background text-foreground"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-foreground mb-2">Teléfono</label>
-                <input
-                  type="tel"
-                  defaultValue={collaborator.phone}
-                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:border-primary bg-background text-foreground"
-                />
-              </div>
-              <div className="flex gap-3 pt-4">
-                <button
-                  onClick={() => {
-                    setShowEditProfile(false)
-                  }}
-                  className="flex-1 px-4 py-2 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600"
-                >
-                  Guardar
-                </button>
-                <button
-                  onClick={() => setShowEditProfile(false)}
-                  className="flex-1 px-4 py-2 border border-border text-foreground font-semibold rounded-lg hover:bg-muted"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Edit Experience Modal */}
-      {showEditExperience && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-          <div className="bg-card rounded-lg p-8 max-w-2xl w-full mx-4 max-h-[80vh] overflow-y-auto">
-            <div className="flex items-center justify-between mb-6">
-              <h2 className="text-xl font-semibold text-foreground">Editar Experiencia</h2>
-              <button onClick={() => setShowEditExperience(false)}>
-                <X className="w-5 h-5 text-foreground" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-semibold text-foreground mb-2">Puesto</label>
-                <input
-                  type="text"
-                  defaultValue="Químico Farmacéutico"
-                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:border-primary bg-background text-foreground"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-semibold text-foreground mb-2">Responsabilidades</label>
-                <textarea
-                  rows={8}
-                  defaultValue="1. Análisis de Calidad: Realización de pruebas fisicoquímicas y microbiológicas para asegurar la calidad y pureza de productos farmacéuticos.&#10;2. Desarrollo y Validación de Métodos: Participación en la investigación, desarrollo y validación de nuevos métodos analíticos para control de calidad.&#10;3. Cumplimiento Normativo: Mantenimiento de registros y documentación técnica en estricto apego a las Buenas Prácticas de Laboratorio (BPL) y normativas de la industria farmacéutica."
-                  className="w-full px-4 py-2 border border-border rounded-lg focus:outline-none focus:border-primary bg-background text-foreground"
-                />
-              </div>
-              <div className="flex gap-3 pt-4">
-                <button
-                  onClick={() => {
-                    setShowEditExperience(false)
-                  }}
-                  className="flex-1 px-4 py-2 bg-yellow-500 text-white font-semibold rounded-lg hover:bg-yellow-600"
-                >
-                  Guardar
-                </button>
-                <button
-                  onClick={() => setShowEditExperience(false)}
-                  className="flex-1 px-4 py-2 border border-border text-foreground font-semibold rounded-lg hover:bg-muted"
-                >
-                  Cancelar
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   )
 }
