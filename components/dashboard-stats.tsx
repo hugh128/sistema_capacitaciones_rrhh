@@ -2,26 +2,40 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
-import { Users, BookOpen, Calendar, TrendingUp, CheckCircle, Clock, AlertTriangle, Award } from "lucide-react"
+import { ActividadProxima, CapacitacionReciente, Estadisticas } from "@/lib/dashboard/type"
+import { Users, BookOpen, Calendar, TrendingUp, CheckCircle, Clock, AlertTriangle, Award, ChartBar } from "lucide-react"
 
-export function DashboardStats() {
-  const stats = {
-    totalCapacitaciones: 24,
-    capacitacionesActivas: 8,
-    totalParticipantes: 156,
-    participantesActivos: 89,
-    planesCompletados: 12,
-    totalPlanes: 18,
-    cumplimientoPromedio: 78,
-    proximasCapacitaciones: 5,
+type DashboardProps = {
+  estadisticas: Estadisticas | null
+  capacitacionesRecientes: CapacitacionReciente[]
+  actividadesProximas: ActividadProxima[]
+}
+
+export function DashboardStats({
+  estadisticas,
+  capacitacionesRecientes,
+  actividadesProximas
+}: DashboardProps) {
+
+  if (!estadisticas) {
+    return (
+      <Card className="col-span-4 bg-primary/10 border-primary/20 shadow-lg">
+        <CardHeader className="pb-3">
+          <CardTitle className="text-xl font-bold text-primary flex items-center gap-2">
+            <Users className="h-5 w-5" /> ¡Bienvenido/a a tu Panel de Control!
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-base text-gray-700">
+            Tu Dashboard Personal está listo.
+          </p>
+          <p className="text-sm text-indigo-600 font-medium mt-2">
+            Navega a través del menú lateral para gestionar tus tareas, registrar avances o acceder a informes específicos.
+          </p>
+        </CardContent>
+      </Card>
+    );
   }
-
-  const recentTrainings = [
-    { nombre: "Seguridad Industrial", participantes: 25, progreso: 85, estado: "En progreso" },
-    { nombre: "Liderazgo Efectivo", participantes: 18, progreso: 100, estado: "Completado" },
-    { nombre: "Excel Avanzado", participantes: 32, progreso: 45, estado: "En progreso" },
-    { nombre: "Atención al Cliente", participantes: 22, progreso: 20, estado: "Iniciando" },
-  ]
 
   return (
     <div className="space-y-6">
@@ -33,9 +47,9 @@ export function DashboardStats() {
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalCapacitaciones}</div>
+            <div className="text-2xl font-bold">{estadisticas.totalCapacitaciones}</div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-chart-2">+{stats.capacitacionesActivas}</span> activas
+              <span className="text-chart-2">+{estadisticas.capacitacionesActivas}</span> activas
             </p>
           </CardContent>
         </Card>
@@ -46,9 +60,9 @@ export function DashboardStats() {
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.totalParticipantes}</div>
+            <div className="text-2xl font-bold">{estadisticas.totalParticipantes}</div>
             <p className="text-xs text-muted-foreground">
-              <span className="text-chart-2">+{stats.participantesActivos}</span> activos
+              <span className="text-chart-2">+{estadisticas.participantesActivos}</span> activos
             </p>
           </CardContent>
         </Card>
@@ -59,8 +73,8 @@ export function DashboardStats() {
             <CheckCircle className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.planesCompletados}</div>
-            <p className="text-xs text-muted-foreground">de {stats.totalPlanes} planes totales</p>
+            <div className="text-2xl font-bold">{estadisticas.planesCompletados}</div>
+            <p className="text-xs text-muted-foreground">de {estadisticas.totalPlanes} planes totales</p>
           </CardContent>
         </Card>
 
@@ -70,8 +84,8 @@ export function DashboardStats() {
             <TrendingUp className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{stats.cumplimientoPromedio}%</div>
-            <Progress value={stats.cumplimientoPromedio} className="mt-2" />
+            <div className="text-2xl font-bold">{estadisticas.cumplimientoPromedio}%</div>
+            <Progress value={estadisticas.cumplimientoPromedio} className="mt-2" />
           </CardContent>
         </Card>
       </div>
@@ -86,7 +100,7 @@ export function DashboardStats() {
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recentTrainings.map((training, index) => (
+            {capacitacionesRecientes.map((training, index) => (
               <div key={index} className="flex items-center justify-between space-x-4">
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-medium truncate">{training.nombre}</p>
@@ -110,47 +124,37 @@ export function DashboardStats() {
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Award className="h-5 w-5" />
+              <Calendar className="h-5 w-5" />
               Próximas Actividades
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="space-y-3">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                <div>
-                  <p className="text-sm font-medium">Evaluación de Seguridad</p>
-                  <p className="text-xs text-muted-foreground">Mañana, 10:00 AM</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs font-medium">25 participantes</p>
-                  <p className="text-xs text-muted-foreground">Sala A-101</p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                <div>
-                  <p className="text-sm font-medium">Taller de Liderazgo</p>
-                  <p className="text-xs text-muted-foreground">Viernes, 2:00 PM</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs font-medium">18 participantes</p>
-                  <p className="text-xs text-muted-foreground">Virtual</p>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                <div>
-                  <p className="text-sm font-medium">Certificación Excel</p>
-                  <p className="text-xs text-muted-foreground">Lunes, 9:00 AM</p>
-                </div>
-                <div className="text-right">
-                  <p className="text-xs font-medium">32 participantes</p>
-                  <p className="text-xs text-muted-foreground">Lab. Cómputo</p>
-                </div>
-              </div>
+              {actividadesProximas.length > 0 ? (
+                actividadesProximas.map((actividad) => (
+                  <div 
+                    key={actividad.ID_SESION} 
+                    className={`flex items-center justify-between p-3 rounded-lg bg-muted/50`}
+                  >
+                    <div>
+                      <p className="text-sm font-medium">{actividad.nombre}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {actividad.fechaHora} ({actividad.duracionTexto})
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-xs font-medium">{actividad.participantes} participantes</p>
+                      <p className="text-xs text-muted-foreground">{actividad.ubicacion}</p>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-sm text-muted-foreground">No hay actividades próximas programadas.</p>
+              )}
             </div>
           </CardContent>
         </Card>
+
       </div>
     </div>
   )

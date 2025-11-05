@@ -52,6 +52,7 @@ export default function CodigosAsociadosPage() {
   });
   const [isImporting, setIsImporting] = useState(false);
   const [isPending, startTransition] = useTransition()
+  const [isLoading, setIsLoading] = useState(true);
 
   const [searchQuery, setSearchQuery] = useState("")
   const [currentPage, setCurrentPage] = useState(1)
@@ -79,16 +80,27 @@ export default function CodigosAsociadosPage() {
   )
 
   useEffect(() => {
-    if (editParent) {
-      const updatedParent = codigos.find(c => c.ID_DOCUMENTO === editParent.ID_DOCUMENTO);
-      if (updatedParent && updatedParent !== editParent) {
-        setEditParent(updatedParent);
-      } else if (!updatedParent) {
-        setEditParent(null);
-      }
+    if (!user) {
+      setIsLoading(false);
+      return; 
     }
-  }, [codigos, editParent]);
 
+    try {
+      if (editParent) {
+        const updatedParent = codigos.find(c => c.ID_DOCUMENTO === editParent.ID_DOCUMENTO);
+        if (updatedParent && updatedParent !== editParent) {
+          setEditParent(updatedParent);
+        } else if (!updatedParent) {
+          setEditParent(null);
+        }
+      }
+    } catch (error) {
+      console.error('Error al cargar codigos:', error)
+    } finally {
+      setIsLoading(false);
+    }
+
+  }, [user, codigos, editParent]);
 
   const handleAddParent = async () => {
     if (
@@ -370,6 +382,22 @@ export default function CodigosAsociadosPage() {
       await refreshCodigos();
     }
   };
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="w-96">
+          <CardHeader>
+            <CardTitle>Cargando Detalles...</CardTitle>
+            <CardDescription>Obteniendo información de los codigos.</CardDescription>
+          </CardHeader>
+          <CardContent className="flex justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="flex h-screen bg-background">

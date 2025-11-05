@@ -36,9 +36,9 @@ export function AllCapacitacionesTab({ capacitaciones }: AllCapacitacionesTabPro
   }, [searchTerm, estadoFilter, capacitadorFilter, capacitaciones])
 
   const getDetailRoute = (capacitacion: ApiCapacitacionSesion): string => {
-    if (capacitacion.ESTADO === "PENDIENTE_ASIGNACION" || capacitacion.ESTADO === "ASIGNADA") {
+    if (capacitacion.ESTADO_SESION === "PENDIENTE_ASIGNACION" || capacitacion.ESTADO_SESION === "ASIGNADA" || capacitacion.ESTADO_SESION === "CREADA") {
       return `/capacitaciones/asignar/${capacitacion.ID_CAPACITACION}`
-    } else if (capacitacion.ESTADO === "FINALIZADA_CAPACITADOR" || capacitacion.ESTADO === "EN_REVISION") {
+    } else if (capacitacion.ESTADO_SESION === "FINALIZADA_CAPACITADOR" || capacitacion.ESTADO_SESION === "EN_REVISION") {
       return `capacitaciones/revisar/${capacitacion.ID_SESION}`
     }
     return `/capacitaciones/${capacitacion.ID_SESION}`
@@ -105,13 +105,13 @@ export function AllCapacitacionesTab({ capacitaciones }: AllCapacitacionesTabPro
               </div>
             ) : (
               capacitacionesFiltradas.map((cap) => (
-                <Card key={cap.ID_CAPACITACION} className="hover:shadow-md transition-shadow">
+                <Card key={cap.CLAVE_UNICA} className="hover:shadow-md transition-shadow">
                   <CardContent className="pt-6">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex-1 space-y-3">
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-semibold text-lg text-foreground">{cap.CAPACITACION_NOMBRE}</h3>
-                          <Badge className={getEstadoCapacitacionColor(cap.ESTADO)}>{cap.ESTADO}</Badge>
+                          <Badge className={getEstadoCapacitacionColor(cap.ESTADO_SESION)}>{cap.ESTADO_SESION}</Badge>
                           <Badge variant="outline">{cap.TIPO_CAPACITACION}</Badge>
                         </div>
 

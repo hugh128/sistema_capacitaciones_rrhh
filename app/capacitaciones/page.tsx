@@ -23,7 +23,7 @@ export default function GestionCapacitacionesPage() {
   // Separar por estado
   const pendientesAsignacion = useMemo(() => {
     return capacitaciones.filter(
-      (c) => c.ESTADO === "PENDIENTE_ASIGNACION"
+      (c) => c.ESTADO === "PENDIENTE_ASIGNACION" || c.ESTADO === "CREADA" || c.ESTADO === "ASIGNADA" || c.ESTADO_SESION === "PENDIENTE_ASIGNACION"
     )
   }, [capacitaciones])
 
@@ -47,8 +47,8 @@ export default function GestionCapacitacionesPage() {
     }).length
 
     const totalParticipantes = capacitaciones.reduce((sum, c) => sum + (c.TOTAL_COLABORADORES ?? 0), 0)
-    const asistenciaPromedio = capacitaciones.reduce((sum, c) => sum + (c.TOTAL_ASISTENCIAS ?? 0), 0) / total || 0
-    const aprobacionPromedio = capacitaciones.reduce((sum, c) => sum + (c.TOTAL_APROBADOS ?? 0), 0) / total || 0
+    const asistenciaPromedio = parseFloat((capacitaciones.reduce((sum, c) => sum + (c.TOTAL_ASISTENCIAS ?? 0), 0) / total || 0).toFixed(2))
+    const aprobacionPromedio = parseFloat((capacitaciones.reduce((sum, c) => sum + (c.TOTAL_APROBADOS ?? 0), 0) / total || 0).toFixed(2))
 
     return {
       total,

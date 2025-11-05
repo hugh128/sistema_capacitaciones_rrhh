@@ -146,22 +146,7 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
 
   const renderTabContent = () => {
     switch (activeTab) {
-      case "General":
-        const trainingItems = [
-          {
-            label: "Cumplimiento de Capacitación obligatoria",
-            value: `${collaborator.PORCENTAJE_CUMPLIMIENTO}%`,
-            status: null,
-          },
-          { label: "Última Capacitación", value: "ISO", status: null },
-          { label: "Próxima Capacitación", value: "Manejo de químicos", status: null },
-          { label: "Inducción", value: "", status: "cross" },
-          { label: "Seguridad Industrial", value: "", status: "check" },
-          { label: "ISO", value: "", status: "check" },
-          { label: "Buenas Prácticas de Laboratorio", value: "", status: "check" },
-          { label: "Manejo de Químicos", value: "", status: "cross" },
-        ]
-        
+      case "General":     
         const colors = getCompletionColors(collaborator.PORCENTAJE_CUMPLIMIENTO);
 
         return (

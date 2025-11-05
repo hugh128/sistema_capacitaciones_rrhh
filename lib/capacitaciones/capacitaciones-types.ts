@@ -369,7 +369,7 @@ export interface ApiCapacitacionSesion {
   APLICA_DIPLOMA: boolean;
   ESTADO: EstadoCapacitacion;
   ESTADO_CAPACITACION: string;
-  ESTADO_SESION: string | null;
+  ESTADO_SESION: EstadoCapacitacion;
   URL_LISTA_ASISTENCIA: string | null;
   OBSERVACIONES_SESION: string | null;
   OBSERVACIONES_CAPACITACION: string | null;
@@ -405,4 +405,5 @@ export interface ApiCapacitacionSesion {
   USUARIO_CREACION_SESION: string | null;
   FECHA_CREACION_CAPACITACION: string;
   FECHA_MODIFICACION_CAPACITACION: string | null;
+  CLAVE_UNICA: string;
 }

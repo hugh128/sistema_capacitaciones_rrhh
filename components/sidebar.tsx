@@ -52,8 +52,8 @@ const MAIN_MENU_CONFIG: MenuItem[] = [
 
   { icon: Users, label: "Colaboradores", href: "/colaboradores", requiredPermissions: ["view_participants"] },
 
-  { icon: FileText, label: "Documentos", href: "/documentos", requiredPermissions: ["upload_documents", "view_documents"] },
-  { icon: BarChart3, label: "Reportes", href: "/reportes", requiredPermissions: ["view_reports"] },
+  /* { icon: FileText, label: "Documentos", href: "/documentos", requiredPermissions: ["upload_documents", "view_documents"] }, */
+  /* { icon: BarChart3, label: "Reportes", href: "/reportes", requiredPermissions: ["view_reports"] }, */
 
   { icon: Code2, label: "Codigos", href: "/codigos", requiredPermissions: ["codes"] },  
 
@@ -133,7 +133,7 @@ export function Sidebar({ className }: SidebarProps) {
 
       <div
         className={cn(
-          "flex flex-col min-h-svh bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out",
+          "flex flex-col min-h-svh h-full bg-sidebar border-r border-sidebar-border transition-all duration-300 ease-in-out",
           "fixed md:relative z-50 md:z-auto",
           "md:flex",
           mobileMenuOpen ? "flex" : "hidden md:flex",

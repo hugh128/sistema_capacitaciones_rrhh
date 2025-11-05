@@ -131,7 +131,7 @@ export default function CapacitacionDetailPage() {
 
   // Helper function to determine if HR can navigate to assignment or review
   const getNavigationButtons = () => {
-    if (sesion.ESTADO === "PENDIENTE_ASIGNACION" || sesion.ESTADO === "ASIGNADA") {
+    if (sesion.ESTADO === "PENDIENTE_ASIGNACION" || sesion.ESTADO === "ASIGNADA" || sesion.ESTADO === "CREADA") {
       return (
         <Link href={`/capacitaciones/asignar/${sesion.ID_CAPACITACION}`}>
           <Button>Ir a Asignación</Button>

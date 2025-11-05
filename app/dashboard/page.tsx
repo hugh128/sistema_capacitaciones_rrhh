@@ -7,9 +7,74 @@ import { Button } from "@/components/ui/button"
 import { AppHeader } from "@/components/app-header"
 import Link from "next/link"
 import { RequirePermission } from "@/components/RequirePermission"
+import { useDashboar } from "@/hooks/useDashboard"
+import { useEffect, useState } from "react"
+import { ActividadProxima, CapacitacionReciente, Estadisticas } from "@/lib/dashboard/type"
 
 export default function DashboardPage() {
   const { user } = useAuth()
+  const [isLoading, setIsLoading] = useState(true);
+  const [estadisticas, setEstadisticas] = useState<Estadisticas | null>(null)
+  const [capacitacionReciente, setCapacitacionReciente] = useState<CapacitacionReciente[]>([])
+  const [actividadProxima, setActividadProxima] = useState<ActividadProxima[]>([])
+
+  const {
+    obtenerEstadisticasDashboard,
+  } = useDashboar(user)
+
+  useEffect(() => {
+    if (!user) {
+      setIsLoading(false);
+      return;
+    }
+
+    const userRole = user.ROLES?.[0]?.NOMBRE;
+    
+    let idToSend: number | null = null;
+    let shouldFetch = true;
+
+    if (userRole === 'RRHH') {
+      idToSend = null; 
+    } else if (userRole === 'Capacitador') {
+      idToSend = user.PERSONA_ID; 
+    } else {
+      shouldFetch = false;
+    }
+
+    if (!shouldFetch) {
+      setEstadisticas(null);
+      setIsLoading(false);
+      return;
+    }
+
+    const fetchData = async () => {
+      setIsLoading(true);
+      try {
+        const responseData = await obtenerEstadisticasDashboard(idToSend);
+
+        const { 
+          ESTADISTICAS,
+          CAPACITACIONES_RECIENTES,
+          ACTIVIDADES_PROXIMAS
+        } = responseData; 
+
+        setEstadisticas(ESTADISTICAS);
+        setCapacitacionReciente(CAPACITACIONES_RECIENTES);
+        setActividadProxima(ACTIVIDADES_PROXIMAS);
+          
+      } catch (error) {
+        console.error('Error al cargar datos:', error)
+        setEstadisticas(null);
+        setCapacitacionReciente([]);
+        setActividadProxima([]);
+      } finally {
+        setIsLoading(false);
+      }
+    }
+
+    fetchData()
+      
+  }, [user, obtenerEstadisticasDashboard])
 
   if (!user) {
     return null
@@ -37,9 +102,10 @@ export default function DashboardPage() {
                   <div className="flex flex-wrap gap-2">
                     {user.ROLES[0]?.NOMBRE === "RRHH" && (
                       <>
-                        <Link href="/reportes">
+                        <Link href="/planes_programas">
                           <Button variant="default" size="sm" className="cursor-pointer">
-                            Ver Reportes
+                            {/* Ver Reportes */}
+                            Ver planes y programas
                           </Button>
                         </Link>
 
@@ -75,7 +141,11 @@ export default function DashboardPage() {
               </div>
 
               {/* Dashboard Stats */}
-              <DashboardStats />
+              <DashboardStats
+                estadisticas={estadisticas}
+                capacitacionesRecientes={capacitacionReciente}
+                actividadesProximas={actividadProxima}
+              />
             </div>
           </main>
         </div>

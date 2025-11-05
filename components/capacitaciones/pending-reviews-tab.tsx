@@ -39,13 +39,13 @@ export function PendingReviewsTab({ capacitaciones }: PendingReviewsTabProps) {
       <CardContent className="space-y-4">
         <div className="space-y-4">
           {capacitaciones.map((cap) => (
-            <Card key={cap.ID_CAPACITACION} className="hover:shadow-md transition-shadow border-l-4 border-l-orange-500">
+            <Card key={cap.CLAVE_UNICA} className="hover:shadow-md transition-shadow border-l-4 border-l-orange-500">
               <CardContent className="pt-6">
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1 space-y-3">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-semibold text-lg text-foreground">{cap.CAPACITACION_NOMBRE}</h3>
-                      <Badge className={getEstadoCapacitacionColor(cap.ESTADO)}>{cap.ESTADO}</Badge>
+                      <Badge className={getEstadoCapacitacionColor(cap.ESTADO_SESION)}>{cap.ESTADO_SESION}</Badge>
                     </div>
 
                     {cap.CODIGO_DOCUMENTO && (
