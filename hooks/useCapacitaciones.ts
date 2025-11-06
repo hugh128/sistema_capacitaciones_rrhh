@@ -1,10 +1,11 @@
 import { apiClient } from "@/lib/api-client";
 import { UsuarioLogin } from "@/lib/auth";
 import type { ApiCapacitacionSesion, AsignarCapacitacion, AsignarSesion, Capacitacion } from "@/lib/capacitaciones/capacitaciones-types";
-import type { ColaboradorAsistenciaData } from "@/lib/mis-capacitaciones/capacitaciones-types";
+import type { ColaboradorAsistenciaData, ListadoAsistencia } from "@/lib/mis-capacitaciones/capacitaciones-types";
 import { handleApiError } from "@/utils/error-handler";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import { AxiosError } from "axios";
 
 export function useCapacitaciones(user: UsuarioLogin | null) {
   const [capacitacionesPendientes, setCapacitacionesPendientes] = useState<Capacitacion[]>([]);
@@ -475,9 +476,9 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     }
   }, []);
 
-  const descargarPlantillaAsistencia = useCallback(async (formatoDatos: any) => {
+  const descargarPlantillaAsistencia = useCallback(async (formatoDatos: ListadoAsistencia) => {
     try {
-      const response = await apiClient.post(`/pdf-module/asistencia`, formatoDatos, {
+      const response = await apiClient.post(`/documents-module/asistencia`, formatoDatos, {
         responseType: "blob",
       });
 
@@ -485,13 +486,15 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
       const url = window.URL.createObjectURL(blob);
 
       window.open(url, "_blank");
-
       setTimeout(() => window.URL.revokeObjectURL(url), 5000);
-    } catch (err: any) {
-      if (err.response && err.response.data instanceof Blob) {
-        const text = await err.response.data.text();
+    } catch (err) {
+      const error = err as AxiosError;
+
+      if (error.response && error.response.data instanceof Blob) {
+        const text = await error.response.data.text();
         console.error("Respuesta del servidor:", text);
       }
+      
       handleApiError(err, "Error al generar la plantilla de asistencia.");
     }
   }, []);

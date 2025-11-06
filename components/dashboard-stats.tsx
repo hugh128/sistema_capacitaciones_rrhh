@@ -26,7 +26,7 @@ export function DashboardStats({
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-base text-gray-700">
+          <p className="text-base">
             Tu Dashboard Personal está listo.
           </p>
           <p className="text-sm text-indigo-600 font-medium mt-2">

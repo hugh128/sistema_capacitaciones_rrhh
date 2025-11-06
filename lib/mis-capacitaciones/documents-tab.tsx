@@ -88,53 +88,41 @@ export function DocumentsTab({
     try {
       setLoadingDownload(true);
 
-      const fechaEmision = new Date().toISOString().split("T")[0];
+    const modalidad = sesion.MODALIDAD?.toUpperCase();
+    const interno = modalidad === 'INTERNA';
+    const externo = modalidad === 'EXTERNA';
 
-      let documentosAsociados: { codigoDocumento: string }[] = [];
-
-      if (sesion?.ES_SISTEMA_DOCUMENTAL) {
-        if (sesion?.TEMAS && typeof sesion.TEMAS === "string") {
-          documentosAsociados = sesion.TEMAS.split(",")
-            .map((t) => t.trim())
-            .filter((t) => t.length > 0)
-            .map((t) => ({ codigoDocumento: t }));
-        } else {
-          documentosAsociados = [{ codigoDocumento: "SIN-CODIGO" }];
-        }
-      } else {
-        documentosAsociados = [{ codigoDocumento: "SIN-CODIGO" }];
-      }
-
-      const documentoPadre = sesion?.ES_SISTEMA_DOCUMENTAL
-        ? {
-            codigoDocumento: sesion?.CODIGO_DOCUMENTO || "SIN-CODIGO",
-            versionDocumento: sesion?.VERSION || "1",
-          }
-        : {
-            codigoDocumento: "SIN-CODIGO",
-            versionDocumento: "1",
-          };
+    const tipo = sesion.TIPO_CAPACITACION?.toUpperCase();
+    const taller = tipo === 'TALLER';
+    const curso = tipo === 'CURSO';
+    const otro = !taller && !curso;
 
       const datos = {
-        fechaEmision,
-        fechaProximaRevision: "2026-11-03",
-        tipoCapacitacion: sesion?.TIPO_CAPACITACION || "Presencial",
-        documentoPadre,
-        documentosAsociados,
-        grupoObjetivo: sesion?.GRUPO_OBJETIVO || "Sin grupo objetivo",
-        nombreCapacitacion: sesion?.CAPACITACION_NOMBRE || "Sin nombre",
-        objetivoCapacitacion: sesion?.OBJETIVO || "Sin objetivo definido",
-        nombreFacilitador: sesion?.CAPACITADOR_NOMBRE || "No asignado",
-        fechaCapacitacion: sesion?.FECHA_FORMATO || "Sin fecha",
-        horario: sesion?.HORARIO_FORMATO_12H || "00:00",
-        instruccion: "Firmar al asistir y completar el listado.",
-        capacitados:
-          colaboradores?.map((col) => ({
+      sistemaDocumental: sesion.ES_SISTEMA_DOCUMENTAL,
+      codigoDocumento: sesion.CODIGO_DOCUMENTO,
+      version: sesion.VERSION?.toString(),
+      documentosAsociados: sesion.TEMAS,
+      taller,
+      curso,
+      otro,
+      interno,
+      externo,
+      grupoObjetivo: sesion.GRUPO_OBJETIVO || "Sin grupo objetivo",
+      nombreCapacitacion: sesion.CAPACITACION_NOMBRE,
+      objetivoCapacitacion: sesion.OBJETIVO || "Sin objetivo definido",
+      nombreFacilitador: sesion.CAPACITADOR_NOMBRE,
+      fechaCapacitacion: sesion.FECHA_FORMATO || "Sin fecha",
+      horario: sesion.HORARIO_FORMATO_12H,
+      horasCapacitacion: sesion.DURACION_FORMATO,
+      asistentes: colaboradores?.map((col) => ({
             nombre:
               col.NOMBRE_COMPLETO ||
               `${col.NOMBRE ?? ""} ${col.APELLIDO ?? ""}`.trim() ||
               "Sin nombre",
+            area: col.DEPARTAMENTO_CODIGO,
+            nota: col.NOTA_OBTENIDA?.toString()
           })) || [],
+      observaciones: sesion.OBSERVACIONES || "Sin observaciones"
       };
 
       await descargarPlantillaAsistencia(datos);

@@ -219,6 +219,33 @@ export interface FileState {
     [colaboradorId: number]: File | null;
 }
 
+export interface ListadoAsistencia {
+  sistemaDocumental: boolean
+  codigoDocumento: string | null
+  version: string | undefined
+  documentosAsociados: string | null
+  taller: boolean
+  curso: boolean
+  otro: boolean
+  interno: boolean
+  externo: boolean
+  grupoObjetivo: string
+  nombreCapacitacion: string
+  objetivoCapacitacion: string
+  nombreFacilitador: string
+  fechaCapacitacion: string
+  horario: string
+  horasCapacitacion: string
+  asistentes: AsistenteListado[]
+  observaciones: string
+}
+
+export interface AsistenteListado {
+  nombre: string
+  area?: string
+  nota?: string
+}
+
 // Helper functions
 export function calcularDuracionMinutos(horaInicio: string, horaFin: string): number {
   const [horasInicio, minutosInicio] = horaInicio.split(":").map(Number)
