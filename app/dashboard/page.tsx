@@ -13,7 +13,8 @@ import { ActividadProxima, CapacitacionReciente, Estadisticas } from "@/lib/dash
 
 export default function DashboardPage() {
   const { user } = useAuth()
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
   const [estadisticas, setEstadisticas] = useState<Estadisticas | null>(null)
   const [capacitacionReciente, setCapacitacionReciente] = useState<CapacitacionReciente[]>([])
   const [actividadProxima, setActividadProxima] = useState<ActividadProxima[]>([])
@@ -24,51 +25,62 @@ export default function DashboardPage() {
 
   useEffect(() => {
     if (!user) {
-      setIsLoading(false);
-      return;
+      setIsLoading(false)
+      return
     }
 
-    const userRole = user.ROLES?.[0]?.NOMBRE;
+    const userRole = user.ROLES?.[0]?.NOMBRE
     
-    let idToSend: number | null = null;
-    let shouldFetch = true;
+    let idToSend: number | null = null
+    let shouldFetch = true
 
     if (userRole === 'RRHH') {
-      idToSend = null; 
+      idToSend = null
     } else if (userRole === 'Capacitador') {
-      idToSend = user.PERSONA_ID; 
+      idToSend = user.PERSONA_ID
     } else {
-      shouldFetch = false;
+      shouldFetch = false
     }
 
     if (!shouldFetch) {
-      setEstadisticas(null);
-      setIsLoading(false);
-      return;
+      setEstadisticas(null)
+      setIsLoading(false)
+      return
     }
 
     const fetchData = async () => {
-      setIsLoading(true);
+      setIsLoading(true)
+      setHasError(false)
       try {
-        const responseData = await obtenerEstadisticasDashboard(idToSend);
+        const responseData = await obtenerEstadisticasDashboard(idToSend)
+
+        // Verificar si la respuesta es válida
+        if (!responseData) {
+          setHasError(true)
+          setEstadisticas(null)
+          setCapacitacionReciente([])
+          setActividadProxima([])
+          return
+        }
 
         const { 
           ESTADISTICAS,
           CAPACITACIONES_RECIENTES,
           ACTIVIDADES_PROXIMAS
-        } = responseData; 
+        } = responseData
 
-        setEstadisticas(ESTADISTICAS);
-        setCapacitacionReciente(CAPACITACIONES_RECIENTES);
-        setActividadProxima(ACTIVIDADES_PROXIMAS);
+        setEstadisticas(ESTADISTICAS)
+        setCapacitacionReciente(CAPACITACIONES_RECIENTES)
+        setActividadProxima(ACTIVIDADES_PROXIMAS)
           
       } catch (error) {
         console.error('Error al cargar datos:', error)
-        setEstadisticas(null);
-        setCapacitacionReciente([]);
-        setActividadProxima([]);
+        setHasError(true)
+        setEstadisticas(null)
+        setCapacitacionReciente([])
+        setActividadProxima([])
       } finally {
-        setIsLoading(false);
+        setIsLoading(false)
       }
     }
 
@@ -82,7 +94,6 @@ export default function DashboardPage() {
 
   return (
     <RequirePermission requiredPermissions={[]}>
-
       <div className="flex h-screen bg-background">
         <Sidebar />
 
@@ -104,7 +115,6 @@ export default function DashboardPage() {
                       <>
                         <Link href="/planes_programas">
                           <Button variant="default" size="sm" className="cursor-pointer">
-                            {/* Ver Reportes */}
                             Ver planes y programas
                           </Button>
                         </Link>
@@ -145,12 +155,13 @@ export default function DashboardPage() {
                 estadisticas={estadisticas}
                 capacitacionesRecientes={capacitacionReciente}
                 actividadesProximas={actividadProxima}
+                isLoading={isLoading}
+                hasError={hasError}
               />
             </div>
           </main>
         </div>
       </div>
-
     </RequirePermission>
   )
 }

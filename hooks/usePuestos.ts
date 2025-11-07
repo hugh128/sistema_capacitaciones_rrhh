@@ -10,6 +10,7 @@ export function usePuestos(user: UsuarioLogin | null) {
   const [puestos, setPuestos] = useState<Puesto[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isMutating, setIsMutating] = useState(false);
 
   const fetchPuestos = useCallback(async () => {
     setLoading(true);
@@ -46,6 +47,8 @@ export function usePuestos(user: UsuarioLogin | null) {
     
   const savePuesto = async (formData: FormValues, editingPuesto: Puesto | null) => {
     setError(null);
+    setIsMutating(true);
+
     const isEditing = !!editingPuesto;
     const action = isEditing ? "Editar" : "Guardar";
 
@@ -75,6 +78,8 @@ export function usePuestos(user: UsuarioLogin | null) {
       const detailedMessage = handleApiError(err, baseMessage);
       setError(detailedMessage);
       return false;
+    } finally {
+      setIsMutating(false);
     }
   };
 
@@ -86,6 +91,7 @@ export function usePuestos(user: UsuarioLogin | null) {
 
   return {
     puestos,
+    isMutating,
     loading,
     error,
     fetchPuestos,

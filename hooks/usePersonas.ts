@@ -10,10 +10,18 @@ export function usePersonas(user: UsuarioLogin | null) {
   const [personas, setPersonas] = useState<Persona[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isMutating, setIsMutating] = useState(false);
+
 
   const fetchPersonas = useCallback(async () => {
+    if (!user) {
+      setPersonas([]);
+      return;
+    }
+
     setLoading(true);
     setError(null);
+
     try {
       const { data } = await apiClient.get<Persona[]>('/persona');
       setPersonas(data);
@@ -24,7 +32,7 @@ export function usePersonas(user: UsuarioLogin | null) {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [user]);
 
   const deletePersona = async (persona: Persona) => {
     setError(null);
@@ -45,7 +53,14 @@ export function usePersonas(user: UsuarioLogin | null) {
   };
     
   const savePersona = async (formData: FormValues, editingPersona: Persona | null) => {
+    if (!user) {
+      toast.error("Usuario no autenticado.");
+      throw new Error("Usuario no autenticado.");
+    }
+
+    setIsMutating(true);
     setError(null);
+
     const isEditing = !!editingPersona;
     const action = isEditing ? "Editar" : "Guardar";
 
@@ -85,6 +100,8 @@ export function usePersonas(user: UsuarioLogin | null) {
       const detailedMessage = handleApiError(err, baseMessage);
       setError(detailedMessage);
       return false;
+    } finally {
+      setIsMutating(false);
     }
   };
 
@@ -98,6 +115,7 @@ export function usePersonas(user: UsuarioLogin | null) {
     personas,
     loading,
     error,
+    isMutating,
     fetchPersonas,
     deletePersona,
     savePersona

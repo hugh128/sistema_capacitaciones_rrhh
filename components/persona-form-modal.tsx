@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
+import { Loader2 } from "lucide-react"
 import { Persona } from "@/lib/types"
 import { FormData } from "./form-modal"
 
@@ -50,10 +51,11 @@ interface FormFieldRendererProps {
   field: FormField;
   value: FormData[string];
   updateField: (key: string, value: string | boolean) => void;
-  options?: Option[]; 
+  options?: Option[];
+  disabled?: boolean;
 }
 
-const FormFieldRenderer = React.memo(({ field, value, updateField, options }: FormFieldRendererProps) => {
+const FormFieldRenderer = React.memo(({ field, value, updateField, options, disabled = false }: FormFieldRendererProps) => {
     
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     updateField(field.key, e.target.value);
@@ -71,9 +73,13 @@ const FormFieldRenderer = React.memo(({ field, value, updateField, options }: Fo
         <Checkbox 
           id={field.key} 
           checked={!!value} 
-          onCheckedChange={handleCheckboxChange} 
+          onCheckedChange={handleCheckboxChange}
+          disabled={disabled}
         />
-        <Label htmlFor={field.key} className="text-base cursor-pointer">
+        <Label 
+          htmlFor={field.key} 
+          className={`text-base ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+        >
           {field.label}
           {field.required && <span className="text-destructive ml-1">*</span>}
         </Label>
@@ -95,12 +101,14 @@ const FormFieldRenderer = React.memo(({ field, value, updateField, options }: Fo
           value={String(value ?? "")}
           onChange={handleChange}
           required={field.required}
+          disabled={disabled}
         />
       ) : field.type === "select" && fieldOptions ? (
         <Select
           value={value !== undefined && value !== null ? String(value) : ""}
           onValueChange={(selectValue) => updateField(field.key, selectValue)}
           required={field.required}
+          disabled={disabled}
         >
           <SelectTrigger className="w-full">
             <SelectValue placeholder={field.placeholder} />
@@ -121,6 +129,7 @@ const FormFieldRenderer = React.memo(({ field, value, updateField, options }: Fo
           value={String(value ?? "")}
           onChange={handleChange}
           required={field.required}
+          disabled={disabled}
         />
       )}
     </div>
@@ -216,11 +225,34 @@ export function PersonaFormModal({
 
   }, [isColaborador, allFields]);
   
-  const colaboradorValue = isColaborador; 
+  const colaboradorValue = isColaborador;
+
+  const handleOpenChange = (newOpenState: boolean) => {
+    // Prevenir cerrar el modal mientras se está guardando
+    if (loading && newOpenState === false) {
+      return;
+    }
+    
+    onOpenChange(newOpenState);
+  }
   
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto custom-scrollbar">
+    <Dialog open={open} onOpenChange={handleOpenChange}>
+      <DialogContent 
+        className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto custom-scrollbar"
+        onInteractOutside={(e) => {
+          // Prevenir cerrar haciendo clic afuera mientras se guarda
+          if (loading) {
+            e.preventDefault();
+          }
+        }}
+        onEscapeKeyDown={(e) => {
+          // Prevenir cerrar con ESC mientras se guarda
+          if (loading) {
+            e.preventDefault();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
@@ -228,33 +260,54 @@ export function PersonaFormModal({
 
         <form onSubmit={handleSubmit} className="space-y-4">
           
-          <div className="border-b pb-2">
-            <FormFieldRenderer 
-              field={{ key: 'isColaborador', label: 'Colaborador Interno', type: 'checkbox' }}
-              value={colaboradorValue}
-              updateField={handleColaboradorChange} 
-            />
-          </div>
+          <div className={loading ? "pointer-events-none opacity-50 transition-opacity" : "transition-opacity"}>
+            <div className="border-b pb-2">
+              <FormFieldRenderer 
+                field={{ key: 'isColaborador', label: 'Colaborador Interno', type: 'checkbox' }}
+                value={colaboradorValue}
+                updateField={handleColaboradorChange}
+                disabled={loading}
+              />
+            </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
-            {fieldsToRender
-                .map((field) => (
-                    <FormFieldRenderer 
-                      key={field.key}
-                      field={field}
-                      value={formData[field.key]}
-                      updateField={updateField}
-                      options={field.options}
-                    />
-            ))}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4 mt-4">
+              {fieldsToRender
+                  .map((field) => (
+                      <FormFieldRenderer 
+                        key={field.key}
+                        field={field}
+                        value={formData[field.key]}
+                        updateField={updateField}
+                        options={field.options}
+                        disabled={loading}
+                      />
+              ))}
+            </div>
           </div>
 
           <DialogFooter className="mt-6">
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="dark:hover:bg-accent cursor-pointer">
+            <Button 
+              type="button" 
+              variant="outline" 
+              onClick={() => handleOpenChange(false)} 
+              className="dark:hover:bg-accent cursor-pointer"
+              disabled={loading}
+            >
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading} className="cursor-pointer">
-              {loading ? "Guardando..." : "Guardar"}
+            <Button 
+              type="submit" 
+              disabled={loading} 
+              className="cursor-pointer min-w-[100px]"
+            >
+              {loading ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Guardando...
+                </>
+              ) : (
+                "Guardar"
+              )}
             </Button>
           </DialogFooter>
         </form>

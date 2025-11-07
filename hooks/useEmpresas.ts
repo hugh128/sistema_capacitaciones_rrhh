@@ -9,6 +9,7 @@ export function useEmpresas(user: UsuarioLogin | null) {
   const [empresas, setEmpresas] = useState<Empresa[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isMutating, setIsMutating] = useState(false);
 
   const fetchEmpresas = useCallback(async () => {
     setLoading(true);

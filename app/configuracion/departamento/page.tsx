@@ -8,23 +8,13 @@ import { useAuth } from "@/contexts/auth-context"
 import { apiClient } from "@/lib/api-client"
 import { DEPARTAMENTO_COLUMNS, DEPARTAMENTO_FORM_FIELDS } from "@/data/departamento-config"
 import { Toaster } from 'react-hot-toast'
-import { Departamento, Empresa, Persona } from "@/lib/types"
+import { Departamento, Persona } from "@/lib/types"
 import { useDepartamentos } from "@/hooks/useDepartamentos"
 import { RequirePermission } from "@/components/RequirePermission"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import { AppHeader } from "@/components/app-header"
-
-const getEmpresasList = async () => {
-  try {
-    const { data } = await apiClient.get<Empresa[]>('/empresa'); 
-    return data;
-  } catch (err) {
-    console.error("Error al cargar lista de empresas para select:", err);
-    return [];
-  }
-}
 
 const getPersonasList = async () => {
   try {
@@ -40,26 +30,20 @@ export default function DepartamentosPage() {
   const { user } = useAuth()
   const [modalOpen, setModalOpen] = useState(false)
   const [editingDepartamento, setEditingDepartamento] = useState<Departamento | null>(null)
-  const [empresasList, setEmpresasList] = useState<Empresa[]>([]);
   const [personasList, setPersonasList] = useState<Persona[]>([])
 
   const { 
     departamentos,
+    isMutating,
     deleteDepartamento,
     saveDepartamento
   } = useDepartamentos(user);
 
   useEffect(() => {
     if (user) {
-      getEmpresasList().then(setEmpresasList);
       getPersonasList().then(setPersonasList);
     }
   }, [user]);
-
-/*   const empresaOptions = empresasList.map((empresa) => ({
-    value: empresa.ID_EMPRESA.toString(),
-    label: empresa.NOMBRE,
-  })); */
 
   const personaOptions = personasList.map((persona) => ({
     value: persona.ID_PERSONA.toString(),
@@ -146,6 +130,7 @@ export default function DepartamentosPage() {
         fields={formFields}
         initialData={(editingDepartamento || DEFAULT_NEW_DATA) as FormValues}
         onSubmit={handleSubmit}
+        loading={isMutating}
       />
     </div>
 

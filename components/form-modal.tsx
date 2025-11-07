@@ -15,7 +15,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Eye, EyeOff } from "lucide-react" 
+import { Eye, EyeOff, Loader2 } from "lucide-react" 
 import { Checkbox } from "@/components/ui/checkbox" 
 
 
@@ -51,9 +51,10 @@ interface FormFieldRendererProps {
   field: FormField;
   value: FormData[string];
   updateField: (key: string, value: string | (string | number)[]) => void;
+  disabled?: boolean;
 }
 
-const FormFieldRenderer = memo(({ field, value, updateField }: FormFieldRendererProps) => {
+const FormFieldRenderer = memo(({ field, value, updateField, disabled = false }: FormFieldRendererProps) => {
     
   const [showPassword, setShowPassword] = useState(false);
   const togglePasswordVisibility = () => {
@@ -82,12 +83,14 @@ const FormFieldRenderer = memo(({ field, value, updateField }: FormFieldRenderer
           value={String(value ?? "")}
           onChange={handleChange}
           required={field.required}
+          disabled={disabled}
         />
       ) : field.type === "select" ? (
         <Select
           value={value !== undefined && value !== null ? String(value) : ""}
           onValueChange={(selectValue) => updateField(field.key, selectValue)}
           required={field.required}
+          disabled={disabled}
         >
           <SelectTrigger>
             <SelectValue placeholder={field.placeholder} />
@@ -124,8 +127,12 @@ const FormFieldRenderer = memo(({ field, value, updateField }: FormFieldRenderer
                             id={`${field.key}-${optionValue}`}
                             checked={isChecked}
                             onCheckedChange={handleCheckChange}
+                            disabled={disabled}
                         />
-                        <Label htmlFor={`${field.key}-${optionValue}`} className="font-normal cursor-pointer">
+                        <Label 
+                          htmlFor={`${field.key}-${optionValue}`} 
+                          className={`font-normal ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+                        >
                             {option.label}
                         </Label>
                     </div>
@@ -142,7 +149,8 @@ const FormFieldRenderer = memo(({ field, value, updateField }: FormFieldRenderer
             onChange={handleChange}
             required={field.required}
             autoComplete={field.autocomplete}
-            className="pr-10" 
+            className="pr-10"
+            disabled={disabled}
           />
           <Button
             type="button" 
@@ -150,7 +158,8 @@ const FormFieldRenderer = memo(({ field, value, updateField }: FormFieldRenderer
             size="sm"
             className="absolute right-0 top-0 h-full px-3 py-1 hover:bg-transparent"
             onClick={togglePasswordVisibility}
-            tabIndex={-1} 
+            tabIndex={-1}
+            disabled={disabled}
           >
             <VisibilityIcon className="h-4 w-4 text-muted-foreground" />
           </Button>
@@ -164,6 +173,7 @@ const FormFieldRenderer = memo(({ field, value, updateField }: FormFieldRenderer
           onChange={handleChange}
           required={field.required}
           autoComplete={field.autocomplete}
+          disabled={disabled}
         />
       )}
     </div>
@@ -222,6 +232,11 @@ export function FormModal({
   }
 
   const handleOpenChange = (newOpenState: boolean) => {
+      // Prevenir cerrar el modal mientras se está guardando
+      if (loading && newOpenState === false) {
+        return;
+      }
+      
       onOpenChange(newOpenState);
       if (!newOpenState) {
           setFormData(initialData); 
@@ -230,7 +245,21 @@ export function FormModal({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}> 
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent 
+        className="sm:max-w-[425px]"
+        onInteractOutside={(e) => {
+          // Prevenir cerrar haciendo clic afuera mientras se guarda
+          if (loading) {
+            e.preventDefault();
+          }
+        }}
+        onEscapeKeyDown={(e) => {
+          // Prevenir cerrar con ESC mientras se guarda
+          if (loading) {
+            e.preventDefault();
+          }
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{title}</DialogTitle>
           {description && <DialogDescription>{description}</DialogDescription>}
@@ -240,14 +269,17 @@ export function FormModal({
           customContent
         ) : (
           <form onSubmit={handleSubmit} className="space-y-4">
-            {fields?.map((field) => (
-              <FormFieldRenderer 
-                key={field.key}
-                field={field}
-                value={formData[field.key]}
-                updateField={updateField}
-              />
-            ))}
+            <div className={loading ? "pointer-events-none opacity-50 transition-opacity space-y-2" : "transition-opacity space-y-2"}>
+              {fields?.map((field) => (
+                <FormFieldRenderer 
+                  key={field.key}
+                  field={field}
+                  value={formData[field.key]}
+                  updateField={updateField}
+                  disabled={loading}
+                />
+              ))}
+            </div>
 
             <DialogFooter>
               <Button 
@@ -255,11 +287,23 @@ export function FormModal({
                 variant="outline" 
                 onClick={() => handleOpenChange(false)} 
                 className="dark:hover:bg-accent cursor-pointer"
+                disabled={loading}
               >
                 Cancelar
               </Button>
-              <Button type="submit" disabled={loading} className="cursor-pointer">
-                {loading ? "Guardando..." : "Guardar"}
+              <Button 
+                type="submit" 
+                disabled={loading} 
+                className="cursor-pointer min-w-[100px]"
+              >
+                {loading ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Guardando...
+                  </>
+                ) : (
+                  "Guardar"
+                )}
               </Button>
             </DialogFooter>
           </form>

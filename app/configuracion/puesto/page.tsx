@@ -34,6 +34,7 @@ export default function PuestosPage() {
 
   const {
     puestos,
+    isMutating,
     deletePuesto,
     savePuesto
   } = usePuestos(user);
@@ -123,6 +124,7 @@ export default function PuestosPage() {
           fields={formFields}
           initialData={(editingPuesto || DEFAULT_NEW_DATA) as FormValues}
           onSubmit={handleSubmit}
+          loading={isMutating}
         />
       </div>
 

@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { ArrowLeft, Plus, Search, Trash2, X } from "lucide-react"
+import { ArrowLeft, CheckCircle2, Plus, Search, Trash2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -17,6 +17,17 @@ import {
 import type { PlanCapacitacion } from "@/lib/planes_programas/types"
 import { Departamento, Puesto } from "@/lib/types"
 import { CodigoPadre } from "@/lib/codigos/types"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 interface CreatePlanProps {
   onBack: () => void
@@ -62,6 +73,7 @@ export default function CreatePlan({
   const [showSuccessMessage, setShowSuccessMessage] = useState(false)
   const [documentosMarcados, setDocumentosMarcados] = useState<number[]>([])
   const [searchTerm, setSearchTerm] = useState("")
+  const [showMissingFieldsAlert, setShowMissingFieldsAlert] = useState(false)
 
   const filteredDocumentos = useMemo(() => {
     if (!searchTerm) {
@@ -91,7 +103,7 @@ export default function CreatePlan({
     event.preventDefault()
     
     if (!planName || !selectedDepartment || !planType || !planStatus) {
-      alert("Por favor, complete todos los campos obligatorios (*).")
+      setShowMissingFieldsAlert(true)
       return
     }
 
@@ -387,6 +399,24 @@ export default function CreatePlan({
           </div>
         </div>
       </form>
+
+      <AlertDialog open={showMissingFieldsAlert} onOpenChange={setShowMissingFieldsAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>No se puede crear el plan</AlertDialogTitle>
+            <AlertDialogDescription>
+              Para continuar, completa todos los campos marcados con{" "}
+              <span className="text-destructive font-semibold">*</span>.  
+              Estos son necesarios para guardar el plan correctamente.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogAction onClick={() => setShowMissingFieldsAlert(false)}>
+              Entendido
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {showAddDocumentoModal && (
           <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">

@@ -10,6 +10,7 @@ export function useDepartamentos(user: UsuarioLogin | null) {
   const [departamentos, setDepartamentos] = useState<Departamento[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [isMutating, setIsMutating] = useState(false);
 
   const fetchDepartamentos = useCallback(async () => {
     setLoading(true);
@@ -46,6 +47,8 @@ export function useDepartamentos(user: UsuarioLogin | null) {
     
   const saveDepartamento = async (formData: FormValues, editingDepartamento: Departamento | null) => {
     setError(null);
+    setIsMutating(true);
+
     const isEditing = !!editingDepartamento;
     const action = isEditing ? "Editar" : "Guardar";
 
@@ -68,6 +71,8 @@ export function useDepartamentos(user: UsuarioLogin | null) {
       const detailedMessage = handleApiError(err, baseMessage);
       setError(detailedMessage);
       return false;
+    } finally {
+      setIsMutating(false);
     }
   };
 
@@ -79,6 +84,7 @@ export function useDepartamentos(user: UsuarioLogin | null) {
 
   return {
     departamentos,
+    isMutating,
     loading,
     error,
     fetchDepartamentos,

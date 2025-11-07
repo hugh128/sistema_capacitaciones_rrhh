@@ -2,21 +2,84 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
+import { Skeleton } from "@/components/ui/skeleton"
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { ActividadProxima, CapacitacionReciente, Estadisticas } from "@/lib/dashboard/type"
-import { Users, BookOpen, Calendar, TrendingUp, CheckCircle, Clock, AlertTriangle, Award, ChartBar } from "lucide-react"
+import { Users, BookOpen, Calendar, TrendingUp, CheckCircle, Clock, AlertTriangle, AlertCircle } from "lucide-react"
 
 type DashboardProps = {
   estadisticas: Estadisticas | null
   capacitacionesRecientes: CapacitacionReciente[]
   actividadesProximas: ActividadProxima[]
+  isLoading: boolean
+  hasError: boolean
 }
 
 export function DashboardStats({
   estadisticas,
   capacitacionesRecientes,
-  actividadesProximas
+  actividadesProximas,
+  isLoading,
+  hasError
 }: DashboardProps) {
 
+  // Estado de carga
+  if (isLoading) {
+    return (
+      <div className="space-y-6">
+        {/* Main Stats Grid Skeleton */}
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+          {[...Array(4)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+                <Skeleton className="h-4 w-32" />
+                <Skeleton className="h-4 w-4 rounded-full" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-8 w-16 mb-2" />
+                <Skeleton className="h-3 w-24" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+
+        {/* Recent Trainings Skeleton */}
+        <div className="grid gap-4 md:grid-cols-2">
+          {[...Array(2)].map((_, i) => (
+            <Card key={i}>
+              <CardHeader>
+                <Skeleton className="h-6 w-48" />
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {[...Array(3)].map((_, j) => (
+                  <div key={j} className="space-y-2">
+                    <Skeleton className="h-4 w-full" />
+                    <Skeleton className="h-3 w-32" />
+                    <Skeleton className="h-1 w-full" />
+                  </div>
+                ))}
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      </div>
+    )
+  }
+
+  // Estado de error
+  if (hasError) {
+    return (
+      <Alert variant="destructive" className="border-destructive/50">
+        <AlertCircle className="h-4 w-4" />
+        <AlertTitle>Error al cargar el dashboard</AlertTitle>
+        <AlertDescription>
+          No se pudieron obtener las estadísticas del dashboard. Por favor, verifica tu conexión e intenta nuevamente.
+        </AlertDescription>
+      </Alert>
+    )
+  }
+
+  // Usuario sin acceso a estadísticas (no es RRHH ni Capacitador)
   if (!estadisticas) {
     return (
       <Card className="col-span-4 bg-primary/10 border-primary/20 shadow-lg">
@@ -34,9 +97,10 @@ export function DashboardStats({
           </p>
         </CardContent>
       </Card>
-    );
+    )
   }
 
+  // Vista completa con datos
   return (
     <div className="space-y-6">
       {/* Main Stats Grid */}
@@ -100,24 +164,28 @@ export function DashboardStats({
             </CardTitle>
           </CardHeader>
           <CardContent className="space-y-4">
-            {capacitacionesRecientes.map((training, index) => (
-              <div key={index} className="flex items-center justify-between space-x-4">
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium truncate">{training.nombre}</p>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Users className="h-3 w-3 text-muted-foreground" />
-                    <span className="text-xs text-muted-foreground">{training.participantes} participantes</span>
+            {capacitacionesRecientes.length > 0 ? (
+              capacitacionesRecientes.map((training, index) => (
+                <div key={index} className="flex items-center justify-between space-x-4">
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{training.nombre}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <Users className="h-3 w-3 text-muted-foreground" />
+                      <span className="text-xs text-muted-foreground">{training.participantes} participantes</span>
+                    </div>
+                    <Progress value={training.progreso} className="mt-2 h-1" />
                   </div>
-                  <Progress value={training.progreso} className="mt-2 h-1" />
+                  <div className="flex items-center gap-2">
+                    {training.estado === "Completado" && <CheckCircle className="h-4 w-4 text-chart-2" />}
+                    {training.estado === "En progreso" && <Clock className="h-4 w-4 text-chart-4" />}
+                    {training.estado === "Iniciando" && <AlertTriangle className="h-4 w-4 text-chart-5" />}
+                    <span className="text-xs font-medium">{training.progreso}%</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  {training.estado === "Completado" && <CheckCircle className="h-4 w-4 text-chart-2" />}
-                  {training.estado === "En progreso" && <Clock className="h-4 w-4 text-chart-4" />}
-                  {training.estado === "Iniciando" && <AlertTriangle className="h-4 w-4 text-chart-5" />}
-                  <span className="text-xs font-medium">{training.progreso}%</span>
-                </div>
-              </div>
-            ))}
+              ))
+            ) : (
+              <p className="text-sm text-muted-foreground">No hay capacitaciones recientes.</p>
+            )}
           </CardContent>
         </Card>
 
@@ -134,7 +202,7 @@ export function DashboardStats({
                 actividadesProximas.map((actividad) => (
                   <div 
                     key={actividad.ID_SESION} 
-                    className={`flex items-center justify-between p-3 rounded-lg bg-muted/50`}
+                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
                   >
                     <div>
                       <p className="text-sm font-medium">{actividad.nombre}</p>
@@ -154,7 +222,6 @@ export function DashboardStats({
             </div>
           </CardContent>
         </Card>
-
       </div>
     </div>
   )

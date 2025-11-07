@@ -20,6 +20,8 @@ import {
   Filter,
   Eye,
   TrendingUp,
+  AlertTriangle,
+  RefreshCw,
 } from "lucide-react"
 import Link from "next/link"
 import { CapacitacionSesion, getEstadoColor } from "@/lib/mis-capacitaciones/capacitaciones-types"
@@ -32,41 +34,69 @@ export default function MisCapacitacionesPage() {
   const [estadoFilter, setEstadoFilter] = useState<string>("TODOS")
   const [tipoFilter, setTipoFilter] = useState<string>("TODOS")
   const [misCapacitaciones, setMisCapacitaciones] = useState<CapacitacionSesion[]>([])
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(true)
+  const [hasError, setHasError] = useState(false)
+  const [errorMessage, setErrorMessage] = useState("")
 
   const {
     obtenerCapacitacionesPorCapacitador,
-  } = useCapacitaciones(user);
+  } = useCapacitaciones(user)
+
+  const fetchCapacitaciones = async () => {
+    if (!user || !user.PERSONA_ID) {
+      setIsLoading(false)
+      return
+    }
+
+    setIsLoading(true)
+    setHasError(false)
+    setErrorMessage("")
+
+    try {
+      const capacitaciones = await obtenerCapacitacionesPorCapacitador(user.PERSONA_ID)
+      
+      // Validar que la respuesta sea un array
+      if (Array.isArray(capacitaciones)) {
+        setMisCapacitaciones(capacitaciones)
+      } else {
+        setMisCapacitaciones([])
+        setHasError(true)
+        setErrorMessage("La respuesta del servidor no tiene el formato esperado")
+      }
+    } catch (error) {
+      console.error('Error al cargar las capacitaciones:', error)
+      setMisCapacitaciones([])
+      setHasError(true)
+      
+      // Determinar el tipo de error
+      if (error && typeof error === 'object' && 'code' in error) {
+        const axiosError = error as { code?: string; message?: string }
+        if (axiosError.code === 'ERR_NETWORK') {
+          setErrorMessage("No se pudo conectar con el servidor. Por favor, verifica tu conexión o intenta más tarde.")
+        } else {
+          setErrorMessage(axiosError.message || "Error desconocido al cargar las capacitaciones")
+        }
+      } else {
+        setErrorMessage("Error inesperado al cargar las capacitaciones")
+      }
+    } finally {
+      setIsLoading(false)
+    }
+  }
 
   useEffect(() => {
-    if (!user || !user.PERSONA_ID) {
-      setIsLoading(false);
-      return; 
-    }
+    fetchCapacitaciones()
+  }, [user])
 
-    const fetchData = async () => {
-      setIsLoading(true);
-      try {
-        const capacitaciones = await obtenerCapacitacionesPorCapacitador(user.PERSONA_ID)
-        setMisCapacitaciones(capacitaciones)
-
-      } catch (error) {
-        console.error('Error al cargar las capacitaciones:', error)
-      } finally {
-        setIsLoading(false);
-      }
-    }
-
-    fetchData()
-  }, [user, obtenerCapacitacionesPorCapacitador])
-
-  // Filter capacitaciones
+  // Filter capacitaciones con validación
   const capacitacionesFiltradas = useMemo(() => {
-    if (!misCapacitaciones) return [];
+    if (!Array.isArray(misCapacitaciones) || misCapacitaciones.length === 0) {
+      return []
+    }
 
     return misCapacitaciones.filter((cap) => {
       const matchesSearch =
-        cap.NOMBRE.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        cap.NOMBRE?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         cap.CODIGO_DOCUMENTO?.toLowerCase().includes(searchTerm.toLowerCase() || '')
       const matchesEstado = estadoFilter === "TODOS" || cap.ESTADO === estadoFilter
       const matchesTipo = tipoFilter === "TODOS" || cap.TIPO_CAPACITACION === tipoFilter
@@ -75,61 +105,81 @@ export default function MisCapacitacionesPage() {
   }, [misCapacitaciones, searchTerm, estadoFilter, tipoFilter])
 
   const metrics = useMemo(() => {
-    if (!misCapacitaciones) return { total: 0, pendientes: 0, enProceso: 0, finalizadasEsteMes: 0 };
+    const defaultMetrics = { total: 0, pendientes: 0, enProceso: 0, finalizadasEsteMes: 0 }
+    
+    if (!Array.isArray(misCapacitaciones) || misCapacitaciones.length === 0) {
+      return defaultMetrics
+    }
 
-    const total = misCapacitaciones.length
-    const pendientes = misCapacitaciones.filter((c) => c.ESTADO === "PROGRAMADA").length
-    const enProceso = misCapacitaciones.filter((c) => c.ESTADO === "EN_PROCESO").length
-    const finalizadasEsteMes = misCapacitaciones.filter((c) => {
-      if (c.ESTADO !== "FINALIZADA" && c.ESTADO !== "FINALIZADA_CAPACITADOR") return false
-      if (!c.FECHA_INICIO) return false
-      const fecha = new Date(c.FECHA_INICIO)
-      const hoy = new Date()
-      return fecha.getMonth() === hoy.getMonth() && fecha.getFullYear() === hoy.getFullYear()
-    }).length
+    try {
+      const total = misCapacitaciones.length
+      const pendientes = misCapacitaciones.filter((c) => c.ESTADO === "PROGRAMADA").length
+      const enProceso = misCapacitaciones.filter((c) => c.ESTADO === "EN_PROCESO").length
+      const finalizadasEsteMes = misCapacitaciones.filter((c) => {
+        if (c.ESTADO !== "FINALIZADA" && c.ESTADO !== "FINALIZADA_CAPACITADOR") return false
+        if (!c.FECHA_INICIO) return false
+        const fecha = new Date(c.FECHA_INICIO)
+        const hoy = new Date()
+        return fecha.getMonth() === hoy.getMonth() && fecha.getFullYear() === hoy.getFullYear()
+      }).length
 
-    return { total, pendientes, enProceso, finalizadasEsteMes }
+      return { total, pendientes, enProceso, finalizadasEsteMes }
+    } catch (error) {
+      console.error('Error al calcular métricas:', error)
+      return defaultMetrics
+    }
   }, [misCapacitaciones])
 
-  // Get upcoming trainings (next 7 days)
+  // Get upcoming trainings (next 7 days) con validación
   const proximasCapacitaciones = useMemo(() => {
-    const hoy = new Date()
-    hoy.setHours(0, 0, 0, 0);
-    const enSieteDias = new Date()
-    enSieteDias.setDate(hoy.getDate() + 7)
+    if (!Array.isArray(misCapacitaciones) || misCapacitaciones.length === 0) {
+      return []
+    }
 
-    return misCapacitaciones
-      .filter((cap) => {
-        if (!cap.FECHA_PROGRAMADA) return false
-        const fecha = new Date(cap.FECHA_PROGRAMADA)
-        fecha.setHours(0, 0, 0, 0);
+    try {
+      const hoy = new Date()
+      hoy.setHours(0, 0, 0, 0)
+      const enSieteDias = new Date()
+      enSieteDias.setDate(hoy.getDate() + 7)
 
-        return fecha >= hoy && fecha <= enSieteDias && (cap.ESTADO === "ASIGNADA" || cap.ESTADO === "EN_PROCESO")
-      })
-      .sort((a, b) => {
-        const fechaA = new Date(a.FECHA_PROGRAMADA!)
-        const fechaB = new Date(b.FECHA_PROGRAMADA!)
-        return fechaA.getTime() - fechaB.getTime()
-      })
-      .slice(0, 5)
+      return misCapacitaciones
+        .filter((cap) => {
+          if (!cap.FECHA_PROGRAMADA) return false
+          const fecha = new Date(cap.FECHA_PROGRAMADA)
+          fecha.setHours(0, 0, 0, 0)
+
+          return fecha >= hoy && fecha <= enSieteDias && (cap.ESTADO === "ASIGNADA" || cap.ESTADO === "EN_PROCESO")
+        })
+        .sort((a, b) => {
+          const fechaA = new Date(a.FECHA_PROGRAMADA!)
+          const fechaB = new Date(b.FECHA_PROGRAMADA!)
+          return fechaA.getTime() - fechaB.getTime()
+        })
+        .slice(0, 5)
+    } catch (error) {
+      console.error('Error al calcular próximas capacitaciones:', error)
+      return []
+    }
   }, [misCapacitaciones])
 
+  // Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-96">
           <CardHeader>
-            <CardTitle>Cargando Detalles...</CardTitle>
-            <CardDescription>Obteniendo información de la capacitación.</CardDescription>
+            <CardTitle>Cargando Capacitaciones...</CardTitle>
+            <CardDescription>Obteniendo información de tus capacitaciones.</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
           </CardContent>
         </Card>
       </div>
-    );
+    )
   }
 
+  // Permission check
   if (
     !user ||
     !user.ROLES.some(
@@ -144,6 +194,45 @@ export default function MisCapacitacionesPage() {
             <CardDescription>No tienes permisos para acceder a esta página.</CardDescription>
           </CardHeader>
         </Card>
+      </div>
+    )
+  }
+
+  // Error state
+  if (hasError) {
+    return (
+      <div className="flex h-screen bg-background">
+        <Sidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <AppHeader title="Mis Capacitaciones" subtitle="Gestiona tus capacitaciones asignadas y registra el progreso de los participantes" />
+          
+          <main className="flex-1 p-6 flex items-center justify-center">
+            <Card className="w-full max-w-2xl border-destructive">
+              <CardHeader className="text-center">
+                <div className="mx-auto h-16 w-16 rounded-full bg-destructive/10 flex items-center justify-center mb-4">
+                  <AlertTriangle className="h-8 w-8 text-destructive" />
+                </div>
+                <CardTitle className="text-2xl">Error al Cargar las Capacitaciones</CardTitle>
+                <CardDescription className="text-base mt-2">
+                  {errorMessage}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="flex flex-col gap-4">
+                <Button 
+                  onClick={fetchCapacitaciones}
+                  className="w-full"
+                  size="lg"
+                >
+                  <RefreshCw className="h-4 w-4 mr-2" />
+                  Reintentar
+                </Button>
+                <p className="text-sm text-center text-muted-foreground">
+                  Si el problema persiste, por favor contacta a sistemas.
+                </p>
+              </CardContent>
+            </Card>
+          </main>
+        </div>
       </div>
     )
   }
@@ -328,7 +417,11 @@ export default function MisCapacitacionesPage() {
                         <BookOpen className="h-10 w-10 opacity-50" />
                       </div>
                       <p className="text-lg font-medium">No se encontraron capacitaciones</p>
-                      <p className="text-sm mt-1">Intenta ajustar los filtros de búsqueda</p>
+                      <p className="text-sm mt-1">
+                        {misCapacitaciones.length === 0 
+                          ? "Aún no tienes capacitaciones asignadas" 
+                          : "Intenta ajustar los filtros de búsqueda"}
+                      </p>
                     </div>
                   ) : (
                     capacitacionesFiltradas.map((cap) => (
