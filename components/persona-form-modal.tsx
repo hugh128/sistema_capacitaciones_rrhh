@@ -164,10 +164,12 @@ export function PersonaFormModal({
   );
 
   useEffect(() => {
-    const personaTipo = (initialFormData?.TIPO_PERSONA as string) || DEFAULT_TIPO_PERSONA;
-    setFormData(initialFormData);
-    setIsColaborador(personaTipo === 'INTERNO');
-  }, [initialFormData, open]) 
+    if (open) {
+      const personaTipo = (initialFormData?.TIPO_PERSONA as string) || DEFAULT_TIPO_PERSONA;
+      setFormData(initialFormData);
+      setIsColaborador(personaTipo === 'INTERNO');
+    }
+  }, [initialFormData, open])
 
   const handleColaboradorChange = useCallback((_key: string, value: string | boolean) => {
     const checked = typeof value === 'boolean' ? value : false;
@@ -228,7 +230,6 @@ export function PersonaFormModal({
   const colaboradorValue = isColaborador;
 
   const handleOpenChange = (newOpenState: boolean) => {
-    // Prevenir cerrar el modal mientras se está guardando
     if (loading && newOpenState === false) {
       return;
     }
@@ -241,13 +242,11 @@ export function PersonaFormModal({
       <DialogContent 
         className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto custom-scrollbar"
         onInteractOutside={(e) => {
-          // Prevenir cerrar haciendo clic afuera mientras se guarda
           if (loading) {
             e.preventDefault();
           }
         }}
         onEscapeKeyDown={(e) => {
-          // Prevenir cerrar con ESC mientras se guarda
           if (loading) {
             e.preventDefault();
           }

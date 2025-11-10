@@ -1,7 +1,7 @@
 "use client"
 
 import { useMemo, useState } from "react"
-import { ArrowLeft, CheckCircle2, Plus, Search, Trash2, X } from "lucide-react"
+import { ArrowLeft, Plus, Search, Trash2, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
@@ -20,13 +20,11 @@ import { CodigoPadre } from "@/lib/codigos/types"
 import {
   AlertDialog,
   AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 
 interface CreatePlanProps {
@@ -217,9 +215,9 @@ export default function CreatePlan({
                       <SelectValue placeholder="Seleccionar estado" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Activo">Activo</SelectItem>
-                      <SelectItem value="Borrador">Borrador</SelectItem>
-                      <SelectItem value="Inactivo">Inactivo</SelectItem>
+                      <SelectItem value="ACTIVO">ACTIVO</SelectItem>
+                      <SelectItem value="BORRADOR">BORRADOR</SelectItem>
+                      <SelectItem value="INACTIVO">INACTIVO</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

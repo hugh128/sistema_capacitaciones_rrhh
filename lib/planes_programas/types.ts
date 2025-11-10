@@ -7,7 +7,6 @@ export type PlanStatus = "Activo" | "Borrador" | "Inactivo"
 export type TrainingCategory = "GENERAL" | "ESPECIFICA" | "CONTINUA"
 export type TrainingType = "INTERNA" | "EXTERNA"
 
-// Training Plan (Inducción, Individual)
 export type TrainingPlan = {
   id: string
   code: string
@@ -19,27 +18,25 @@ export type TrainingPlan = {
   trainings: PlanTraining[]
   department?: string
   trainingCount?: number
-  selectedDepartment?: string // Single department
-  appliesToAllPositions: boolean // Checkbox for all positions
-  applicablePositions: string[] // Only if appliesToAllPositions is false
+  selectedDepartment?: string
+  appliesToAllPositions: boolean
+  applicablePositions: string[]
   applicableDepartment?: string
 }
 
-// Training Program (Programa)
 export type TrainingProgram = {
   id: string
   code: string
   name: string
   description: string
   type: ProgramType
-  period: number // Year
-  createdAt: string // Display only
+  period: number
+  createdAt: string
   status: PlanStatus
   trainings: ProgramTraining[]
   trainingCount?: number
 }
 
-// Training within a Plan
 export type PlanTraining = {
   id: string
   name: string
@@ -52,15 +49,14 @@ export type PlanTraining = {
   applicablePositions: string[]
 }
 
-// Training within a Program
 export type ProgramTraining = {
   id: string
   name: string
-  trainer?: string // Optional
+  trainer?: string
   category: TrainingCategory
   type: TrainingType
   appliesToAllDepartments: boolean
-  applicableDepartments: string[] // Only if appliesToAllDepartments is false
+  applicableDepartments: string[]
   scheduledDate?: string
   hasExam: boolean
   hasDiploma: boolean
@@ -104,4 +100,80 @@ export interface ColaboradorDisponible {
   PUESTO: string;
   PLAN_YA_APLICADO: boolean;
   seleccionado?: boolean;
+}
+
+export interface CambiarPlanCapacitacion {
+  ID_COLABORADOR: number
+  NUEVO_DEPARTAMENTO_ID: number
+  NUEVO_PUESTO_ID: number
+  IDS_CAPACITACIONES_MIGRAR?: number[]
+  USUARIO?: string
+}
+
+export interface CambiarPlanResponse {
+  ID_COLABORADOR: number,
+  REQUIERE_CAMBIO_PLAN: boolean,
+  PLAN_ACTUAL_ID: number,
+  PLAN_ACTUAL_NOMBRE: string,
+  PLAN_NUEVO_ID: number,
+  PLAN_NUEVO_NOMBRE: string,
+  NUEVO_DEPARTAMENTO_ID: number,
+  NUEVO_PUESTO_ID: number,
+  MENSAJE: string,
+}
+
+export interface InformacionPlanColaborador {
+  ID_COLABORADOR: number,
+  NOMBRE_COLABORADOR: string,
+  DEPARTAMENTO_ACTUAL_ID: number,
+  DEPARTAMENTO_ACTUAL: string,
+  PUESTO_ACTUAL_ID: number,
+  PUESTO_ACTUAL: string,
+  PLAN_ACTUAL_ID: number,
+  PLAN_ACTUAL_NOMBRE: string,
+  NUEVO_DEPARTAMENTO_ID: number,
+  NUEVO_DEPARTAMENTO: string,
+  NUEVO_PUESTO_ID: number,
+  NUEVO_PUESTO: string,
+  PLAN_NUEVO_ID: number,
+  PLAN_NUEVO_NOMBRE: string,
+  TIPO_CAMBIO: string,
+  CAPACITACIONES_PLAN_ACTUAL: number,
+  CAPACITACIONES_COMPLETADAS_PLAN_ACTUAL: number,
+  CAPACITACIONES_PLAN_NUEVO: number
+}
+
+export interface CapacitacionMigrar {
+  ID_CAPACITACION: number,
+  CODIGO_DOCUMENTO: string,
+  CAPACITACION_NOMBRE: string,
+  ID_DOCUMENTO: number,
+  DOCUMENTO_CODIGO: string,
+  NOMBRE_DOCUMENTO: string,
+  VERSION: number,
+  ID_SESION: number,
+  NUMERO_SESION: number,
+  FECHA_INICIO: string,
+  FECHA_COMPLETADA: string,
+  NOTA_OBTENIDA: number,
+  APROBADO: boolean,
+  URL_DIPLOMA: string | null,
+  URL_EXAMEN: string | null,
+  EXISTE_EN_NUEVO_PLAN: 1,
+  ESTADO_MIGRACION: string
+}
+
+export interface CapacitacionNueva {
+  ID_DOCUMENTO: number,
+  DOCUMENTO_CODIGO: string,
+  NOMBRE_DOCUMENTO: string,
+  VERSION: number,
+  YA_COMPLETADA_PLAN_ANTERIOR: number,
+  ESTADO: string
+}
+
+export interface AnalizarCambioPlanResponse {
+  INFORMACION_COLABORADOR: InformacionPlanColaborador
+  CAPACITACIONES_MIGRAR: CapacitacionMigrar[]
+  CAPACITACIONES_NUEVAS: CapacitacionNueva[]
 }

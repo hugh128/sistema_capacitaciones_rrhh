@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Plus, Eye, BookOpen, Calendar, Building2, Upload, UserPlus, Check, Loader2, Info, AlertTriangle } from "lucide-react"
+import { Search, Plus, Eye, BookOpen, Calendar, Building2, UserPlus, Check, Loader2, Info, AlertTriangle } from "lucide-react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -184,7 +184,7 @@ export default function PlansListView({ plans, onCreatePlan, onViewDetails, onAs
                   </Badge>
                 </div>
               </div>
-              <div className="mt-2">
+              <div className="mt-1">
                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeBadgeColor(plan.TIPO.toLowerCase())}`}>
                   {plan.TIPO}
                 </span>
@@ -192,7 +192,7 @@ export default function PlansListView({ plans, onCreatePlan, onViewDetails, onAs
             </CardHeader>
 
             {/* Card Content (Detalles) */}
-            <CardContent className="space-y-3">
+            <CardContent className="space-y-2">
               <div className="flex items-center gap-2 text-sm text-foreground">
                 <BookOpen className="w-4 h-4 text-muted-foreground" />
                 <span>

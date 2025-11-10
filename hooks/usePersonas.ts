@@ -118,6 +118,6 @@ export function usePersonas(user: UsuarioLogin | null) {
     isMutating,
     fetchPersonas,
     deletePersona,
-    savePersona
+    savePersona,
   };
 }
