@@ -3,7 +3,7 @@
 import { Sidebar } from "@/components/sidebar"
 import { RequirePermission } from "@/components/RequirePermission"
 import { AppHeader } from "@/components/app-header"
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import type { Colaborador } from "@/lib/colaboradores/type"
 import CollaboratorsList from "@/components/colaboradores/CollaboratorsList"
 import ProfileContent from "@/components/colaboradores/profile-content"
@@ -16,7 +16,8 @@ export default function ColaboradoresPage() {
   const [filterStatus, setFilterStatus] = useState<"all" | "activo" | "inactivo">("all")
 
   const {
-    colaboradores
+    colaboradores,
+    obtenerColaboradores,
   } = useColaboradores(user)
 
   const handleSelectCollaborator = useCallback((colaborador: Colaborador) => {
@@ -27,8 +28,24 @@ export default function ColaboradoresPage() {
     setSelectedCollaborator(null)
   }, [])
 
+  useEffect(() => {
+    if (!user) return;
+
+    const roles = user.ROLES?.map((r) => r.NOMBRE) || [];
+
+    if (roles.includes("RRHH") || roles.includes("Auditoria")) {
+      obtenerColaboradores();
+    } 
+    else if (roles.includes("Gerente") || roles.includes("Jefe")) {
+      obtenerColaboradores(user.PERSONA_ID);
+    } 
+    else {
+      console.warn("Usuario sin permisos para ver colaboradores");
+    }
+  }, [user, obtenerColaboradores]);
+
   return (
-    <RequirePermission requiredPermissions={["manage_users"]}>
+    <RequirePermission requiredPermissions={["manage_users", "view_team"]}>
       <div className="flex h-screen bg-background">
         <Sidebar />
 

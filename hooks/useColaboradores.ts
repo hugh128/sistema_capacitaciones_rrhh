@@ -2,7 +2,7 @@ import { apiClient } from "@/lib/api-client";
 import { UsuarioLogin } from "@/lib/auth";
 import { Colaborador } from "@/lib/colaboradores/type";
 import { handleApiError } from "@/utils/error-handler";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import toast from "react-hot-toast";
 
 export function useColaboradores(user: UsuarioLogin | null) {
@@ -11,26 +11,32 @@ export function useColaboradores(user: UsuarioLogin | null) {
   const [error, setError] = useState<string | null>(null);
   const [isMutating, setIsMutating] = useState(false);
 
-  const obtenerColaboradores = useCallback(async () => {
-    if (!user) {
-      setColaboradores([]);
-      return;
-    }
+  const obtenerColaboradores = useCallback(
+    async (idEncargado?: number) => {
+      if (!user) {
+        setColaboradores([]);
+        return;
+      }
 
-    setLoading(true);
-    setError(null);
+      setLoading(true);
+      setError(null);
 
-    try {
-      const { data } = await apiClient.get<Colaborador[]>('/colaboradores');
-      setColaboradores(data);
-    } catch (err) {
-      const baseMessage = "Error al cargar colaboradores.";
-      setError(baseMessage);
-      handleApiError(err, baseMessage)
-    } finally {
-      setLoading(false);
-    }
-  }, [user]);
+      try {
+        const { data } = await apiClient.get<Colaborador[]>('/colaboradores', {
+          params: idEncargado ? { idEncargado } : undefined,
+        });
+
+        setColaboradores(data);
+      } catch (err) {
+        const baseMessage = "Error al cargar colaboradores.";
+        setError(baseMessage);
+        handleApiError(err, baseMessage);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [user]
+  );
 
   const obtenerCapacitacionesColaborador = useCallback(async (idColaborador: number) => {  
     if (!user) {
@@ -157,17 +163,12 @@ export function useColaboradores(user: UsuarioLogin | null) {
     }
   }, []);
 
-  useEffect(() => {
-    if (user) {
-      obtenerColaboradores();
-    }
-  }, [user, obtenerColaboradores]);
-
   return {
     colaboradores,
     loading,
     error,
     isMutating,
+    obtenerColaboradores,
     descargarListaAsistencia,
     descargarExamen,
     descargarDiploma,

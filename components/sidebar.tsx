@@ -23,6 +23,7 @@ import {
   X,
   Code2,
   ClipboardList,
+  UserStar,
 } from "lucide-react"
 import Link from "next/link"
 import Image from "next/image"
@@ -41,16 +42,14 @@ interface MenuItem {
 
 const MAIN_MENU_CONFIG: MenuItem[] = [
   { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", requiredPermissions: [] },
-  { icon: Users, label: "Personas", href: "/personas", requiredPermissions: ["manage_users", "view_team"] },
+  { icon: Users, label: "Personas", href: "/personas", requiredPermissions: ["manage_users"] },
   { icon: UserCheck, label: "Usuarios", href: "/usuarios", requiredPermissions: ["manage_users"] },
   { icon: Shield, label: "Roles y Permisos", href: "/roles", requiredPermissions: ["manage_users"] },
   { icon: Calendar, label: "Planes y Programas", href: "/planes_programas", requiredPermissions: ["view_trainings"] },
   { icon: BookOpen, label: "Capacitaciones", href: "/capacitaciones", requiredPermissions: ["view_trainings"] },
-  /* { icon: Users, label: "Participantes", href: "/participantes", requiredPermissions: ["manage_users"] }, */
-  
   { icon: ClipboardList, label: "Mis Capacitaciones", href: "/mis-capacitaciones", requiredPermissions: ["manage_trainings", "view_trainings"] },
 
-  { icon: Users, label: "Colaboradores", href: "/colaboradores", requiredPermissions: ["view_participants"] },
+  { icon: UserStar, label: "Colaboradores", href: "/colaboradores", requiredPermissions: ["view_participants", "view_team"] },
 
   /* { icon: FileText, label: "Documentos", href: "/documentos", requiredPermissions: ["upload_documents", "view_documents"] }, */
   /* { icon: BarChart3, label: "Reportes", href: "/reportes", requiredPermissions: ["view_reports"] }, */
