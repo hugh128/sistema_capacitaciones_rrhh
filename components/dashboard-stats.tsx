@@ -23,7 +23,6 @@ export function DashboardStats({
   hasError
 }: DashboardProps) {
 
-  // Estado de carga
   if (isLoading) {
     return (
       <div className="space-y-6">
@@ -66,7 +65,6 @@ export function DashboardStats({
     )
   }
 
-  // Estado de error
   if (hasError) {
     return (
       <Alert variant="destructive" className="border-destructive/50">
@@ -79,12 +77,11 @@ export function DashboardStats({
     )
   }
 
-  // Usuario sin acceso a estadísticas (no es RRHH ni Capacitador)
   if (!estadisticas) {
     return (
-      <Card className="col-span-4 bg-primary/10 border-primary/20 shadow-lg">
+      <Card className="col-span-4 bg-primary/10 border-primary/20 shadow-lg dark:border-foreground/10">
         <CardHeader className="pb-3">
-          <CardTitle className="text-xl font-bold text-primary flex items-center gap-2">
+          <CardTitle className="text-xl font-bold text-primary flex items-center gap-2 dark:text-foreground">
             <Users className="h-5 w-5" /> ¡Bienvenido/a a tu Panel de Control!
           </CardTitle>
         </CardHeader>
@@ -100,7 +97,6 @@ export function DashboardStats({
     )
   }
 
-  // Vista completa con datos
   return (
     <div className="space-y-6">
       {/* Main Stats Grid */}

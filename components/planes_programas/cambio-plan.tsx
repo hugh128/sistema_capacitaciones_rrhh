@@ -215,7 +215,7 @@ export function CambioPlanModal({
                   </div>
                 </div>
 
-                <div className="space-y-2 max-h-60 overflow-y-auto border rounded-lg p-3">
+                <div className="space-y-2 max-h-60 overflow-y-auto border rounded-lg p-3 custom-scrollbar">
                   {analisisData.CAPACITACIONES_MIGRAR.map((cap: CapacitacionMigrar) => {
                     const isMigrable = cap.ESTADO_MIGRACION === 'MIGRABLE'
                     const isSelected = capacitacionesSeleccionadas.includes(cap.ID_CAPACITACION)
@@ -258,7 +258,7 @@ export function CambioPlanModal({
             {analisisData.CAPACITACIONES_NUEVAS.length > 0 && (
               <div className="space-y-3">
                 <h3 className="text-lg font-semibold">Capacitaciones del Nuevo Plan</h3>
-                <div className="space-y-2 max-h-60 overflow-y-auto border rounded-lg p-3">
+                <div className="space-y-2 max-h-60 overflow-y-auto border rounded-lg p-3 custom-scrollbar">
                   {analisisData.CAPACITACIONES_NUEVAS.map((cap, idx) => (
                     <div
                       key={idx}

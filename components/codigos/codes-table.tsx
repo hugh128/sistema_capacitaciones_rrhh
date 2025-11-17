@@ -63,7 +63,7 @@ export function CodesTable({ codigos, onView, onEdit, onDelete }: CodesTableProp
 
   return (
     <>
-      <div className="border rounded-lg overflow-hidden bg-card">
+      <div className="border rounded-lg overflow-hidden bg-card custom-scrollbar">
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50">

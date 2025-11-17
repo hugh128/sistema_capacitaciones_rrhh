@@ -28,8 +28,8 @@ export function AppHeader({ title, subtitle, showActions = true }: AppHeaderProp
     if (user.ROLES.some((role) => ["RRHH"].includes(role.NOMBRE))) {
       return (
         <Link href="/capacitaciones">
-          <Button size="sm">
-            <Plus className="h-4 w-4 mr-2" />
+          <Button size="sm" className="cursor-pointer">
+            <Plus className="h-4 w-4" />
             Capacitaciones
           </Button>
         </Link>
@@ -37,8 +37,8 @@ export function AppHeader({ title, subtitle, showActions = true }: AppHeaderProp
     } else if (user.ROLES.some((role) => ["Capacitador"].includes(role.NOMBRE)))  {
       return (
         <Link href="/mis-capacitaciones">
-          <Button size="sm">
-            <Plus className="h-4 w-4 mr-2" />
+          <Button size="sm" className="cursor-pointer">
+            <Plus className="h-4 w-4" />
             Mis Capacitaciones
           </Button>
         </Link>

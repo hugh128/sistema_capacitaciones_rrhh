@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { usePathname } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from "@/contexts/auth-context"
 import { useTheme } from "@/contexts/theme-context"
 import { Button } from "@/components/ui/button"
@@ -24,8 +24,8 @@ import {
   Code2,
   ClipboardList,
   UserStar,
+  Loader2,
 } from "lucide-react"
-import Link from "next/link"
 import Image from "next/image"
 import { hasAnyPermission } from "@/lib/permissions"
 
@@ -48,21 +48,17 @@ const MAIN_MENU_CONFIG: MenuItem[] = [
   { icon: Calendar, label: "Planes y Programas", href: "/planes_programas", requiredPermissions: ["view_trainings"] },
   { icon: BookOpen, label: "Capacitaciones", href: "/capacitaciones", requiredPermissions: ["view_trainings"] },
   { icon: ClipboardList, label: "Mis Capacitaciones", href: "/mis-capacitaciones", requiredPermissions: ["manage_trainings", "view_trainings"] },
-
   { icon: UserStar, label: "Colaboradores", href: "/colaboradores", requiredPermissions: ["view_participants", "view_team"] },
-
   /* { icon: FileText, label: "Documentos", href: "/documentos", requiredPermissions: ["upload_documents", "view_documents"] }, */
-  /* { icon: BarChart3, label: "Reportes", href: "/reportes", requiredPermissions: ["view_reports"] }, */
-
   { icon: Code2, label: "Codigos", href: "/codigos", requiredPermissions: ["codes"] },  
-
-/*   { icon: Shield, label: "Auditoría", href: "/auditoria", requiredPermissions: ["view_audit"] }, */
+  /* { icon: Shield, label: "Auditoría", href: "/auditoria", requiredPermissions: ["view_audit"] }, */
   { icon: Settings, label: "Configuración", href: "/configuracion", requiredPermissions: ["manage_config"] },
 ];
 
 export function Sidebar({ className }: SidebarProps) {
   const { user, logout, loggingOut } = useAuth()
   const { theme, toggleTheme } = useTheme()
+  const router = useRouter()
 
   const [collapsed, setCollapsed] = useState(() => {
     if (typeof window !== 'undefined') {
@@ -72,6 +68,8 @@ export function Sidebar({ className }: SidebarProps) {
   })
 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+  const [isNavigating, setIsNavigating] = useState(false)
+  const [navigatingTo, setNavigatingTo] = useState<string>("")
   const currentPath = usePathname()
 
   useEffect(() => {
@@ -79,6 +77,11 @@ export function Sidebar({ className }: SidebarProps) {
       localStorage.setItem('sidebarCollapsed', String(collapsed));
     }
   }, [collapsed])
+
+  useEffect(() => {
+    setIsNavigating(false)
+    setNavigatingTo("")
+  }, [currentPath])
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -111,6 +114,15 @@ export function Sidebar({ className }: SidebarProps) {
 
   const menuItems = getMenuItems()
 
+  const handleNavigation = (href: string, label: string) => {
+    if (href === currentPath) return;
+    
+    setIsNavigating(true)
+    setNavigatingTo(label)
+    setMobileMenuOpen(false)
+    router.push(href)
+  }
+
   const MobileMenuButton = () => (
     <Button
       variant="ghost"
@@ -125,6 +137,15 @@ export function Sidebar({ className }: SidebarProps) {
   return (
     <>
       <MobileMenuButton />
+
+      {isNavigating && (
+        <div className="fixed inset-0 bg-background/5 z-[100] flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4 bg-card p-6 rounded-lg shadow-lg border dark:border-foreground/10">
+            <Loader2 className="w-12 h-12 animate-spin text-primary" />
+            <p className="text-sm text-foreground">Cargando {navigatingTo}...</p>
+          </div>
+        </div>
+      )}
 
       {mobileMenuOpen && (
         <div className="fixed inset-0 bg-black/50 z-40 md:hidden" onClick={() => setMobileMenuOpen(false)} />
@@ -193,29 +214,30 @@ export function Sidebar({ className }: SidebarProps) {
             
             return (
               <div key={index}>
-                <Link
-                  href={item.href}
-                  onClick={() => setMobileMenuOpen(false)}
-                  title={collapsed && !mobileMenuOpen ? item.label : undefined} 
+                <Button
+                  variant="ghost"
+                  onClick={() => handleNavigation(item.href, item.label)}
+                  disabled={isNavigating}
+                  title={collapsed && !mobileMenuOpen ? item.label : undefined}
+                  className={cn(
+                    "w-full justify-start gap-3 text-sidebar-foreground hover:bg-accent hover:text-sidebar-accent-foreground cursor-pointer",
+                    collapsed && !mobileMenuOpen ? "justify-center px-2" : "", 
+                    isActive && "bg-sidebar-foreground/12"
+                  )}
                 >
-                  <Button
-                    variant="ghost"
-                    className={cn(
-                      "w-full justify-start gap-3 text-sidebar-foreground hover:bg-accent hover:text-sidebar-accent-foreground cursor-pointer",
-                      collapsed && !mobileMenuOpen ? "justify-center px-2" : "", 
-                      isActive && "bg-sidebar-foreground/12"
-                    )}
-                  >
+                  {isNavigating && navigatingTo === item.label ? (
+                    <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" />
+                  ) : (
                     <Icon className="w-4 h-4 flex-shrink-0" />
-                    {(!collapsed || mobileMenuOpen) && <span className="truncate">{item.label}</span>} 
-                  </Button>
-                </Link>
+                  )}
+                  {(!collapsed || mobileMenuOpen) && <span className="truncate">{item.label}</span>} 
+                </Button>
               </div>
             )
           })}
         </nav>
 
-        {/* Logout */}
+        {/* Footer */}
         <div
           className={cn(
             "p-4 border-t border-sidebar-border space-y-2 transition-all duration-300",
@@ -253,26 +275,7 @@ export function Sidebar({ className }: SidebarProps) {
           >
             {loggingOut ? (
               <span className="flex items-center gap-2">
-                <svg
-                  className="animate-spin h-4 w-4 text-sidebar-foreground"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v8H4z"
-                  />
-                </svg>
+                <Loader2 className="w-4 h-4 animate-spin" />
                   <span
                     className={cn(
                       "transition-all duration-300 ease-in-out",
