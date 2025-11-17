@@ -1,7 +1,8 @@
 import { apiClient } from "@/lib/api-client";
 import { UsuarioLogin } from "@/lib/auth";
-import { Colaborador } from "@/lib/colaboradores/type";
+import { Colaborador, InduccionDocumental } from "@/lib/colaboradores/type";
 import { handleApiError } from "@/utils/error-handler";
+import { AxiosError } from "axios";
 import { useCallback, useState } from "react";
 import toast from "react-hot-toast";
 
@@ -113,6 +114,25 @@ export function useColaboradores(user: UsuarioLogin | null) {
       handleApiError(err, baseMessage);
     }
   }, [user]);
+    
+  const obtenerDetallePlanColaborador = useCallback(async (idColaborador: number) => {  
+    if (!user) {
+      toast.error("Usuario no autenticado.");
+      return;
+    }
+
+    setIsMutating(true);
+    setError(null);
+
+    try {
+      const { data } = await apiClient.get(`/colaboradores/${idColaborador}/detalle-plan`);
+      return data;
+    } catch (err) {
+      const baseMessage = "Error al obtener detalle del plan.";
+      setError(baseMessage);
+      handleApiError(err, baseMessage);
+    }
+  }, [user]);
 
   const descargarListaAsistencia = useCallback(async (idSesion: number): Promise<string> => {
     try {
@@ -163,6 +183,29 @@ export function useColaboradores(user: UsuarioLogin | null) {
     }
   }, []);
 
+  const descargarInduccionDocumental = useCallback(async (formatoDatos: InduccionDocumental) => {
+    try {
+      const response = await apiClient.post(`/documents-module/induccion-documental`, formatoDatos, {
+        responseType: "blob",
+      });
+      
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+
+      window.open(url, "_blank");
+      setTimeout(() => window.URL.revokeObjectURL(url), 5000);
+    } catch (err) {
+      const error = err as AxiosError;
+
+      if (error.response && error.response.data instanceof Blob) {
+        const text = await error.response.data.text();
+        console.error("Respuesta del servidor:", text);
+      }
+      
+      handleApiError(err, "Error al generar documento de induccion documental.");
+    }
+  }, []);
+
   return {
     colaboradores,
     loading,
@@ -176,5 +219,7 @@ export function useColaboradores(user: UsuarioLogin | null) {
     obtenerDocumentosColaborador,
     obtenerHistorialColaborador,
     obtenerResumenColaborador,
+    descargarInduccionDocumental,
+    obtenerDetallePlanColaborador,
   }
 }

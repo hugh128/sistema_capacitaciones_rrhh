@@ -507,6 +507,8 @@ export default function CodigosAsociadosPage() {
                         size="sm"
                         onClick={() => setCurrentPage(currentPage - 1)}
                         disabled={currentPage === 1}
+                        className="dark:text-foreground dark:hover:border-white/40 cursor-pointer"
+
                       >
                         <ChevronLeft className="h-4 w-4 mr-1" />
                         Anterior
@@ -531,7 +533,7 @@ export default function CodigosAsociadosPage() {
                               variant={currentPage === pageNum ? "default" : "outline"}
                               size="sm"
                               onClick={() => setCurrentPage(pageNum)}
-                              className="w-9 h-9 p-0"
+                              className="w-9 h-9 p-0 dark:text-foreground dark:hover:border-white/40 cursor-pointer"
                             >
                               {pageNum}
                             </Button>
@@ -544,6 +546,7 @@ export default function CodigosAsociadosPage() {
                         size="sm"
                         onClick={() => setCurrentPage(currentPage + 1)}
                         disabled={currentPage === totalPages}
+                        className="dark:text-foreground dark:hover:border-white/40 cursor-pointer"
                       >
                         Siguiente
                         <ChevronRight className="h-4 w-4 ml-1" />

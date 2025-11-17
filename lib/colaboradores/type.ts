@@ -90,6 +90,81 @@ export interface ResumenColaborador {
   FECHA_ORDER: string
 }
 
+export interface CapacitacionInduccion {
+  documento: string
+  codigo: string
+  version: number
+  fechaEvaluacion?: string
+  lectura?: string
+  capacitacion?: string
+  evaluacion?: string
+  calificacion?: string
+  nombreCapacitador?: string
+  estatus: string
+}
+
+export interface GrupoCapacitacion {
+  departamentoCapacitacion: string
+  capacitaciones: CapacitacionInduccion[];
+}
+
+export interface InduccionDocumental {
+  nombreColaborador: string
+  departamentoColaborador: string
+  cargo: string
+  jefeInmediatoNombre: string
+  gruposCapacitacion: GrupoCapacitacion[];
+  fechaInicioInduccion: string
+  fechaFinInduccion: string
+}
+
+export interface informacionColaborador {
+  nombreColaborador: string
+  departamentoColaborador: string
+  cargo: string
+  jefeInmediatoNombre: string
+}
+
+export interface plan {
+  ID_PLAN_COLABORADOR: number
+  ID_PLAN: number
+  nombrePlan: string
+  descripcionPlan: string
+  tipoPlan: string
+  fechaInicioInduccion: string
+  fechaFinInduccion: string | null,
+  totalCapacitaciones: number,
+  capacitacionesCompletadas: number,
+  planCompletado: boolean,
+  porcentajeCompletado: number
+}
+
+export interface detallePlan {
+  ID_PLAN: number
+  nombrePlan: string
+  departamentoCapacitacion: string
+  codigoDepartamento: string
+  documento: string
+  codigo: string
+  version: number
+  nombreCapacitador: string
+  fechaEvaluacion: string
+  lectura: string
+  capacitacion: string
+  evaluacion: string
+  calificacion: string
+  estatus: string
+  ID_CAPACITACION: number
+  ID_DOCUMENTO: number
+  fechaOrden: string
+}
+
+export interface DETALLE_PLAN_COLABORADOR {
+  INFORMACION_COLABORADOR: informacionColaborador
+  PLANES: plan[]
+  DETALLE_CAPACITACIONES: detallePlan[]
+}
+
 export const getStatusColor = (status: string) => {
   switch (status) {
     case "activo":
