@@ -626,7 +626,7 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
                         <div className="space-y-2">
                           <div className="flex items-center justify-between">
                             <span className="text-xs text-blue-100 font-medium">Progreso del Plan</span>
-                            <span className="text-xs text-white font-semibold">{plan.porcentajeCompletado}%</span>
+                            <span className="text-xs text-white font-semibold">{plan.porcentajeCompletado.toFixed(0)}%</span>
                           </div>
                           <div className="w-full h-2.5 bg-white/20 rounded-full overflow-hidden">
                             <div

@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { ChevronLeft, ChevronRight, Search } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useCallback, memo } from "react"
 import type { CodigoPadre } from "@/lib/codigos/types"
 import { getEstatusBadgeVariant } from "./codes-table"
 
@@ -17,7 +17,7 @@ interface ParentCodeViewProps {
   onClose: () => void
 }
 
-export function ParentCodeView({ parent, open, onClose }: ParentCodeViewProps) {
+export const ParentCodeView = memo(function ParentCodeView({ parent, open, onClose }: ParentCodeViewProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
   const itemsPerPage = 10
@@ -50,21 +50,25 @@ export function ParentCodeView({ parent, open, onClose }: ParentCodeViewProps) {
     return { totalPages: total, visibleChildren: visible, filteredCount: filtered.length }
   }, [parent, currentPage, searchQuery])
 
-  const handleSearchChange = (value: string) => {
+  const handleSearchChange = useCallback((value: string) => {
     setSearchQuery(value)
     setCurrentPage(1)
-  }
+  }, [])
 
-  const handleClose = () => {
-    onClose()
-  }
+  const handlePrevPage = useCallback(() => {
+    setCurrentPage(prev => Math.max(1, prev - 1))
+  }, [])
+
+  const handleNextPage = useCallback(() => {
+    setCurrentPage(prev => prev + 1)
+  }, [])
 
   if (!parent) return null
 
   const childrenCount = parent.DOCUMENTOS_ASOCIADOS.length;
 
   return (
-    <Dialog open={open} onOpenChange={handleClose}>
+    <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto md:max-w-3xl">
         <DialogHeader>
           <DialogTitle>Detalles del Código</DialogTitle>
@@ -169,12 +173,10 @@ export function ParentCodeView({ parent, open, onClose }: ParentCodeViewProps) {
                                 <p className="text-xs text-muted-foreground">Nombre de Documento</p>
                                 <p className="text-sm break-words">{child.NOMBRE_DOCUMENTO}</p> 
                               </div>
-
                               <div>
                                 <p className="text-xs text-muted-foreground">Aprobacion</p>
                                 <p className="text-sm break-words">{child.FECHA_APROBACION}</p> 
                               </div>
-
                               <div className="text-center">
                                 <Badge variant={getEstatusBadgeVariant(child.ESTATUS)} className="font-normal whitespace-nowrap">
                                   {child.ESTATUS}
@@ -199,7 +201,7 @@ export function ParentCodeView({ parent, open, onClose }: ParentCodeViewProps) {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => setCurrentPage(currentPage - 1)}
+                              onClick={handlePrevPage}
                               disabled={currentPage === 1}
                               className="h-7 px-2"
                             >
@@ -211,7 +213,7 @@ export function ParentCodeView({ parent, open, onClose }: ParentCodeViewProps) {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() => setCurrentPage(currentPage + 1)}
+                              onClick={handleNextPage}
                               disabled={currentPage === totalPages}
                               className="h-7 px-2"
                             >
@@ -230,4 +232,4 @@ export function ParentCodeView({ parent, open, onClose }: ParentCodeViewProps) {
       </DialogContent>
     </Dialog>
   )
-}
+});

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useCallback, memo } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -24,7 +24,7 @@ interface ParentCodeEditProps {
   onDeleteChild: (parentId: number, childId: number) => void
 }
 
-export function ParentCodeEdit({
+export const ParentCodeEdit = memo(function ParentCodeEdit({
   parent,
   open,
   onClose,
@@ -60,37 +60,32 @@ export function ParentCodeEdit({
     }
   }, [parent])
 
-  const [editFormData, setEditFormData] = useState<NuevoCodigoPadre>(initialFormData)
-
-  useEffect(() => {
-    if (parent) {
-      setEditFormData(initialFormData);
-    }
-  }, [parent, initialFormData, parent?.DOCUMENTOS_ASOCIADOS])
-
   useEffect(() => {
     if (!open) {
       setIsEditing(false);
     }
   }, [open]);
 
-  const handleEdit = () => {
-    setEditFormData(initialFormData)
+  const handleEdit = useCallback(() => {
     setIsEditing(true)
-  }
+  }, [])
 
-  const handleSave = () => {
+  const handleSave = useCallback((data: NuevoCodigoPadre) => {
     if (!parent) return
-    onUpdate(parent.ID_DOCUMENTO, editFormData)
+    onUpdate(parent.ID_DOCUMENTO, data)
     setIsEditing(false)
-  }
+  }, [parent, onUpdate])
 
-  const handleDelete = () => {
+  const handleCancel = useCallback(() => {
+    setIsEditing(false)
+  }, [])
+
+  const handleDelete = useCallback(() => {
     if (!parent) return
     onDelete(parent.ID_DOCUMENTO)
     setDeleteDialog(false)
     onClose()
-  }
+  }, [parent, onDelete, onClose])
 
   if (!parent) return null
 
@@ -132,10 +127,9 @@ export function ParentCodeEdit({
                 <CardContent>
                   {isEditing ? (
                     <ParentCodeForm
-                      data={editFormData}
-                      onChange={setEditFormData}
+                      initialData={initialFormData}
                       onSubmit={handleSave}
-                      onCancel={() => setIsEditing(false)}
+                      onCancel={handleCancel}
                       isEditing
                     />
                   ) : (
@@ -218,4 +212,4 @@ export function ParentCodeEdit({
       />
     </>
   )
-}
+});

@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState, useRef, useEffect, useMemo, useTransition, useCallback } from "react"
+import { useState, useRef, useEffect, useMemo, useCallback } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -18,11 +18,11 @@ import { ParentCodeForm } from "@/components/codigos/parent-code-form"
 import { ParentCodeView } from "@/components/codigos/parent-code-view"
 import { ParentCodeEdit } from "@/components/codigos/parent-code-edit"
 import { exportToExcel, importFromExcel } from "@/lib/codigos/excel-utils"
-import { useCodigosFilter, useCodigosPagination } from "@/lib/codigos/hooks"
 import type { CodigoPadre, NuevoCodigoPadre, NuevoCodigoHijo } from "@/lib/codigos/types"
 import toast, { Toaster } from "react-hot-toast"
 import { useCodigos } from "@/hooks/useCodigos"
 import { useAuth } from "@/contexts/auth-context"
+import { useDebounce } from "@/hooks/useDebounde"
 
 type ImportConfirmationState = {
   isOpen: boolean;
@@ -30,7 +30,12 @@ type ImportConfirmationState = {
   codigosAImportar: CodigoPadre[] | null;
 };
 
+let renderCount = 0;
+
 export default function CodigosAsociadosPage() {
+  renderCount++;
+  console.log('🔄 Page renders:', renderCount);
+
   const fileInputRef = useRef<HTMLInputElement>(null)
 
   const { user } = useAuth()
@@ -51,103 +56,119 @@ export default function CodigosAsociadosPage() {
     codigosAImportar: null,
   });
   const [isImporting, setIsImporting] = useState(false);
-  const [isPending, startTransition] = useTransition()
   const [isLoading, setIsLoading] = useState(true);
-
-  const [searchQuery, setSearchQuery] = useState("")
+  const [isTableReady, setIsTableReady] = useState(false);
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(20)
-
   const [isAddParentOpen, setIsAddParentOpen] = useState(false)
   const [viewParent, setViewParent] = useState<CodigoPadre | null>(null)
   const [editParent, setEditParent] = useState<CodigoPadre | null>(null)
 
-  const [newParentData, setNewParentData] = useState<NuevoCodigoPadre>({
-    CODIGO: "",
-    TIPO_DOCUMENTO: "",
-    NOMBRE_DOCUMENTO: "",
-    APROBACION: "",
-    VERSION: 0,
-    ESTATUS: "VIGENTE",
-    DEPARTAMENTO_CODIGO: ""
-  })
+  const [searchQuery, setSearchQuery] = useState("")
 
-  const filteredCodigos = useCodigosFilter(codigos, searchQuery)
-  const paginatedCodigos = useCodigosPagination(filteredCodigos, currentPage, itemsPerPage)
+  const debouncedSearchQuery = useDebounce(searchQuery, 300)
+
+  const filteredCodigos = useMemo(() => {
+    if (!debouncedSearchQuery) return codigos;
+    
+    const query = debouncedSearchQuery.toLowerCase();
+    
+    return codigos.filter(codigo => {
+      if (codigo.CODIGO?.toLowerCase().includes(query)) return true;
+      if (codigo.TIPO_DOCUMENTO?.toLowerCase().includes(query)) return true;
+      if (codigo.ESTATUS?.toLowerCase().includes(query)) return true;
+      if (codigo.NOMBRE_DOCUMENTO?.toLowerCase().includes(query)) return true;
+      return false;
+    });
+  }, [codigos, debouncedSearchQuery]);
+
   const totalPages = useMemo(
     () => Math.ceil(filteredCodigos.length / itemsPerPage),
-    [filteredCodigos.length, itemsPerPage],
+    [filteredCodigos.length, itemsPerPage]
   )
+
+  const paginatedCodigos = useMemo(() => {
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    return filteredCodigos.slice(startIndex, startIndex + itemsPerPage);
+  }, [filteredCodigos, currentPage, itemsPerPage]);
 
   useEffect(() => {
     if (!user) {
       setIsLoading(false);
       return; 
     }
+    setIsLoading(false);
+  }, [user]);
 
-    try {
-      if (editParent) {
-        const updatedParent = codigos.find(c => c.ID_DOCUMENTO === editParent.ID_DOCUMENTO);
-        if (updatedParent && updatedParent !== editParent) {
-          setEditParent(updatedParent);
-        } else if (!updatedParent) {
-          setEditParent(null);
-        }
+  useEffect(() => {
+    if (!isTableReady && codigos.length > 0) {
+      if (typeof requestIdleCallback !== 'undefined') {
+        requestIdleCallback(() => setIsTableReady(true));
+      } else {
+        setTimeout(() => setIsTableReady(true), 0);
       }
-    } catch (error) {
-      console.error('Error al cargar codigos:', error)
-    } finally {
-      setIsLoading(false);
     }
+  }, [codigos.length, isTableReady]);
 
-  }, [user, codigos, editParent]);
+  useEffect(() => {
+    if (!editParent) return;
+    
+    const updatedParent = codigos.find(c => c.ID_DOCUMENTO === editParent.ID_DOCUMENTO);
+    
+    if (!updatedParent) {
+      setEditParent(null);
+      return;
+    }
+    
+    const hasChanged = (
+      updatedParent.CODIGO !== editParent.CODIGO ||
+      updatedParent.TIPO_DOCUMENTO !== editParent.TIPO_DOCUMENTO ||
+      updatedParent.NOMBRE_DOCUMENTO !== editParent.NOMBRE_DOCUMENTO ||
+      updatedParent.ESTATUS !== editParent.ESTATUS ||
+      updatedParent.VERSION !== editParent.VERSION ||
+      updatedParent.DOCUMENTOS_ASOCIADOS.length !== editParent.DOCUMENTOS_ASOCIADOS.length
+    );
+    
+    if (hasChanged) {
+      setEditParent(updatedParent);
+    }
+  }, [codigos, editParent]);
 
-  const handleAddParent = async () => {
+  const handleSearchChange = useCallback((value: string) => {
+    setSearchQuery(value)
+    setCurrentPage(1)
+  }, [])
+
+  const handleItemsPerPageChange = useCallback((value: string) => {
+    setItemsPerPage(Number(value))
+    setCurrentPage(1)
+  }, [])
+
+  const handleAddParent = async (data: NuevoCodigoPadre) => {
     if (
-      !newParentData.CODIGO ||
-      !newParentData.TIPO_DOCUMENTO ||
-      !newParentData.NOMBRE_DOCUMENTO ||
-      !newParentData.APROBACION ||
-      !newParentData.VERSION ||
-      !newParentData.DEPARTAMENTO_CODIGO
+      !data.CODIGO ||
+      !data.TIPO_DOCUMENTO ||
+      !data.NOMBRE_DOCUMENTO ||
+      !data.APROBACION ||
+      !data.VERSION ||
+      !data.DEPARTAMENTO_CODIGO
     ) {
       toast.error("Por favor complete todos los campos obligatorios")
       return
     }
 
     try {
-      await createParent(newParentData)
+      await createParent(data)
       toast.success("Código padre agregado correctamente.");
-      
-      setNewParentData({
-        CODIGO: "",
-        TIPO_DOCUMENTO: "",
-        NOMBRE_DOCUMENTO: "",
-        VERSION: 1,
-        APROBACION: "",
-        ESTATUS: "VIGENTE",
-        DEPARTAMENTO_CODIGO: ""
-      })
       setIsAddParentOpen(false)
-
     } catch (error) {
       console.error("Error en handleAddParent:", error)
     }
   }
 
-  const handleUpdateParent = async (id: number, data: Omit<CodigoPadre, "ID_DOCUMENTO" | "DOCUMENTOS_ASOCIADOS">) => {
+  const handleUpdateParent = async (id: number, data: NuevoCodigoPadre) => {
     try {
-      const updatedParentData: NuevoCodigoPadre = {
-        CODIGO: data.CODIGO,
-        TIPO_DOCUMENTO: data.TIPO_DOCUMENTO,
-        NOMBRE_DOCUMENTO: data.NOMBRE_DOCUMENTO,
-        APROBACION: data.APROBACION,
-        VERSION: data.VERSION,
-        ESTATUS: data.ESTATUS,
-        DEPARTAMENTO_CODIGO: data.DEPARTAMENTO_CODIGO
-      }
-
-      await updateParent(id, updatedParentData)
+      await updateParent(id, data)
       setEditParent(null)
     } catch (error) {
       console.error("Error en handleUpdateParent:", error)
@@ -190,36 +211,22 @@ export default function CodigosAsociadosPage() {
   }
 
   const handleView = useCallback((parent: CodigoPadre) => {
-    startTransition(() => {
-      setViewParent(parent)
-    })
+    setViewParent(parent)
   }, [])
 
   const handleEdit = useCallback((parent: CodigoPadre) => {
-    startTransition(() => {
-      setEditParent(parent)
-    })
+    setEditParent(parent)
   }, [])
 
-  const handleSearchChange = (value: string) => {
-    setSearchQuery(value)
-    setCurrentPage(1)
-  }
-
-  const handleItemsPerPageChange = (value: string) => {
-    setItemsPerPage(Number(value))
-    setCurrentPage(1)
-  }
-
-  const handleCancelImport = () => {
+  const handleCancelImport = useCallback(() => {
     setImportConfirmation({
       isOpen: false,
       file: null,
       codigosAImportar: null,
     });
-  };
+  }, []);
 
-  const handleExportExcel = () => {
+  const handleExportExcel = useCallback(() => {
     try {
       exportToExcel(codigos); 
       toast.success("El archivo Excel se descargó correctamente");
@@ -227,7 +234,7 @@ export default function CodigosAsociadosPage() {
       console.error("Error exporting Excel:", error)
       toast.error("No se pudo generar el archivo Excel")
     }
-  }
+  }, [codigos])
 
   const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -309,7 +316,7 @@ export default function CodigosAsociadosPage() {
               const response = await createParent(parentData);
               newParentId = response[0].ID_DOCUMENTO;
             } catch (e) {
-              console.log(`Errores en cada iteracio: ${e}`)
+              console.log(`Errores en cada iteracion: ${e}`)
               const errorMsg = e instanceof Error ? e.message : "Error desconocido";
               errorMessages.push(`Falló al crear Padre ${parent.CODIGO}: ${errorMsg}`);
               continue;
@@ -351,8 +358,6 @@ export default function CodigosAsociadosPage() {
           errorMessages.push(`Error inesperado al procesar ${parent.CODIGO}. ${error}`);
         }
       }
-
-      //await refreshCodigos();
 
       const totalProcessed = codesToImport.length;
       const failCount = totalProcessed - successCount;
@@ -488,14 +493,20 @@ export default function CodigosAsociadosPage() {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <CodesTable
-                  codigos={paginatedCodigos}
-                  onView={handleView}
-                  onEdit={handleEdit}
-                  onDelete={handleDeleteParent}
-                />
+                {!isTableReady && codigos.length > 0 ? (
+                  <div className="flex justify-center py-12">
+                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                  </div>
+                ) : (
+                  <CodesTable
+                    codigos={paginatedCodigos}
+                    onView={handleView}
+                    onEdit={handleEdit}
+                    onDelete={handleDeleteParent}
+                  />
+                )}
 
-                {totalPages > 1 && (
+                {totalPages > 1 && isTableReady && (
                   <div className="flex items-center justify-between mt-6 pt-6 border-t">
                     <div className="text-sm text-muted-foreground">
                       Mostrando {(currentPage - 1) * itemsPerPage + 1} -{" "}
@@ -560,45 +571,41 @@ export default function CodigosAsociadosPage() {
         </main>
       </div>
 
-      <Dialog open={isAddParentOpen} onOpenChange={setIsAddParentOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Agregar Código Padre</DialogTitle>
-            <DialogDescription>Complete los campos para crear un nuevo código padre</DialogDescription>
-          </DialogHeader>
-          <ParentCodeForm
-            data={newParentData}
-            onChange={setNewParentData}
-            onSubmit={handleAddParent}
-            onCancel={() => setIsAddParentOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
+      {isAddParentOpen && (
+        <Dialog open={isAddParentOpen} onOpenChange={setIsAddParentOpen}>
+          <DialogContent className="max-w-2xl">
+            <DialogHeader>
+              <DialogTitle>Agregar Código Padre</DialogTitle>
+              <DialogDescription>Complete los campos para crear un nuevo código padre</DialogDescription>
+            </DialogHeader>
+            <ParentCodeForm
+              onSubmit={handleAddParent}
+              onCancel={() => setIsAddParentOpen(false)}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
 
-      <ParentCodeView
-        parent={viewParent}
-        open={!!viewParent}
-        onClose={() => {
-          startTransition(() => {
-            setViewParent(null)
-          })
-        }}
-      />
+      {viewParent && (
+        <ParentCodeView
+          parent={viewParent}
+          open={!!viewParent}
+          onClose={() => setViewParent(null)}
+        />
+      )}
 
-      <ParentCodeEdit
-        parent={editParent}
-        open={!!editParent}
-        onClose={() => {
-          startTransition(() => {
-            setEditParent(null)
-          })
-        }}
-        onUpdate={(id: number, data) => handleUpdateParent(id, data)}
-        onDelete={(id: number) => handleDeleteParent(id)}
-        onAddChild={(parentId: number, child) => handleAddChild(parentId, child)}
-        onEditChild={(parentId: number, childId: number, data) => handleEditChild(parentId, childId, data)}
-        onDeleteChild={(parentId: number, childId: number) => handleDeleteChild(parentId, childId)}
-      />
+      {editParent && (
+        <ParentCodeEdit
+          parent={editParent}
+          open={!!editParent}
+          onClose={() => setEditParent(null)}
+          onUpdate={(id: number, data) => handleUpdateParent(id, data)}
+          onDelete={(id: number) => handleDeleteParent(id)}
+          onAddChild={(parentId: number, child) => handleAddChild(parentId, child)}
+          onEditChild={(parentId: number, childId: number, data) => handleEditChild(parentId, childId, data)}
+          onDeleteChild={(parentId: number, childId: number) => handleDeleteChild(parentId, childId)}
+        />
+      )}
 
       <Dialog open={importConfirmation.isOpen} onOpenChange={handleCancelImport}>
         <DialogContent className="sm:max-w-[425px]">

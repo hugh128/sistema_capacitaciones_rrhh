@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useCallback, memo } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, Search } from "lucide-react"
@@ -18,21 +18,76 @@ interface ChildCodesListProps {
   onDelete: (childId: number) => void
 }
 
-export function ChildCodesList({ children, onAdd, onEdit, onDelete }: ChildCodesListProps) {
+// ✅ Memoizar cada hijo individualmente
+const ChildItem = memo(({ 
+  child, 
+  onEdit, 
+  onDelete 
+}: { 
+  child: CodigoHijo
+  onEdit: (child: CodigoHijo) => void
+  onDelete: (id: number) => void
+}) => {
+  const handleEdit = useCallback(() => onEdit(child), [onEdit, child]);
+  const handleDelete = useCallback(() => onDelete(child.ID_DOC_ASOCIADO), [onDelete, child.ID_DOC_ASOCIADO]);
+
+  return (
+    <div className="p-3 bg-muted/50 rounded-lg">
+      <div className="grid grid-cols-[0.9fr_2.4fr_0.5fr_0.5fr] gap-3 items-center">
+        <div>
+          <p className="text-xs text-muted-foreground">Dato Asociado</p>
+          <p className="text-sm font-medium">{child.CODIGO}</p>
+        </div>
+        <div>
+          <p className="text-xs text-muted-foreground">Nombre de Documento</p>
+          <p className="text-sm">{child.NOMBRE_DOCUMENTO}</p>
+        </div>
+        <div>
+          <Badge variant={getEstatusBadgeVariant(child.ESTATUS)} className="font-normal whitespace-nowrap">
+            {child.ESTATUS}
+          </Badge>
+        </div>
+        <div>
+          <Button variant="ghost" size="icon" onClick={handleEdit} className="h-8 w-8">
+            <Pencil className="h-4 w-4" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={handleDelete}
+            className="h-8 w-8 text-destructive hover:text-destructive"
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+    </div>
+  );
+}, (prev, next) => {
+  return (
+    prev.child.ID_DOC_ASOCIADO === next.child.ID_DOC_ASOCIADO &&
+    prev.child.CODIGO === next.child.CODIGO &&
+    prev.child.NOMBRE_DOCUMENTO === next.child.NOMBRE_DOCUMENTO &&
+    prev.child.ESTATUS === next.child.ESTATUS &&
+    prev.child.VERSION === next.child.VERSION
+  );
+});
+
+ChildItem.displayName = "ChildItem";
+
+export const ChildCodesList = memo(function ChildCodesList({ 
+  children, 
+  onAdd, 
+  onEdit, 
+  onDelete 
+}: ChildCodesListProps) {
   const [isAddOpen, setIsAddOpen] = useState(false)
   const [editingChild, setEditingChild] = useState<CodigoHijo | null>(null)
   const [currentPage, setCurrentPage] = useState(1)
   const [searchQuery, setSearchQuery] = useState("")
   const itemsPerPage = 10
 
-  const [formData, setFormData] = useState<NuevoCodigoHijo>({
-    CODIGO: "",
-    NOMBRE_DOCUMENTO: "",
-    FECHA_APROBACION: "",
-    VERSION: 1,
-    ESTATUS: "VIGENTE",
-  })
-
+  // ✅ Memoizar cálculos
   const { filteredChildren, totalPages, visibleChildren } = useMemo(() => {
     const filtered = children.filter((child) => {
       const query = searchQuery.toLowerCase()
@@ -49,72 +104,61 @@ export function ChildCodesList({ children, onAdd, onEdit, onDelete }: ChildCodes
     return { filteredChildren: filtered, totalPages: total, visibleChildren: visible }
   }, [children, searchQuery, currentPage])
 
-  const handleSearchChange = (value: string) => {
+  // ✅ Handlers optimizados
+  const handleSearchChange = useCallback((value: string) => {
     setSearchQuery(value)
     setCurrentPage(1)
-  }
+  }, [])
 
-  const handleAdd = () => {
-    if (
-      !formData.CODIGO ||
-      !formData.NOMBRE_DOCUMENTO ||
-      !formData.VERSION ||
-      !formData.ESTATUS
-    ) return
+  const handleOpenAdd = useCallback(() => {
+    setIsAddOpen(true)
+  }, [])
 
-    onAdd({
-        CODIGO: formData.CODIGO,
-        NOMBRE_DOCUMENTO: formData.NOMBRE_DOCUMENTO,
-        FECHA_APROBACION: formData.FECHA_APROBACION,
-        VERSION: formData.VERSION,
-        ESTATUS: formData.ESTATUS,
-    } as NuevoCodigoHijo)
-    
-    setFormData(
-      {
-        CODIGO: "",
-        NOMBRE_DOCUMENTO: "",
-        FECHA_APROBACION: "",
-        VERSION: 1,
-        ESTATUS: "VIGENTE"
-      }
-    )
+  const handleCloseAdd = useCallback(() => {
     setIsAddOpen(false)
-  }
+  }, [])
 
-  const handleEdit = () => {
-    if (!editingChild || !formData.CODIGO || !formData.NOMBRE_DOCUMENTO) return
+  const handleAdd = useCallback((data: NuevoCodigoHijo) => {
+    if (!data.CODIGO || !data.NOMBRE_DOCUMENTO || !data.VERSION || !data.ESTATUS) {
+      return;
+    }
+    onAdd(data);
+    setIsAddOpen(false);
+  }, [onAdd])
 
-    onEdit(editingChild.ID_DOC_ASOCIADO, {
-        CODIGO: formData.CODIGO,
-        NOMBRE_DOCUMENTO: formData.NOMBRE_DOCUMENTO,
-        FECHA_APROBACION: formData.FECHA_APROBACION,
-        VERSION: formData.VERSION,
-        ESTATUS: formData.ESTATUS,
-    }) 
-    
-    setFormData(
-      {
-        CODIGO: "",
-        NOMBRE_DOCUMENTO: "",
-        FECHA_APROBACION: "",
-        VERSION: 1,
-        ESTATUS: "VIGENTE"
-      }
-    )
-    setEditingChild(null)
-  }
-
-  const openEditDialog = (child: CodigoHijo) => {
+  const openEditDialog = useCallback((child: CodigoHijo) => {
     setEditingChild(child)
-    setFormData({
-      CODIGO: child.CODIGO,
-      NOMBRE_DOCUMENTO: child.NOMBRE_DOCUMENTO,
-      FECHA_APROBACION: child.FECHA_APROBACION,
-      VERSION: child.VERSION,
-      ESTATUS: child.ESTATUS,
-    })
-  }
+  }, [])
+
+  const handleCloseEdit = useCallback(() => {
+    setEditingChild(null)
+  }, [])
+
+  const handleEdit = useCallback((data: NuevoCodigoHijo) => {
+    if (!editingChild || !data.CODIGO || !data.NOMBRE_DOCUMENTO) return;
+    onEdit(editingChild.ID_DOC_ASOCIADO, data);
+    setEditingChild(null);
+  }, [editingChild, onEdit])
+
+  const handlePrevPage = useCallback(() => {
+    setCurrentPage(prev => Math.max(1, prev - 1))
+  }, [])
+
+  const handleNextPage = useCallback(() => {
+    setCurrentPage(prev => prev + 1)
+  }, [])
+
+  // ✅ Preparar datos iniciales para edición
+  const editInitialData = useMemo<NuevoCodigoHijo | undefined>(() => {
+    if (!editingChild) return undefined;
+    return {
+      CODIGO: editingChild.CODIGO,
+      NOMBRE_DOCUMENTO: editingChild.NOMBRE_DOCUMENTO,
+      FECHA_APROBACION: editingChild.FECHA_APROBACION,
+      VERSION: editingChild.VERSION,
+      ESTATUS: editingChild.ESTATUS,
+    };
+  }, [editingChild]);
 
   return (
     <div className="space-y-4">
@@ -122,20 +166,7 @@ export function ChildCodesList({ children, onAdd, onEdit, onDelete }: ChildCodes
         <h4 className="text-sm font-medium">
           Códigos Hijo ({searchQuery ? `${filteredChildren.length} de ${children.length}` : children.length})
         </h4>
-        <Button
-          size="sm"
-          variant="outline"
-          onClick={() => {
-            setFormData({
-              CODIGO: "",
-              NOMBRE_DOCUMENTO: "",
-              FECHA_APROBACION: "",
-              VERSION: 1,
-              ESTATUS: "VIGENTE",
-            });
-            setIsAddOpen(true);
-          }}
-        >
+        <Button size="sm" variant="outline" onClick={handleOpenAdd}>
           <Plus className="h-4 w-4 mr-2" />
           Agregar Hijo
         </Button>
@@ -163,40 +194,12 @@ export function ChildCodesList({ children, onAdd, onEdit, onDelete }: ChildCodes
         <>
           <div className="space-y-2">
             {visibleChildren.map((child) => (
-              <div key={child.ID_DOC_ASOCIADO} className="p-3 bg-muted/50 rounded-lg">
-                <div className="grid grid-cols-[0.9fr_2.4fr_0.5fr_0.5fr] gap-3 items-center">
-                  <div>
-                    <p className="text-xs text-muted-foreground">Dato Asociado</p>
-                    <p className="text-sm font-medium">{child.CODIGO}</p>
-                  </div>
-                  <div>
-                    <p className="text-xs text-muted-foreground">Nombre de Documento</p>
-                    <p className="text-sm">{child.NOMBRE_DOCUMENTO}</p>
-                  </div>
-
-                  <div className="">
-                      <Badge variant={getEstatusBadgeVariant(child.ESTATUS)} className="font-normal whitespace-nowrap">
-                        {child.ESTATUS}
-                      </Badge>
-                  </div>
-
-                  <div className="">
-                    <Button variant="ghost" size="icon" onClick={() => openEditDialog(child)} className="h-8 w-8">
-                      <Pencil className="h-4 w-4" />
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => onDelete(child.ID_DOC_ASOCIADO)}
-                      className="h-8 w-8 text-destructive hover:text-destructive"
-                    >
-                      <Trash2 className="h-4 w-4" />
-                    </Button>
-                  </div>
-                </div>
-
-
-              </div>
+              <ChildItem
+                key={child.ID_DOC_ASOCIADO}
+                child={child}
+                onEdit={openEditDialog}
+                onDelete={onDelete}
+              />
             ))}
           </div>
 
@@ -210,7 +213,7 @@ export function ChildCodesList({ children, onAdd, onEdit, onDelete }: ChildCodes
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(currentPage - 1)}
+                  onClick={handlePrevPage}
                   disabled={currentPage === 1}
                   className="h-7 px-2"
                 >
@@ -222,7 +225,7 @@ export function ChildCodesList({ children, onAdd, onEdit, onDelete }: ChildCodes
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setCurrentPage(currentPage + 1)}
+                  onClick={handleNextPage}
                   disabled={currentPage === totalPages}
                   className="h-7 px-2"
                 >
@@ -234,50 +237,35 @@ export function ChildCodesList({ children, onAdd, onEdit, onDelete }: ChildCodes
         </>
       )}
 
-      <Dialog
-        open={isAddOpen}
-        onOpenChange={(open) => {
-          setIsAddOpen(open);
-          if (!open) {
-            setFormData({
-              CODIGO: "",
-              NOMBRE_DOCUMENTO: "",
-              FECHA_APROBACION: "",
-              VERSION: 1,
-              ESTATUS: "VIGENTE",
-            });
-          }
-        }}
-      >
+      {/* ✅ Dialog para AGREGAR - sin datos iniciales */}
+      <Dialog open={isAddOpen} onOpenChange={handleCloseAdd}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Agregar Código Hijo</DialogTitle>
             <DialogDescription>Complete los campos para crear un nuevo código hijo</DialogDescription>
           </DialogHeader>
           <ChildCodeForm
-            data={formData}
-            onChange={setFormData}
             onSubmit={handleAdd}
-            onCancel={() => setIsAddOpen(false)}
+            onCancel={handleCloseAdd}
           />
         </DialogContent>
       </Dialog>
 
-      <Dialog open={!!editingChild} onOpenChange={(open) => !open && setEditingChild(null)}>
+      {/* ✅ Dialog para EDITAR - con datos iniciales */}
+      <Dialog open={!!editingChild} onOpenChange={handleCloseEdit}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Editar Código Hijo</DialogTitle>
             <DialogDescription>Modifique los campos del código hijo</DialogDescription>
           </DialogHeader>
           <ChildCodeForm
-            data={formData}
-            onChange={setFormData}
+            initialData={editInitialData}
             onSubmit={handleEdit}
-            onCancel={() => setEditingChild(null)}
+            onCancel={handleCloseEdit}
             isEditing
           />
         </DialogContent>
       </Dialog>
     </div>
   )
-}
+});

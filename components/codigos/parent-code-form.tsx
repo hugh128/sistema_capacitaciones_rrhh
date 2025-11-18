@@ -1,5 +1,6 @@
 "use client"
 
+import { memo, useState, useCallback, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -7,83 +8,162 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import type { NuevoCodigoPadre } from "@/lib/codigos/types"
 
 interface ParentCodeFormProps {
-  data: NuevoCodigoPadre
-  onChange: (data: NuevoCodigoPadre) => void
-  onSubmit: () => void
+  onSubmit: (data: NuevoCodigoPadre) => void
   onCancel: () => void
   isEditing?: boolean
+  initialData?: NuevoCodigoPadre
 }
 
-export function ParentCodeForm({ data, onChange, onSubmit, onCancel, isEditing = false }: ParentCodeFormProps) {
+let formRenderCount = 0;
+
+export const ParentCodeForm = memo(({ 
+  onSubmit, 
+  onCancel, 
+  isEditing = false,
+  initialData
+}: ParentCodeFormProps) => {
+
+  formRenderCount++;
+  console.log('📝 Form render count:', formRenderCount);
+  
+  const [formData, setFormData] = useState<NuevoCodigoPadre>(
+    initialData || {
+      CODIGO: "",
+      TIPO_DOCUMENTO: "",
+      NOMBRE_DOCUMENTO: "",
+      APROBACION: "",
+      VERSION: 1,
+      ESTATUS: "VIGENTE",
+      DEPARTAMENTO_CODIGO: ""
+    }
+  );
+
+  useEffect(() => {
+    if (initialData) {
+      setFormData(initialData);
+    }
+  }, [initialData]);
+
+  const handleInputChange = useCallback((field: keyof NuevoCodigoPadre) => {
+    return (e: React.ChangeEvent<HTMLInputElement>) => {
+      const value = e.target.type === 'number' 
+        ? Number(e.target.value) 
+        : e.target.value;
+      
+      setFormData(prev => ({ 
+        ...prev, 
+        [field]: value 
+      }));
+    };
+  }, []);
+
+  const handleSelectChange = useCallback((value: string) => {
+    setFormData(prev => ({ ...prev, ESTATUS: value }));
+  }, []);
+
+  const handleSubmit = useCallback((e: React.FormEvent) => {
+    e.preventDefault();
+    onSubmit(formData);
+  }, [formData, onSubmit]);
+
   return (
-    <div className="space-y-4">
+    <form 
+      onSubmit={handleSubmit}
+      className="space-y-4"
+    >
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="codigo">Código <span className="text-destructive">*</span></Label>
+          <Label htmlFor="codigo">
+            Código <span className="text-destructive">*</span>
+          </Label>
           <Input
             id="codigo"
-            value={data.CODIGO ?? ""}
-            onChange={(e) => onChange({ ...data, CODIGO: e.target.value })}
+            name="codigo"
+            value={formData.CODIGO ?? ""}
+            onChange={handleInputChange('CODIGO')}
             placeholder="VAL-PMV-001"
+            autoComplete="off"
+            autoFocus
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="tipo">Tipo de Documento <span className="text-destructive">*</span></Label>
+          <Label htmlFor="tipo">
+            Tipo de Documento <span className="text-destructive">*</span>
+          </Label>
           <Input
             id="tipo"
-            value={data.TIPO_DOCUMENTO ?? ""}
-            onChange={(e) => onChange({ ...data, TIPO_DOCUMENTO: e.target.value })}
+            name="tipo"
+            value={formData.TIPO_DOCUMENTO ?? ""}
+            onChange={handleInputChange('TIPO_DOCUMENTO')}
             placeholder="PMV"
+            autoComplete="off"
           />
         </div>
       </div>
 
       <div className="space-y-2">
-        <Label htmlFor="documento">Documento <span className="text-destructive">*</span></Label>
+        <Label htmlFor="documento">
+          Documento <span className="text-destructive">*</span>
+        </Label>
         <Input
           id="documento"
-          value={data.NOMBRE_DOCUMENTO ?? ""}
-          onChange={(e) => onChange({ ...data, NOMBRE_DOCUMENTO: e.target.value })}
+          name="documento"
+          value={formData.NOMBRE_DOCUMENTO ?? ""}
+          onChange={handleInputChange('NOMBRE_DOCUMENTO')}
           placeholder="Plan maestro de validaciones"
+          autoComplete="off"
         />
       </div>
+
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="fecha">Fecha de Aprobación <span className="text-destructive">*</span></Label>
+          <Label htmlFor="fecha">
+            Fecha de Aprobación <span className="text-destructive">*</span>
+          </Label>
           <Input
             id="fecha"
+            name="fecha"
             type="date"
-            value={data.APROBACION ?? ""}
-            onChange={(e) => onChange({ ...data, APROBACION: e.target.value })}
+            value={formData.APROBACION ?? ""}
+            onChange={handleInputChange('APROBACION')}
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="codigo-departamento">Código Departamento <span className="text-destructive">*</span></Label>
+          <Label htmlFor="codigo-departamento">
+            Código Departamento <span className="text-destructive">*</span>
+          </Label>
           <Input
             id="codigo-departamento"
-            value={data.DEPARTAMENTO_CODIGO ?? ""}
-            onChange={(e) => onChange({ ...data, DEPARTAMENTO_CODIGO: e.target.value })}
+            name="codigo-departamento"
+            value={formData.DEPARTAMENTO_CODIGO ?? ""}
+            onChange={handleInputChange('DEPARTAMENTO_CODIGO')}
             placeholder="RRHH"
+            autoComplete="off"
           />
         </div>
       </div>
 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
-          <Label htmlFor="version">Version <span className="text-destructive">*</span></Label>
+          <Label htmlFor="version">
+            Version <span className="text-destructive">*</span>
+          </Label>
           <Input
             id="version"
+            name="version"
             type="number"
-            value={data.VERSION ?? 1}
-            onChange={(e) => onChange({ ...data, VERSION: Number(e.target.value) })}
+            value={formData.VERSION ?? 1}
+            onChange={handleInputChange('VERSION')}
             placeholder="1"
           />
         </div>
         <div className="space-y-2">
-          <Label htmlFor="estatus">Estatus <span className="text-destructive">*</span></Label>
+          <Label htmlFor="estatus">
+            Estatus <span className="text-destructive">*</span>
+          </Label>
           <Select
-            value={data.ESTATUS ?? ""}
-            onValueChange={(value) => onChange({ ...data, ESTATUS: value })}
+            value={formData.ESTATUS ?? "VIGENTE"}
+            onValueChange={handleSelectChange}
           >
             <SelectTrigger id="estatus">
               <SelectValue />
@@ -99,11 +179,15 @@ export function ParentCodeForm({ data, onChange, onSubmit, onCancel, isEditing =
       </div>
 
       <div className="flex justify-end gap-2 pt-4">
-        <Button variant="outline" onClick={onCancel}>
+        <Button type="button" variant="outline" onClick={onCancel}>
           Cancelar
         </Button>
-        <Button onClick={onSubmit}>{isEditing ? "Guardar Cambios" : "Agregar"}</Button>
+        <Button type="submit">
+          {isEditing ? "Guardar Cambios" : "Agregar"}
+        </Button>
       </div>
-    </div>
+    </form>
   )
-}
+});
+
+ParentCodeForm.displayName = "ParentCodeForm";
