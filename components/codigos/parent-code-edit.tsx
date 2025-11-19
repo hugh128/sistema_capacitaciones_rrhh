@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect, useCallback, memo } from "react"
+import { useState, useMemo, useEffect, useCallback, memo, useRef } from "react"
 import { Button } from "@/components/ui/button"
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
@@ -10,8 +10,10 @@ import { Trash2 } from "lucide-react"
 import { ParentCodeForm } from "./parent-code-form"
 import { ChildCodesList } from "./child-codes-list"
 import { DeleteConfirmationDialog } from "./delete-confirmation-dialog"
-import type { CodigoPadre, NuevoCodigoPadre, NuevoCodigoHijo } from "@/lib/codigos/types"
+import { VersionChangeDialog } from "./version-change-dialog"
+import type { CodigoPadre, NuevoCodigoPadre, NuevoCodigoHijo, Recapacitacion } from "@/lib/codigos/types"
 import { getEstatusBadgeVariant } from "./codes-table"
+import toast from "react-hot-toast"
 
 interface ParentCodeEditProps {
   parent: CodigoPadre | null
@@ -22,6 +24,8 @@ interface ParentCodeEditProps {
   onAddChild: (parentId: number, child: NuevoCodigoHijo) => void
   onEditChild: (parentId: number, childId: number, data: NuevoCodigoHijo) => void
   onDeleteChild: (parentId: number, childId: number) => void
+  onRecapacitar: (idDocumento: number, nuevaVersion: number, usuario: string) => Promise<Recapacitacion>
+  currentUser: string
 }
 
 export const ParentCodeEdit = memo(function ParentCodeEdit({
@@ -33,9 +37,24 @@ export const ParentCodeEdit = memo(function ParentCodeEdit({
   onAddChild,
   onEditChild,
   onDeleteChild,
+  onRecapacitar,
+  currentUser,
 }: ParentCodeEditProps) {
   const [isEditing, setIsEditing] = useState(false)
   const [deleteDialog, setDeleteDialog] = useState(false)
+  
+  const [pendingUpdate, setPendingUpdate] = useState<NuevoCodigoPadre | null>(null)
+  const [versionChangeDialog, setVersionChangeDialog] = useState(false)
+  const [isProcessingRecapacitacion, setIsProcessingRecapacitacion] = useState(false)
+  const [recapacitacionResult, setRecapacitacionResult] = useState<Recapacitacion | null>(null)
+  
+  const dialogStateRef = useRef({
+    isOpen: false,
+    result: null as Recapacitacion | null,
+    pendingData: null as NuevoCodigoPadre | null,
+  })
+  
+  const isRecapacitacionInProgressRef = useRef(false)
 
   const initialFormData = useMemo<NuevoCodigoPadre>(() => {
     if (!parent) {
@@ -61,8 +80,16 @@ export const ParentCodeEdit = memo(function ParentCodeEdit({
   }, [parent])
 
   useEffect(() => {
-    if (!open) {
+    if (!open && !isRecapacitacionInProgressRef.current) {
       setIsEditing(false);
+      setPendingUpdate(null);
+      setVersionChangeDialog(false);
+      setRecapacitacionResult(null);
+      dialogStateRef.current = {
+        isOpen: false,
+        result: null,
+        pendingData: null,
+      };
     }
   }, [open]);
 
@@ -70,11 +97,97 @@ export const ParentCodeEdit = memo(function ParentCodeEdit({
     setIsEditing(true)
   }, [])
 
-  const handleSave = useCallback((data: NuevoCodigoPadre) => {
+  const handleSave = useCallback(async (data: NuevoCodigoPadre) => {
     if (!parent) return
-    onUpdate(parent.ID_DOCUMENTO, data)
-    setIsEditing(false)
+
+    const versionIncreased = data.VERSION > parent.VERSION
+
+    if (versionIncreased) {
+      setPendingUpdate(data)
+      setVersionChangeDialog(true)
+      dialogStateRef.current = {
+        isOpen: true,
+        result: null,
+        pendingData: data,
+      }
+    } else {
+      onUpdate(parent.ID_DOCUMENTO, data)
+      setIsEditing(false)
+      toast.success("Código actualizado correctamente")
+    }
   }, [parent, onUpdate])
+
+  const handleConfirmRecapacitacion = useCallback(async () => {
+    if (!parent || !pendingUpdate) return
+
+    setIsProcessingRecapacitacion(true)
+    isRecapacitacionInProgressRef.current = true
+
+    try {
+      onUpdate(parent.ID_DOCUMENTO, pendingUpdate)
+      
+      await new Promise(resolve => setTimeout(resolve, 300))
+
+      const result = await onRecapacitar(
+        parent.ID_DOCUMENTO,
+        pendingUpdate.VERSION,
+        currentUser
+      )
+
+      dialogStateRef.current = {
+        isOpen: true,
+        result: result,
+        pendingData: pendingUpdate,
+      }
+      
+      setTimeout(() => {
+        setRecapacitacionResult(result)
+        setVersionChangeDialog(true)
+        
+        isRecapacitacionInProgressRef.current = false
+      }, 100)
+      
+      toast.success("Versión actualizada y recapacitaciones creadas")
+    } catch (error) {
+      console.error("❌ Error en recapacitación:", error)
+      toast.error("Error al procesar la recapacitación")
+      setVersionChangeDialog(false)
+      setPendingUpdate(null)
+      setRecapacitacionResult(null)
+      dialogStateRef.current = {
+        isOpen: false,
+        result: null,
+        pendingData: null,
+      }
+      isRecapacitacionInProgressRef.current = false
+    } finally {
+      setIsProcessingRecapacitacion(false)
+    }
+  }, [parent, pendingUpdate, onRecapacitar, onUpdate, currentUser])
+
+  const handleCancelRecapacitacion = useCallback(() => {
+    if (!parent || !pendingUpdate) return
+
+    onUpdate(parent.ID_DOCUMENTO, pendingUpdate)
+    setIsEditing(false)
+    setVersionChangeDialog(false)
+    setPendingUpdate(null)
+    
+    toast.success("Versión actualizada sin recapacitación")
+  }, [parent, pendingUpdate, onUpdate])
+
+  const handleCloseVersionDialog = useCallback(() => {
+    setVersionChangeDialog(false)
+    setPendingUpdate(null)
+    setRecapacitacionResult(null)
+    setIsEditing(false)
+    isRecapacitacionInProgressRef.current = false
+    dialogStateRef.current = {
+      isOpen: false,
+      result: null,
+      pendingData: null,
+    }
+  }, [])
 
   const handleCancel = useCallback(() => {
     setIsEditing(false)
@@ -210,6 +323,20 @@ export const ParentCodeEdit = memo(function ParentCodeEdit({
         title="¿Eliminar código padre?"
         description={`¿Está seguro de eliminar el código ${parent.CODIGO} y todos sus ${childrenCount} códigos hijo? Esta acción no se puede deshacer.`}
       />
+
+      {parent && (pendingUpdate || dialogStateRef.current.pendingData) && (
+        <VersionChangeDialog
+          open={versionChangeDialog || dialogStateRef.current.isOpen}
+          oldVersion={parent.VERSION}
+          newVersion={(pendingUpdate || dialogStateRef.current.pendingData)?.VERSION || parent.VERSION}
+          codigoPadre={parent.CODIGO}
+          isLoading={isProcessingRecapacitacion}
+          result={recapacitacionResult || dialogStateRef.current.result}
+          onConfirm={handleConfirmRecapacitacion}
+          onCancel={handleCancelRecapacitacion}
+          onClose={handleCloseVersionDialog}
+        />
+      )}
     </>
   )
 });

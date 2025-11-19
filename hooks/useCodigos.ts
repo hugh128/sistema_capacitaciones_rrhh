@@ -1,6 +1,6 @@
 import { apiClient } from "@/lib/api-client";
 import { UsuarioLogin } from "@/lib/auth";
-import type {   CodigoPadre, NuevoCodigoPadre, NuevoCodigoHijo } from "@/lib/codigos/types";
+import type {   CodigoPadre, NuevoCodigoPadre, NuevoCodigoHijo, RecapacitacionCambioVersion } from "@/lib/codigos/types";
 import { handleApiError } from "@/utils/error-handler";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -144,6 +144,27 @@ export function useCodigos(user: UsuarioLogin | null) {
     [refreshCodigos],
   );
 
+  const recapacitarPorCambioVersion = useCallback(async (recapacitacionCambioVersion: RecapacitacionCambioVersion) => {
+    if (!user) {
+      toast.error("Usuario no autenticado.");
+      return;
+    }
+
+    setIsMutating(true);
+    setError(null);
+
+    try {
+      const { data } = await apiClient.post('documento/cambio-version', recapacitacionCambioVersion);
+      return data;
+    } catch (err) {
+      const baseMessage = "Error al crear capacitaciones por cambio de version de documento.";
+      setError(baseMessage);
+      handleApiError(err, baseMessage);
+    } finally {
+      setIsMutating(false);
+    }
+  }, [user]);
+
   useEffect(() => {
     if (user) {
       refreshCodigos();
@@ -162,5 +183,6 @@ export function useCodigos(user: UsuarioLogin | null) {
     addChild,
     updateChild,
     deleteChild,
+    recapacitarPorCambioVersion,
   }
 }

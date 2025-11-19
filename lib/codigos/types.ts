@@ -38,3 +38,31 @@ export interface CodigoHijo {
   ESTATUS: string
   DOCUMENTO_ID: number
 }
+
+export interface Recapacitacion {
+  RESUMEN: ResumenRecapacitacion[]
+  DETALLE_RECAPACITACION: DetalleRecapacitacion[] | []
+}
+
+export interface ResumenRecapacitacion {
+  Mensaje: string
+  ColaboradoresAfectados: number
+  CapacitacionesCreadas: number
+  CodigoDocumento: string
+  NuevaVersion: number
+}
+
+export interface DetalleRecapacitacion {
+  ID_PERSONA: number
+  NombreColaborador: string
+  Departamento: string
+  NombrePlan: string
+  VERSION_ANTERIOR: number
+  NuevaVersion: number
+}
+
+export interface RecapacitacionCambioVersion {
+  idDocumento: number,
+  nuevaVersion: number,
+  usuario: string,
+}

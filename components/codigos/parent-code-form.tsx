@@ -14,18 +14,12 @@ interface ParentCodeFormProps {
   initialData?: NuevoCodigoPadre
 }
 
-let formRenderCount = 0;
-
 export const ParentCodeForm = memo(({ 
   onSubmit, 
   onCancel, 
   isEditing = false,
   initialData
-}: ParentCodeFormProps) => {
-
-  formRenderCount++;
-  console.log('📝 Form render count:', formRenderCount);
-  
+}: ParentCodeFormProps) => {  
   const [formData, setFormData] = useState<NuevoCodigoPadre>(
     initialData || {
       CODIGO: "",

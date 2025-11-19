@@ -23,6 +23,7 @@ import toast, { Toaster } from "react-hot-toast"
 import { useCodigos } from "@/hooks/useCodigos"
 import { useAuth } from "@/contexts/auth-context"
 import { useDebounce } from "@/hooks/useDebounde"
+import type { Recapacitacion } from "@/lib/codigos/types"
 
 type ImportConfirmationState = {
   isOpen: boolean;
@@ -30,13 +31,9 @@ type ImportConfirmationState = {
   codigosAImportar: CodigoPadre[] | null;
 };
 
-let renderCount = 0;
-
 export default function CodigosAsociadosPage() {
-  renderCount++;
-  console.log('🔄 Page renders:', renderCount);
-
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const isRecapacitacionActiveRef = useRef(false)
 
   const { user } = useAuth()
   const {
@@ -47,7 +44,8 @@ export default function CodigosAsociadosPage() {
     addChild,
     updateChild,
     deleteChild,
-    refreshCodigos
+    refreshCodigos,
+    recapacitarPorCambioVersion,
   } = useCodigos(user)
 
   const [importConfirmation, setImportConfirmation] = useState<ImportConfirmationState>({
@@ -113,6 +111,10 @@ export default function CodigosAsociadosPage() {
   useEffect(() => {
     if (!editParent) return;
     
+    if (isRecapacitacionActiveRef.current) {
+      return;
+    }
+    
     const updatedParent = codigos.find(c => c.ID_DOCUMENTO === editParent.ID_DOCUMENTO);
     
     if (!updatedParent) {
@@ -169,7 +171,6 @@ export default function CodigosAsociadosPage() {
   const handleUpdateParent = async (id: number, data: NuevoCodigoPadre) => {
     try {
       await updateParent(id, data)
-      setEditParent(null)
     } catch (error) {
       console.error("Error en handleUpdateParent:", error)
     }
@@ -388,6 +389,34 @@ export default function CodigosAsociadosPage() {
     }
   };
 
+  const handleRecapacitar = useCallback(async (
+    idDocumento: number, 
+    nuevaVersion: number, 
+    usuario: string
+  ): Promise<Recapacitacion> => {
+    try {
+      console.log('🚀 handleRecapacitar iniciado - Marcando flag')
+      isRecapacitacionActiveRef.current = true
+      
+      const result = await recapacitarPorCambioVersion({
+        idDocumento,
+        nuevaVersion,
+        usuario
+      })
+      
+      await refreshCodigos()
+      
+      setTimeout(() => {
+        isRecapacitacionActiveRef.current = false
+      }, 2000)
+      
+      return result
+    } catch (error) {
+      isRecapacitacionActiveRef.current = false
+      throw error
+    }
+  }, [recapacitarPorCambioVersion, refreshCodigos])
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -604,6 +633,8 @@ export default function CodigosAsociadosPage() {
           onAddChild={(parentId: number, child) => handleAddChild(parentId, child)}
           onEditChild={(parentId: number, childId: number, data) => handleEditChild(parentId, childId, data)}
           onDeleteChild={(parentId: number, childId: number) => handleDeleteChild(parentId, childId)}
+          onRecapacitar={handleRecapacitar}
+          currentUser={user?.USERNAME || user?.CORREO || "Usuario"}
         />
       )}
 
