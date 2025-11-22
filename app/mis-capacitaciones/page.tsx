@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useCallback } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Sidebar } from "@/components/sidebar"
 import { AppHeader } from "@/components/app-header"
@@ -42,7 +42,7 @@ export default function MisCapacitacionesPage() {
     obtenerCapacitacionesPorCapacitador,
   } = useCapacitaciones(user)
 
-  const fetchCapacitaciones = async () => {
+  const fetchCapacitaciones = useCallback(async () => {
     if (!user || !user.PERSONA_ID) {
       setIsLoading(false)
       return
@@ -82,11 +82,11 @@ export default function MisCapacitacionesPage() {
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [user, obtenerCapacitacionesPorCapacitador])
 
   useEffect(() => {
     fetchCapacitaciones()
-  }, [user])
+  }, [fetchCapacitaciones])
 
   // Filter capacitaciones con validación
   const capacitacionesFiltradas = useMemo(() => {

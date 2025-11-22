@@ -101,7 +101,7 @@ export function DocumentsTab({
       sistemaDocumental: sesion.ES_SISTEMA_DOCUMENTAL,
       codigoDocumento: sesion.CODIGO_DOCUMENTO,
       version: sesion.VERSION?.toString(),
-      documentosAsociados: sesion.TEMAS,
+      documentosAsociados: sesion.TEMAS_CODIGOS,
       taller,
       curso,
       otro,

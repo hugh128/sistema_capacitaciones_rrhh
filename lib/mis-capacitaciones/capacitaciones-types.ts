@@ -160,6 +160,7 @@ export interface SESION_DETALLE {
   DEPARTAMENTO: string | null;
   DEPARTAMENTO_CODIGO: string | null;
   TEMAS: string | null;
+  TEMAS_CODIGOS: string | null;
   TOTAL_COLABORADORES: number;
   TOTAL_ASISTENCIAS: number;
   TOTAL_AUSENCIAS: number;
