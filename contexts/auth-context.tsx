@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { createContext, useContext, useState, useEffect, useCallback } from "react"
+import { createContext, useContext, useState, useEffect, useCallback, useMemo } from "react"
 import { useRouter } from "next/navigation"
 import { apiClient } from "@/lib/api-client"
 import axios, { AxiosError } from "axios"
@@ -16,7 +16,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [loggingOut, setLoggingOut] = useState(false)
   const router = useRouter()
 
-  // Función para verificar si el token es válido
+  const logoutDueToExpiredToken = useCallback(() => {
+    setUser(null)
+    localStorage.removeItem("training_user")
+    localStorage.removeItem("access_token")
+    toast.error("Tu sesión ha expirado. Por favor, inicia sesión nuevamente.")
+    router.push("/")
+  }, [router])
+
   const verifyToken = useCallback(async () => {
     const token = localStorage.getItem("access_token")
     const storedUser = localStorage.getItem("training_user")
@@ -28,39 +35,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
 
     try {
-      // Hacer una petición ligera para verificar el token
       await apiClient.get('/auth/verify')
       
-      setUser(JSON.parse(storedUser))
+      const parsedUser = JSON.parse(storedUser)
+      setUser(prevUser => {
+        if (prevUser?.PERSONA_ID === parsedUser.PERSONA_ID) {
+          return prevUser
+        }
+        return parsedUser
+      })
+      
       setLoading(false)
       return true
     } catch (error) {
-      // Si falla, el interceptor ya manejará el cierre de sesión
-      // Solo necesitamos limpiar el estado local
       console.log(error);
-      setUser(null)
+      logoutDueToExpiredToken()
       setLoading(false)
       return false
     }
-  }, [])
+  }, [logoutDueToExpiredToken])
 
-  // Verificar token al montar el componente
   useEffect(() => {
     verifyToken()
   }, [verifyToken])
 
-  // Verificar token periódicamente (cada 5 minutos)
   useEffect(() => {
+    if (!user?.PERSONA_ID) return
+    
     const interval = setInterval(() => {
-      if (user) {
-        verifyToken()
-      }
+      verifyToken()
     }, 5 * 60 * 1000) // 5 minutos
 
     return () => clearInterval(interval)
-  }, [user, verifyToken])
+  }, [user?.PERSONA_ID, verifyToken])
 
-  const login = async (username: string, password: string) => {
+  const login = useCallback(async (username: string, password: string) => {
     try {
       const response = await apiClient.post<LoginApiResponse>('/auth/login', { 
         username,
@@ -92,9 +101,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       }
       throw new Error(errorMessage);
     }
-  }
+  }, [])
 
-  const logout = async (showMessage: boolean = true) => {
+  const logout = useCallback(async (showMessage: boolean = true) => {
     setLoggingOut(true)
 
     await new Promise((res) => setTimeout(res, 500))
@@ -109,28 +118,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     router.push("/")
     setLoggingOut(false)
-  }
-
-  // Función para cerrar sesión por token expirado (sin mensaje de éxito)
-  const logoutDueToExpiredToken = useCallback(() => {
-    setUser(null)
-    localStorage.removeItem("training_user")
-    localStorage.removeItem("access_token")
-    toast.error("Tu sesión ha expirado. Por favor, inicia sesión nuevamente.")
-    router.push("/")
   }, [router])
 
+  const contextValue = useMemo(() => ({
+    user,
+    login,
+    logout,
+    loading,
+    loggingOut,
+    logoutDueToExpiredToken
+  }), [user, login, logout, loading, loggingOut, logoutDueToExpiredToken])
+
   return (
-    <AuthContext.Provider
-      value={{ 
-        user, 
-        login, 
-        logout, 
-        loading, 
-        loggingOut,
-        logoutDueToExpiredToken 
-      }}
-    >
+    <AuthContext.Provider value={contextValue}>
       {children}
     </AuthContext.Provider>
   )

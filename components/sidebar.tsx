@@ -49,9 +49,7 @@ const MAIN_MENU_CONFIG: MenuItem[] = [
   { icon: BookOpen, label: "Capacitaciones", href: "/capacitaciones", requiredPermissions: ["view_trainings"] },
   { icon: ClipboardList, label: "Mis Capacitaciones", href: "/mis-capacitaciones", requiredPermissions: ["manage_trainings", "view_trainings"] },
   { icon: UserStar, label: "Colaboradores", href: "/colaboradores", requiredPermissions: ["view_participants", "view_team"] },
-  /* { icon: FileText, label: "Documentos", href: "/documentos", requiredPermissions: ["upload_documents", "view_documents"] }, */
   { icon: Code2, label: "Codigos", href: "/codigos", requiredPermissions: ["codes"] },  
-  /* { icon: Shield, label: "Auditoría", href: "/auditoria", requiredPermissions: ["view_audit"] }, */
   { icon: Settings, label: "Configuración", href: "/configuracion", requiredPermissions: ["manage_config"] },
 ];
 
@@ -71,6 +69,8 @@ export function Sidebar({ className }: SidebarProps) {
   const [isNavigating, setIsNavigating] = useState(false)
   const [navigatingTo, setNavigatingTo] = useState<string>("")
   const currentPath = usePathname()
+
+  const shouldShowText = mobileMenuOpen || !collapsed
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -166,7 +166,7 @@ export function Sidebar({ className }: SidebarProps) {
           <div
             className={cn(
               "flex items-center justify-center w-full transition-all duration-300 h-20",
-              collapsed && !mobileMenuOpen ? "opacity-0 scale-95" : "opacity-100 scale-100"
+              !shouldShowText ? "opacity-0 scale-95" : "opacity-100 scale-100"
             )}
           >
             <div className="flex items-center justify-center">
@@ -218,10 +218,10 @@ export function Sidebar({ className }: SidebarProps) {
                   variant="ghost"
                   onClick={() => handleNavigation(item.href, item.label)}
                   disabled={isNavigating}
-                  title={collapsed && !mobileMenuOpen ? item.label : undefined}
+                  title={!shouldShowText ? item.label : undefined}
                   className={cn(
                     "w-full justify-start gap-3 text-sidebar-foreground hover:bg-accent hover:text-sidebar-accent-foreground cursor-pointer",
-                    collapsed && !mobileMenuOpen ? "justify-center px-2" : "", 
+                    !shouldShowText ? "justify-center px-2" : "", 
                     isActive && "bg-sidebar-foreground/12"
                   )}
                 >
@@ -230,7 +230,7 @@ export function Sidebar({ className }: SidebarProps) {
                   ) : (
                     <Icon className="w-4 h-4 flex-shrink-0" />
                   )}
-                  {(!collapsed || mobileMenuOpen) && <span className="truncate">{item.label}</span>} 
+                  {shouldShowText && <span className="truncate">{item.label}</span>}
                 </Button>
               </div>
             )
@@ -241,61 +241,47 @@ export function Sidebar({ className }: SidebarProps) {
         <div
           className={cn(
             "p-4 border-t border-sidebar-border space-y-2 transition-all duration-300",
-            collapsed && !mobileMenuOpen && "px-2" 
+            !shouldShowText && "px-2" 
           )}    
         >
+          {/* Botón de tema */}
           <Button
             variant="ghost"
             onClick={toggleTheme}
             className={cn(
               "w-full justify-start gap-3 text-sidebar-foreground hover:text-sidebar-accent-foreground hover:bg-accent cursor-pointer",
-              collapsed && !mobileMenuOpen && "justify-center px-2", 
+              !shouldShowText && "justify-center px-2", 
             )}
-            title={collapsed ? (theme === "light" ? "Modo Oscuro" : "Modo Claro") : undefined}
+            title={!shouldShowText ? (theme === "light" ? "Modo Oscuro" : "Modo Claro") : undefined}
           >
             {theme === "light" ? <Moon className="w-4 h-4 flex-shrink-0" /> : <Sun className="w-4 h-4 flex-shrink-0" />}
-            <span
-              className={cn(
-                "transition-all duration-300 ease-in-out",
-                collapsed && !mobileMenuOpen ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto" 
-              )}
-            >
-              {theme === "light" ? "Modo Oscuro" : "Modo Claro"}
-            </span>
+            {shouldShowText && (
+              <span className="truncate">
+                {theme === "light" ? "Modo Oscuro" : "Modo Claro"}
+              </span>
+            )}
           </Button>
+
+          {/* Botón de cerrar sesión */}
           <Button
             variant="ghost"
             onClick={logout}
             disabled={loggingOut}
             className={cn(
               "w-full justify-start gap-3 text-sidebar-foreground hover:bg-destructive hover:text-destructive-foreground cursor-pointer",
-              collapsed && !mobileMenuOpen && "justify-center px-2",
+              !shouldShowText && "justify-center px-2",
             )}
-            title={collapsed ? "Cerrar Sesión" : undefined}
+            title={!shouldShowText ? "Cerrar Sesión" : undefined}
           >
             {loggingOut ? (
-              <span className="flex items-center gap-2">
-                <Loader2 className="w-4 h-4 animate-spin" />
-                  <span
-                    className={cn(
-                      "transition-all duration-300 ease-in-out",
-                      collapsed && !mobileMenuOpen ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto"
-                    )}
-                  >
-                    Saliendo...
-                  </span>
-              </span>
+              <>
+                <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" />
+                {shouldShowText && <span className="truncate">Saliendo...</span>}
+              </>
             ) : (
               <>
                 <LogOut className="w-4 h-4 flex-shrink-0" />
-                  <span
-                    className={cn(
-                      "transition-all duration-300 ease-in-out",
-                      collapsed ? "opacity-0 w-0 overflow-hidden" : "opacity-100 w-auto" 
-                    )}
-                  >
-                    Cerrar Sesión
-                  </span>
+                {shouldShowText && <span className="truncate">Cerrar Sesión</span>}
               </>
             )}
           </Button>

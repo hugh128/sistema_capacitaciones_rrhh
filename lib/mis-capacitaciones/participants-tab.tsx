@@ -143,7 +143,7 @@ export function ParticipantsTab({
 
   return (
     <Card className="shadow-sm">
-      <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
+      <CardHeader className="py-2 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
         <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
           <div>
             <CardTitle className="text-xl">Participantes</CardTitle>
@@ -179,7 +179,7 @@ export function ParticipantsTab({
           )}
         </div>
       </CardHeader>
-      <CardContent className="space-y-4 pt-6">
+      <CardContent className="space-y-4 pt-2">
         <div className="flex items-center gap-2">
           <Input
             placeholder="Buscar por nombre, correo o departamento..."
@@ -196,6 +196,10 @@ export function ParticipantsTab({
                 <TableRow className="bg-muted/50">
                   <TableHead className="w-12">
                     <Checkbox
+                      className="
+                        dark:border dark:border-gray-500
+                        data-[state=checked]:dark:border-transparent
+                      "
                       checked={
                         selectedColaboradores.length === colaboradoresFiltrados.length &&
                         colaboradoresFiltrados.length > 0
@@ -232,6 +236,10 @@ export function ParticipantsTab({
                     <TableRow key={col.ID_COLABORADOR} className="hover:bg-muted/50">
                       <TableCell>
                         <Checkbox
+                          className="
+                            dark:border dark:border-gray-500
+                            data-[state=checked]:dark:border-transparent
+                          "
                           checked={selectedColaboradores.includes(col.ID_COLABORADOR)}
                           onCheckedChange={(checked) => {
                             if (checked) {
@@ -258,7 +266,7 @@ export function ParticipantsTab({
                           <Checkbox
                             checked={asistio === true}
                             onCheckedChange={() => isEditable && onToggleAsistencia(col.ID_COLABORADOR, asistio)}
-                            className="h-5 w-5"
+                            className="h-5 w-5 dark:border dark:border-gray-500 data-[state=checked]:dark:border-transparent"
                           />
                         </div>
                       </TableCell>

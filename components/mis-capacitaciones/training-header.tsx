@@ -27,7 +27,7 @@ interface TrainingHeaderProps {
 
 export function TrainingHeader({ sesion, onChangeEstado, usuario }: TrainingHeaderProps) {
   return (
-    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-4">
+    <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between">
       <div className="flex items-start gap-4 flex-1">
         <Link href="/mis-capacitaciones">
           <Button variant="outline" size="icon" className="shrink-0 bg-transparent">
@@ -36,7 +36,7 @@ export function TrainingHeader({ sesion, onChangeEstado, usuario }: TrainingHead
         </Link>
         <div className="space-y-2">
           <div className="flex items-center gap-3 flex-wrap">
-            <h1 className="text-3xl font-bold text-foreground">{sesion.CAPACITACION_NOMBRE}</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">{sesion.CAPACITACION_NOMBRE}</h1>
             <Badge className={`${getEstadoColor(sesion.ESTADO)} text-sm px-3 py-1`}>{sesion.ESTADO}</Badge>
           </div>
           {sesion.CODIGO_DOCUMENTO && (

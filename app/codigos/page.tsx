@@ -395,7 +395,6 @@ export default function CodigosAsociadosPage() {
     usuario: string
   ): Promise<Recapacitacion> => {
     try {
-      console.log('🚀 handleRecapacitar iniciado - Marcando flag')
       isRecapacitacionActiveRef.current = true
       
       const result = await recapacitarPorCambioVersion({

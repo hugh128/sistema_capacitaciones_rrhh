@@ -14,9 +14,6 @@ interface ChildCodeFormProps {
   initialData?: NuevoCodigoHijo
 }
 
-let childFormRenderCount = 0;
-
-// ✅ SOLUCIÓN: Estado interno del formulario
 export const ChildCodeForm = memo(({ 
   onSubmit, 
   onCancel, 
@@ -24,10 +21,6 @@ export const ChildCodeForm = memo(({
   initialData
 }: ChildCodeFormProps) => {
 
-  childFormRenderCount++;
-  console.log('📝 Child Form render count:', childFormRenderCount);
-
-  // ✅ Estado LOCAL del formulario
   const [formData, setFormData] = useState<NuevoCodigoHijo>(
     initialData || {
       CODIGO: "",
@@ -38,14 +31,12 @@ export const ChildCodeForm = memo(({
     }
   );
 
-  // ✅ Actualizar cuando cambien los datos iniciales (modo edición)
   useEffect(() => {
     if (initialData) {
       setFormData(initialData);
     }
   }, [initialData]);
 
-  // ✅ Handler optimizado para inputs
   const handleInputChange = useCallback((field: keyof NuevoCodigoHijo) => {
     return (e: React.ChangeEvent<HTMLInputElement>) => {
       const value = e.target.type === 'number' 
@@ -59,12 +50,10 @@ export const ChildCodeForm = memo(({
     };
   }, []);
 
-  // ✅ Handler para el select
   const handleSelectChange = useCallback((value: string) => {
     setFormData(prev => ({ ...prev, ESTATUS: value }));
   }, []);
 
-  // ✅ Handler para enviar
   const handleSubmit = useCallback(() => {
     onSubmit(formData);
   }, [formData, onSubmit]);

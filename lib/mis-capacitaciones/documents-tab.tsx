@@ -24,6 +24,7 @@ interface DocumentsTabProps {
   isFileUploaded: boolean
   plantillaExamen: { series: Serie[] } | undefined;
   usuario: UsuarioLogin
+  listaAsistenciaFile: File | null
 }
 
 export function DocumentsTab({ 
@@ -36,6 +37,7 @@ export function DocumentsTab({
   isFileUploaded,
   plantillaExamen,
   usuario,
+  listaAsistenciaFile,
 }: DocumentsTabProps) {
   const [loadingDownload, setLoadingDownload] = useState(false);
   const {
@@ -51,11 +53,21 @@ export function DocumentsTab({
 
   const fileInputId = `attendance-upload-${sesion.ID_SESION || 'new'}`;
 
-  const getFileName = (urlOrName: string) => {
-    if (urlOrName.startsWith('http')) {
-      return urlOrName.split('/').pop();
+  const getFileName = (): string => {
+    if (listaAsistenciaFile) {
+      return listaAsistenciaFile.name;
     }
-    return urlOrName;
+    
+    if (isFileUploaded && displayedFileUrl) {
+      if (displayedFileUrl.startsWith('http')) {
+        const urlParts = displayedFileUrl.split('/');
+        const fileName = urlParts[urlParts.length - 1];
+        return decodeURIComponent(fileName.split('?')[0]);
+      }
+      return displayedFileUrl;
+    }
+    
+    return 'Sin archivo';
   }
 
   const handleDownload = async () => {
@@ -194,7 +206,7 @@ export function DocumentsTab({
 
   return (
     <Card className="shadow-sm">
-      <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
+      <CardHeader className="py-2 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
         <CardTitle className="text-xl">Documentos de la Sesión</CardTitle>
         <CardDescription>Gestiona los documentos de los participantes</CardDescription>
       </CardHeader>
@@ -219,7 +231,7 @@ export function DocumentsTab({
                     {isFileUploaded ? 'Registro de asistencia subido' : 'Archivo seleccionado localmente'}
                   </p>
                   <p className="text-sm text-muted-foreground truncate px-4">
-                    {getFileName(attendanceInfo)}
+                    {getFileName()}
                     {!isFileUploaded && (
                       <span className="text-orange-500 ml-2 font-semibold">(Pendiente de Subida)</span>
                     )}

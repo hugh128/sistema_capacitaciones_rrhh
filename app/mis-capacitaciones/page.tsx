@@ -227,7 +227,7 @@ export default function MisCapacitacionesPage() {
                   Reintentar
                 </Button>
                 <p className="text-sm text-center text-muted-foreground">
-                  Si el problema persiste, por favor contacta a sistemas.
+                  Si el problema persiste, por favor contacta a <span className="font-extrabold text-lg">sistemas</span>.
                 </p>
               </CardContent>
             </Card>
@@ -429,11 +429,11 @@ export default function MisCapacitacionesPage() {
                         key={cap.ID_CAPACITACION}
                         className="hover:shadow-lg transition-all border-2 hover:border-primary/50 dark:hover:border-primary group"
                       >
-                        <CardContent className="p-6">
-                          <div className="flex items-start justify-between gap-4">
+                        <CardContent className="px-6 py-4">
+                          <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                             <div className="flex-1 space-y-3">
                               <div className="flex items-center gap-3 flex-wrap">
-                                <h3 className="font-bold text-xl group-hover:text-primary transition-colors dark:group-hover:text-foreground">
+                                <h3 className="font-bold text-lg sm:text-xl group-hover:text-primary transition-colors dark:group-hover:text-foreground">
                                   {cap.NOMBRE}
                                 </h3>
                                 <Badge className={`${getEstadoColor(cap.ESTADO)} text-xs px-3 py-1`}>{cap.ESTADO}</Badge>

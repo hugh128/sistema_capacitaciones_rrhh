@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect } from "react"
+import { useState, useMemo, useEffect, useCallback } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Sidebar } from "@/components/sidebar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
@@ -26,7 +26,7 @@ export default function TrainerCapacitacionDetailPage() {
   const params = useParams()
   const router = useRouter()
   const sesionId = Number(params.id)
-
+  
   const {
     obtenerDetalleSesionCapacitador,
     iniciarSesionCapacitador,
@@ -60,10 +60,10 @@ export default function TrainerCapacitacionDetailPage() {
       setIsLoading(true);
       try {
         const { SESION, COLABORADORES } = await obtenerDetalleSesionCapacitador(sesionId, user?.PERSONA_ID)
+        
         setSesion(SESION)
         setColaboradoresAsignados(COLABORADORES)
 
-        // Inicializar los estados desde la data que viene del backend
         const initialAsistencia: Record<number, boolean> = {};
         const initialNotas: Record<number, number | null> = {};
         const initialExamenes: Record<number, boolean> = {};
@@ -81,26 +81,24 @@ export default function TrainerCapacitacionDetailPage() {
         setExamenesState(initialExamenes);
         setDiplomasState(initialDiplomas);
 
-        // Si hay una lista de asistencia subida, la mostramos
         if (SESION.URL_LISTA_ASISTENCIA) {
           setDisplayedFileUrl(SESION.URL_LISTA_ASISTENCIA);
         }
 
-        // Cargar plantilla del examen si existe
         const plantilla = await obtenerPlantillaExamen(sesionId)
         if (plantilla) {
           setPlantillaExamen(plantilla)
         }
 
       } catch (error) {
-        console.error('Error al cargar datos:', error)
+        console.error('❌ Error al cargar datos:', error)
       } finally {
         setIsLoading(false);
       }
     }
 
     fetchData()
-  }, [user, sesionId, obtenerDetalleSesionCapacitador, setAsistenciaState, setNotasState, obtenerPlantillaExamen])
+  }, [user, sesionId, obtenerDetalleSesionCapacitador, obtenerPlantillaExamen])
 
   const examenesParticipantsState = useMemo(() => {
     const state: Record<number, File | null> = {};
@@ -156,14 +154,38 @@ export default function TrainerCapacitacionDetailPage() {
     if (sesion.ESTADO !== "EN_PROCESO") return false
 
     const allAttendanceMarked = colaboradoresAsignados.every((c) => asistenciaState[c.ID_COLABORADOR] !== undefined);
+    if (!allAttendanceMarked) return false;
+
+    if (!listaAsistenciaFile) return false;
+
+    const attendees = colaboradoresAsignados.filter((c) => asistenciaState[c.ID_COLABORADOR] === true);
+
+    if (sesion.APLICA_EXAMEN) {
+      const allGradesEntered = attendees.every((c) => notasState[c.ID_COLABORADOR] !== null && notasState[c.ID_COLABORADOR] !== undefined);
+      if (!allGradesEntered) return false;
+
+      const allExamsUploaded = attendees.every((c) => examenesParticipantsState[c.ID_COLABORADOR]);
+      if (!allExamsUploaded) return false;
+    }
+    
+    if (sesion.APLICA_DIPLOMA) {
+      const allDiplomasUploaded = attendees.every((c) => diplomasParticipantsState[c.ID_COLABORADOR]);
+      if (!allDiplomasUploaded) return false;
+    }
+
+    return true
+  }, [sesion, colaboradoresAsignados, asistenciaState, notasState, examenesParticipantsState, diplomasParticipantsState, listaAsistenciaFile]);
+
+  const getFinalizationError = useCallback(() => {
+    if (!sesion || sesion.ESTADO !== "EN_PROCESO") return null;
+
+    const allAttendanceMarked = colaboradoresAsignados.every((c) => asistenciaState[c.ID_COLABORADOR] !== undefined);
     if (!allAttendanceMarked) {
-      console.log("No se puede finalizar: La asistencia no está marcada para todos.");
-      return false;
+      return "La asistencia no está marcada para todos los colaboradores.";
     }
 
     if (!listaAsistenciaFile) {
-      console.log("No se puede finalizar: Falta subir el archivo de Lista de Asistencia de la Sesión.");
-      return false;
+      return "Falta subir el archivo de Lista de Asistencia de la Sesión.";
     }
 
     const attendees = colaboradoresAsignados.filter((c) => asistenciaState[c.ID_COLABORADOR] === true);
@@ -171,86 +193,79 @@ export default function TrainerCapacitacionDetailPage() {
     if (sesion.APLICA_EXAMEN) {
       const allGradesEntered = attendees.every((c) => notasState[c.ID_COLABORADOR] !== null && notasState[c.ID_COLABORADOR] !== undefined);
       if (!allGradesEntered) {
-        console.log("No se puede finalizar: Faltan notas por ingresar para algunos asistentes.");
-        return false;
+        return "Faltan notas por ingresar para algunos asistentes.";
       }
 
       const allExamsUploaded = attendees.every((c) => examenesParticipantsState[c.ID_COLABORADOR]);
       if (!allExamsUploaded) {
-        console.log("No se puede finalizar: Faltan archivos de Examen por subir.");
-        return false;
+        return "Faltan archivos de Examen por subir.";
       }
     }
     
     if (sesion.APLICA_DIPLOMA) {
       const allDiplomasUploaded = attendees.every((c) => diplomasParticipantsState[c.ID_COLABORADOR]);
       if (!allDiplomasUploaded) {
-        console.log("No se puede finalizar: Faltan archivos de Diploma por subir.");
-        return false;
+        return "Faltan archivos de Diploma por subir.";
       }
     }
 
-    console.log("Listo para finalizar: Se cumplen todas las condiciones.");
-    return true
-      
-  }, [
-    sesion, 
-    colaboradoresAsignados, 
-    asistenciaState, 
-    notasState,
-    examenesParticipantsState,
-    diplomasParticipantsState,
-    listaAsistenciaFile
-  ]);
+    return null;
+  }, [sesion, colaboradoresAsignados, asistenciaState, notasState, examenesParticipantsState, diplomasParticipantsState, listaAsistenciaFile]);
 
-  const handleToggleAsistencia = (colaboradorId: number, currentValue: boolean | undefined) => {
+  const handleToggleAsistencia = useCallback((colaboradorId: number, currentValue: boolean | undefined) => {
     const newValue = currentValue === true ? false : true
     setAsistenciaState((prev) => ({ ...prev, [colaboradorId]: newValue }))
-  }
+  }, [])
 
-  const handleUpdateNota = (colaboradorId: number, nota: number) => {
+  const handleUpdateNota = useCallback((colaboradorId: number, nota: number) => {
     setNotasState((prev) => ({ ...prev, [colaboradorId]: nota }))
-  }
+  }, [])
 
-  const handleSubirDocumento = (tipo: "examen" | "diploma", colaboradorId: number, file: File) => {
+  const handleSubirDocumento = useCallback((tipo: "examen" | "diploma", colaboradorId: number, file: File) => {
     if (tipo === "examen") {
       setExamenesFileState((prev) => ({ ...prev, [colaboradorId]: file }))
     } else {
       setDiplomasFileState((prev) => ({ ...prev, [colaboradorId]: file }))
     }
-  }
+  }, [])
   
-  const handleEliminarDocumento = (tipo: "examen" | "diploma", colaboradorId: number) => {
+  const handleEliminarDocumento = useCallback((tipo: "examen" | "diploma", colaboradorId: number) => {
     if (tipo === "examen") {
       setExamenesFileState((prev) => ({ ...prev, [colaboradorId]: null }))
     } else {
       setDiplomasFileState((prev) => ({ ...prev, [colaboradorId]: null }))
     }
-  }
+  }, [])
 
-  const handleMarcarAsistenciaMasiva = (asistio: boolean, colaboradorIds: number[]) => {
+  const handleMarcarAsistenciaMasiva = useCallback((asistio: boolean, colaboradorIds: number[]) => {
     const updates: Record<number, boolean> = {}
     colaboradorIds.forEach((id) => {
       updates[id] = asistio
     })
     setAsistenciaState((prev) => ({ ...prev, ...updates }))
-  }
+  }, [])
 
-  const handleSelectAttendanceFile = (file: File) => {
+  const handleSelectAttendanceFile = useCallback((file: File) => {
     setListaAsistenciaFile(file)
     setDisplayedFileUrl(URL.createObjectURL(file))
-  }
+  }, [])
 
-  const handleDeleteAttendance = () => {
+  const handleDeleteAttendance = useCallback(() => {
     if (displayedFileUrl) {
       URL.revokeObjectURL(displayedFileUrl)
     }
     setListaAsistenciaFile(null)
     setDisplayedFileUrl(null)
-  }
+  }, [displayedFileUrl])
 
   const handleFinalizar = async () => {
-    if (!canFinalize || !user?.PERSONA_ID || !sesionId || !listaAsistenciaFile) {
+    const error = getFinalizationError();
+    if (error) {
+      console.error("No se puede finalizar la sesión:", error);
+      return;
+    }
+
+    if (!user?.PERSONA_ID || !sesionId || !listaAsistenciaFile) {
       console.error("No se puede finalizar la sesión por datos incompletos.");
       return;
     }
@@ -270,20 +285,9 @@ export default function TrainerCapacitacionDetailPage() {
         } as ColaboradorAsistenciaData;
       });
 
-
     try {
-      await registrarAsistenciaMasiva(
-        sesionId,
-        colaboradoresParaAPI
-      );
-      
-      await finalizarSesionCapacitador(
-        sesionId,
-        user.PERSONA_ID,
-        observacionesFinales,
-        listaAsistenciaFile
-      )
-      
+      await registrarAsistenciaMasiva(sesionId, colaboradoresParaAPI);
+      await finalizarSesionCapacitador(sesionId, user.PERSONA_ID, observacionesFinales, listaAsistenciaFile)
       router.push("/mis-capacitaciones")
     } catch (error) {
       console.error("Error al finalizar la sesión:", error)
@@ -293,7 +297,6 @@ export default function TrainerCapacitacionDetailPage() {
   const handleChangeEstado = async (idSesion: number, idCapacitador: number, observaciones: null | string) => {
     try {
       setIsLoading(true);
-      
       await iniciarSesionCapacitador(idSesion, idCapacitador, observaciones)
       
       setSesion(prevSesion => {
@@ -307,7 +310,6 @@ export default function TrainerCapacitacionDetailPage() {
       });
       
       router.refresh() 
-
     } catch (error) {
       console.error('Error al iniciar la sesión:', error);
     } finally {
@@ -315,7 +317,6 @@ export default function TrainerCapacitacionDetailPage() {
     }
   }
 
-  // Función para guardar la plantilla
   const handleSavePlantilla = async (plantilla: { series: Serie[] }) => {
     try {
       if (!user) {
@@ -344,13 +345,7 @@ export default function TrainerCapacitacionDetailPage() {
     );
   }
 
-  if (
-    !user ||
-    !user.ROLES.some(
-      (role) => (role.NOMBRE === "Capacitador" || role.NOMBRE === "RRHH")
-    )
-
-  ) {
+  if (!user || !user.ROLES.some((role) => (role.NOMBRE === "Capacitador" || role.NOMBRE === "RRHH"))) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-96">
@@ -386,8 +381,6 @@ export default function TrainerCapacitacionDetailPage() {
       <div className="flex h-screen bg-background">
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
-          {/* <AppHeader /> */}
-
           <AppHeader title="Mis Capacitaciones" subtitle="Gestiona tus capacitaciones asignadas y registra el progreso de los participantes" />
 
           <main className="flex-1 p-6 space-y-6 max-w-[1600px] mx-auto w-full overflow-auto custom-scrollbar">
@@ -400,7 +393,7 @@ export default function TrainerCapacitacionDetailPage() {
             />
 
             <Tabs defaultValue="info" className="w-full">
-              <TabsList className="grid w-full grid-cols-5 h-auto p-1">
+              <TabsList className="flex flex-wrap w-full gap-1 p-1 h-auto">
                 <TabsTrigger value="info" className="flex items-center gap-2 py-3">
                   <Info className="h-4 w-4" />
                   <span className="hidden sm:inline">Información</span>
@@ -409,12 +402,10 @@ export default function TrainerCapacitacionDetailPage() {
                   <Users className="h-4 w-4" />
                   <span className="hidden sm:inline">Participantes</span>
                 </TabsTrigger>
-
                 <TabsTrigger value="examen" className="flex items-center gap-2 py-3">
                   <FileEdit className="h-4 w-4" />
                   <span className="hidden sm:inline">Examen</span>
                 </TabsTrigger>
-          
                 <TabsTrigger value="documentos" className="flex items-center gap-2 py-3">
                   <FileText className="h-4 w-4" />
                   <span className="hidden sm:inline">Documentos</span>
@@ -475,6 +466,7 @@ export default function TrainerCapacitacionDetailPage() {
                   isFileUploaded={!!(listaAsistenciaFile || sesion.URL_LISTA_ASISTENCIA)}
                   plantillaExamen={plantillaExamen}
                   usuario={user}
+                  listaAsistenciaFile={listaAsistenciaFile}
                 />
               </TabsContent>
 

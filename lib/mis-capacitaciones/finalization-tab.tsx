@@ -43,7 +43,7 @@ export function FinalizationTab({
 }: FinalizationTabProps) {
   return (
     <Card className="shadow-sm">
-      <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
+      <CardHeader className="py-2 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
         <CardTitle className="text-xl">Finalizar Capacitación</CardTitle>
         <CardDescription>Revisa el progreso y finaliza la capacitación para enviarla a RRHH</CardDescription>
       </CardHeader>
@@ -161,11 +161,11 @@ export function FinalizationTab({
           <AlertDialogTrigger asChild>
             <Button
               size="lg"
-              className="w-full h-14 text-lg"
+              className="w-full h-14 text-md sm:text-lg"
               disabled={!canFinalize || sesion.ESTADO !== "EN_PROCESO"}
             >
-              <CheckCheck className="h-6 w-6 mr-2" />
-              Finalizar y Enviar a RRHH para Revisión
+              <CheckCheck className="h-6 w-6" />
+              Finalizar y Enviar a RRHH
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>

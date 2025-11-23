@@ -13,11 +13,11 @@ interface InfoTabProps {
 export function InfoTab({ sesion }: InfoTabProps) {
   return (
   <Card className="shadow-sm">
-    <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
+    <CardHeader className="py-2 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
       <CardTitle className="text-xl">Detalles de la Capacitación</CardTitle>
       <CardDescription>Información completa sobre esta capacitación</CardDescription>
     </CardHeader>
-    <CardContent className="space-y-6 pt-6">
+    <CardContent className="space-y-6 pt-2">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div className="space-y-1">
           <Label className="text-xs text-muted-foreground uppercase tracking-wide">Nombre</Label>
@@ -76,10 +76,17 @@ export function InfoTab({ sesion }: InfoTabProps) {
       </div>
 
       <div className="space-y-2">
-        <Label className="text-xs text-muted-foreground uppercase tracking-wide">Temas</Label>
+        <Label className="text-xs text-muted-foreground uppercase tracking-wide">
+          Temas
+        </Label>
+
         <div className="flex flex-wrap gap-2">
           {(sesion.TEMAS ?? "").split(",").map((tema, idx) => (
-            <Badge key={idx} variant="secondary" className="text-sm px-3 py-1">
+            <Badge
+              key={idx}
+              variant="secondary"
+              className="text-sm px-3 py-1 whitespace-normal"
+            >
               {tema.trim()}
             </Badge>
           ))}
