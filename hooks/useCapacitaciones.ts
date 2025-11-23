@@ -1,7 +1,7 @@
 import { apiClient } from "@/lib/api-client";
 import { UsuarioLogin } from "@/lib/auth";
 import type { ApiCapacitacionSesion, AsignarCapacitacion, AsignarSesion, Capacitacion } from "@/lib/capacitaciones/capacitaciones-types";
-import type { ColaboradorAsistenciaData, ListadoAsistencia } from "@/lib/mis-capacitaciones/capacitaciones-types";
+import type { ColaboradorAsistenciaData, ExamenCompleto, ListadoAsistencia, Serie } from "@/lib/mis-capacitaciones/capacitaciones-types";
 import { handleApiError } from "@/utils/error-handler";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -532,12 +532,114 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     }
   }, [user]);
 
+
+  const obtenerPlantillaExamen = useCallback(async (idSesion: number) => {
+    if (!user) {
+      toast.error("Usuario no autenticado.");
+      return;
+    }
+
+    setIsMutating(true);
+    setError(null);
+
+    try {
+      const response = await apiClient.get(`/capacitaciones/sesiones/${idSesion}/plantilla-examen`);
+
+      return response.data;
+
+    } catch (err) {
+      const baseMessage = "Error al obtener plantilla de examen.";
+      setError(baseMessage);
+      handleApiError(err, baseMessage);
+    } finally {
+      setIsMutating(false);
+    }
+  }, [user])
+
+  const guardarPlantillaExamen = useCallback(async (idSesion: number, plantilla: { series: Serie[] }, usuario: string) => {
+    if (!user) {
+      toast.error("Usuario no autenticado.");
+      return;
+    }
+    
+    setIsMutating(true);
+    setError(null);
+
+    const payload = {
+      plantilla,
+      usuario,
+    }
+    
+    try {
+      
+      await apiClient.post(`capacitaciones/sesiones/${idSesion}/plantilla-examen`, payload)
+      toast.success("Plantilla guardada exitosamente.");
+
+    } catch (err) {
+      const baseMessage = "Error al guardar la plantilla.";
+      setError(baseMessage);
+      handleApiError(err, baseMessage);
+    } finally {
+      setIsMutating(false);
+    }
+  }, [user])
+
+/*   const generarExamenPDF = useCallback(async (formatoDatos: ExamenCompleto) => {
+    try {
+      const response = await apiClient.post(`/documents-module/examen`, formatoDatos, {
+        responseType: "blob",
+      });
+
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+
+      window.open(url, "_blank");
+      setTimeout(() => window.URL.revokeObjectURL(url), 5000);
+    } catch (err) {
+      const error = err as AxiosError;
+
+      if (error.response && error.response.data instanceof Blob) {
+        const text = await error.response.data.text();
+        console.error("Respuesta del servidor:", text);
+      }
+      
+      handleApiError(err, "Error al generar el examen de la sesion.");
+    }
+  }, []); */
+
+  const generarExamenPDF = useCallback(async (formatoDatosList: ExamenCompleto[]) => {
+      try {
+        // Asumiendo que crearás un nuevo endpoint en tu API para la combinación
+        const response = await apiClient.post(`/documents-module/examenes-combinados`, formatoDatosList, {
+            responseType: "blob",
+        });
+
+        const blob = new Blob([response.data], { type: "application/pdf" });
+        const url = window.URL.createObjectURL(blob);
+        
+        // Abrir la URL que contiene el PDF combinado
+        window.open(url, "_blank"); 
+        setTimeout(() => window.URL.revokeObjectURL(url), 5000);
+
+      } catch (err) {
+        const error = err as AxiosError;
+
+        if (error.response && error.response.data instanceof Blob) {
+          const text = await error.response.data.text();
+          console.error("Respuesta del servidor:", text);
+        }
+        
+        handleApiError(err, "Error al generar el examen de la sesion.");
+        }
+  }, []);
+
   useEffect(() => {
     if (user) {
       refreshCapacitacionesPendientes();
       obtenerCapacitaciones();
     }
-  }, [user, refreshCapacitacionesPendientes, obtenerCapacitaciones]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [user]);
 
   return {
     capacitaciones,
@@ -564,5 +666,8 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     aprobarAsistencia,
     aprobarSesion,
     obtenerDetalleSesion,
+    obtenerPlantillaExamen,
+    guardarPlantillaExamen,
+    generarExamenPDF,
   }
 }

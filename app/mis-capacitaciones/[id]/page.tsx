@@ -6,15 +6,16 @@ import { Sidebar } from "@/components/sidebar"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
-import { Info, Users, FileText, Award } from "lucide-react"
+import { Info, Users, FileText, Award, FileEdit } from "lucide-react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
-import type { ColaboradorAsistenciaData, COLABORADORES_SESION, FileState, SESION_DETALLE } from "@/lib/mis-capacitaciones/capacitaciones-types"
+import type { ColaboradorAsistenciaData, COLABORADORES_SESION, FileState, Serie, SESION_DETALLE } from "@/lib/mis-capacitaciones/capacitaciones-types"
 import { TrainingHeader } from "@/components/mis-capacitaciones/training-header"
 import { InfoTab } from "@/components/mis-capacitaciones/info-tab"
 import { ParticipantsTab } from "@/lib/mis-capacitaciones/participants-tab"
 import { DocumentsTab } from "@/lib/mis-capacitaciones/documents-tab"
 import { FinalizationTab } from "@/lib/mis-capacitaciones/finalization-tab"
+import { ExamTab } from "@/lib/mis-capacitaciones/exam-tab"
 import { RequirePermission } from "@/components/RequirePermission"
 import { useCapacitaciones } from "@/hooks/useCapacitaciones"
 import { AppHeader } from "@/components/app-header"
@@ -31,6 +32,8 @@ export default function TrainerCapacitacionDetailPage() {
     iniciarSesionCapacitador,
     finalizarSesionCapacitador,
     registrarAsistenciaMasiva,
+    guardarPlantillaExamen,
+    obtenerPlantillaExamen,
   } = useCapacitaciones(user);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -45,6 +48,7 @@ export default function TrainerCapacitacionDetailPage() {
   const [observacionesFinales, setObservacionesFinales] = useState("")
   const [examenesState, setExamenesState] = useState<Record<number, boolean>>({});
   const [diplomasState, setDiplomasState] = useState<Record<number, boolean>>({});
+  const [plantillaExamen, setPlantillaExamen] = useState<{ series: Serie[] } | undefined>()
 
   useEffect(() => {
     if (!user || !user.PERSONA_ID) {
@@ -82,6 +86,12 @@ export default function TrainerCapacitacionDetailPage() {
           setDisplayedFileUrl(SESION.URL_LISTA_ASISTENCIA);
         }
 
+        // Cargar plantilla del examen si existe
+        const plantilla = await obtenerPlantillaExamen(sesionId)
+        if (plantilla) {
+          setPlantillaExamen(plantilla)
+        }
+
       } catch (error) {
         console.error('Error al cargar datos:', error)
       } finally {
@@ -90,8 +100,7 @@ export default function TrainerCapacitacionDetailPage() {
     }
 
     fetchData()
-  }, [user, sesionId, obtenerDetalleSesionCapacitador, setAsistenciaState, setNotasState])
-
+  }, [user, sesionId, obtenerDetalleSesionCapacitador, setAsistenciaState, setNotasState, obtenerPlantillaExamen])
 
   const examenesParticipantsState = useMemo(() => {
     const state: Record<number, File | null> = {};
@@ -306,6 +315,19 @@ export default function TrainerCapacitacionDetailPage() {
     }
   }
 
+  // Función para guardar la plantilla
+  const handleSavePlantilla = async (plantilla: { series: Serie[] }) => {
+    try {
+      if (!user) {
+        throw new Error("Usuario no disponible para guardar la plantilla.");
+      }
+      await guardarPlantillaExamen(sesionId, plantilla, user.USERNAME)
+      setPlantillaExamen(plantilla)
+    } catch (error) {
+      console.error('Error al guardar plantilla:', error)
+    }
+  }
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -378,7 +400,7 @@ export default function TrainerCapacitacionDetailPage() {
             />
 
             <Tabs defaultValue="info" className="w-full">
-              <TabsList className="grid w-full grid-cols-4 h-auto p-1">
+              <TabsList className="grid w-full grid-cols-5 h-auto p-1">
                 <TabsTrigger value="info" className="flex items-center gap-2 py-3">
                   <Info className="h-4 w-4" />
                   <span className="hidden sm:inline">Información</span>
@@ -387,6 +409,12 @@ export default function TrainerCapacitacionDetailPage() {
                   <Users className="h-4 w-4" />
                   <span className="hidden sm:inline">Participantes</span>
                 </TabsTrigger>
+
+                <TabsTrigger value="examen" className="flex items-center gap-2 py-3">
+                  <FileEdit className="h-4 w-4" />
+                  <span className="hidden sm:inline">Examen</span>
+                </TabsTrigger>
+          
                 <TabsTrigger value="documentos" className="flex items-center gap-2 py-3">
                   <FileText className="h-4 w-4" />
                   <span className="hidden sm:inline">Documentos</span>
@@ -417,6 +445,25 @@ export default function TrainerCapacitacionDetailPage() {
                 />
               </TabsContent>
 
+              <TabsContent value="examen" className="space-y-4 mt-6">
+                {sesion.APLICA_EXAMEN ? (
+                  <ExamTab
+                    sesion={sesion}
+                    onSavePlantilla={handleSavePlantilla}
+                    plantillaInicial={plantillaExamen}
+                  />
+                ) : (
+                  <Card>
+                    <CardContent className="py-12 text-center">
+                      <FileEdit className="w-16 h-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                      <p className="text-lg font-medium text-muted-foreground">
+                        Esta capacitación no requiere examen
+                      </p>
+                    </CardContent>
+                  </Card>
+                )}
+              </TabsContent>
+
               <TabsContent value="documentos" className="space-y-4 mt-6">
                 <DocumentsTab
                   sesion={sesion}
@@ -426,6 +473,7 @@ export default function TrainerCapacitacionDetailPage() {
                   onDeleteAttendance={handleDeleteAttendance}
                   displayedFileUrl={displayedFileUrl || sesion.URL_LISTA_ASISTENCIA || null}
                   isFileUploaded={!!(listaAsistenciaFile || sesion.URL_LISTA_ASISTENCIA)}
+                  plantillaExamen={plantillaExamen}
                   usuario={user}
                 />
               </TabsContent>

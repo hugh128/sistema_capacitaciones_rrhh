@@ -2,8 +2,8 @@
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Upload, Download, Eye, CheckCircle, FileText, Trash2, Info } from "lucide-react"
-import type { COLABORADORES_SESION, SESION_DETALLE } from "./capacitaciones-types"
+import { Upload, Download, Eye, CheckCircle, FileText, Trash2, Info, FileCheck } from "lucide-react"
+import type { COLABORADORES_SESION, ExamenCompleto, Serie, SESION_DETALLE } from "./capacitaciones-types"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useCapacitaciones } from "@/hooks/useCapacitaciones"
 import { UsuarioLogin } from "../auth"
@@ -22,6 +22,7 @@ interface DocumentsTabProps {
   onDeleteAttendance: () => void
   displayedFileUrl: string | null
   isFileUploaded: boolean
+  plantillaExamen: { series: Serie[] } | undefined;
   usuario: UsuarioLogin
 }
 
@@ -33,6 +34,7 @@ export function DocumentsTab({
   onDeleteAttendance, 
   displayedFileUrl, 
   isFileUploaded,
+  plantillaExamen,
   usuario,
 }: DocumentsTabProps) {
   const [loadingDownload, setLoadingDownload] = useState(false);
@@ -40,6 +42,7 @@ export function DocumentsTab({
     descargarListaAsistencia,
     descargarPlantillaAsistencia,
     descargarArchivoPorRuta,
+    generarExamenPDF,
   } = useCapacitaciones(usuario);
 
   const attendanceInfo = displayedFileUrl
@@ -88,41 +91,41 @@ export function DocumentsTab({
     try {
       setLoadingDownload(true);
 
-    const modalidad = sesion.MODALIDAD?.toUpperCase();
-    const interno = modalidad === 'INTERNA';
-    const externo = modalidad === 'EXTERNA';
+      const modalidad = sesion.MODALIDAD?.toUpperCase();
+      const interno = modalidad === 'INTERNA';
+      const externo = modalidad === 'EXTERNA';
 
-    const tipo = sesion.TIPO_CAPACITACION?.toUpperCase();
-    const taller = tipo === 'TALLER';
-    const curso = tipo === 'CURSO';
-    const otro = !taller && !curso;
+      const tipo = sesion.TIPO_CAPACITACION?.toUpperCase();
+      const taller = tipo === 'TALLER';
+      const curso = tipo === 'CURSO';
+      const otro = !taller && !curso;
 
       const datos = {
-      sistemaDocumental: sesion.ES_SISTEMA_DOCUMENTAL,
-      codigoDocumento: sesion.CODIGO_DOCUMENTO,
-      version: sesion.VERSION?.toString(),
-      documentosAsociados: sesion.TEMAS_CODIGOS,
-      taller,
-      curso,
-      otro,
-      interno,
-      externo,
-      grupoObjetivo: sesion.GRUPO_OBJETIVO || "Sin grupo objetivo",
-      nombreCapacitacion: sesion.CAPACITACION_NOMBRE,
-      objetivoCapacitacion: sesion.OBJETIVO || "Sin objetivo definido",
-      nombreFacilitador: sesion.CAPACITADOR_NOMBRE,
-      fechaCapacitacion: sesion.FECHA_FORMATO || "Sin fecha",
-      horario: sesion.HORARIO_FORMATO_12H,
-      horasCapacitacion: sesion.DURACION_FORMATO,
-      asistentes: colaboradores?.map((col) => ({
-            nombre:
-              col.NOMBRE_COMPLETO ||
-              `${col.NOMBRE ?? ""} ${col.APELLIDO ?? ""}`.trim() ||
-              "Sin nombre",
-            area: col.DEPARTAMENTO_CODIGO,
-            nota: col.NOTA_OBTENIDA?.toString()
-          })) || [],
-      observaciones: sesion.OBSERVACIONES || "Sin observaciones"
+        sistemaDocumental: sesion.ES_SISTEMA_DOCUMENTAL,
+        codigoDocumento: sesion.CODIGO_DOCUMENTO,
+        version: sesion.VERSION?.toString(),
+        documentosAsociados: sesion.TEMAS_CODIGOS,
+        taller,
+        curso,
+        otro,
+        interno,
+        externo,
+        grupoObjetivo: sesion.GRUPO_OBJETIVO || "Sin grupo objetivo",
+        nombreCapacitacion: sesion.CAPACITACION_NOMBRE,
+        objetivoCapacitacion: sesion.OBJETIVO || "Sin objetivo definido",
+        nombreFacilitador: sesion.CAPACITADOR_NOMBRE,
+        fechaCapacitacion: sesion.FECHA_FORMATO || "Sin fecha",
+        horario: sesion.HORARIO_FORMATO_12H,
+        horasCapacitacion: sesion.DURACION_FORMATO,
+        asistentes: colaboradores?.map((col) => ({
+          nombre:
+            col.NOMBRE_COMPLETO ||
+            `${col.NOMBRE ?? ""} ${col.APELLIDO ?? ""}`.trim() ||
+            "Sin nombre",
+          area: col.DEPARTAMENTO_CODIGO,
+          nota: col.NOTA_OBTENIDA?.toString()
+        })) || [],
+        observaciones: sesion.OBSERVACIONES || "Sin observaciones"
       };
 
       await descargarPlantillaAsistencia(datos);
@@ -150,6 +153,42 @@ export function DocumentsTab({
       console.error("❌ Error al descargar el examen:", error);
     } finally {
       setLoadingDownload(false);
+    }
+  };
+
+  const handleGenerarExamenCargado = async () => {
+    if (!plantillaExamen) {
+      console.error("No hay plantilla de examen cargada.");
+      return;
+    }
+    
+    const colaboradoresAProcesar = colaboradores.filter(c => c.NOMBRE_COMPLETO);
+
+    if (colaboradoresAProcesar.length === 0) {
+      console.error("No hay colaboradores válidos para generar exámenes.");
+      return;
+    }
+    
+    try {
+      setLoadingDownload(true);
+      
+      const listaExamenesData: ExamenCompleto[] = colaboradoresAProcesar.map(colaborador => ({
+        collaboratorName: colaborador.NOMBRE_COMPLETO,
+        documentCode: sesion.CODIGO_DOCUMENTO || 'N/A',
+        department: colaborador.DEPARTAMENTO, 
+        trainingName: sesion.CAPACITACION_NOMBRE,
+        internal: sesion.MODALIDAD === 'INTERNA' ? 'X' : '', 
+        external: sesion.MODALIDAD === 'EXTERNA' ? 'X' : '', 
+        passingScore: sesion.NOTA_MINIMA ? sesion.NOTA_MINIMA.toString() : 'N/A',
+        series: plantillaExamen.series, 
+      }));
+
+      await generarExamenPDF(listaExamenesData);
+        
+    } catch (error) {
+        console.error("Error al generar el examen:", error);
+    } finally {
+        setLoadingDownload(false);
     }
   };
 
@@ -291,23 +330,36 @@ export function DocumentsTab({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <Button
               variant="outline"
-              className="w-full justify-start bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 transition"
+              className="w-full justify-start bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer"
               onClick={handleDownloadPlantilla}
               disabled={loadingDownload}
             >
               <Download className="h-4 w-4 mr-2 text-blue-500" />
               {loadingDownload ? "Generando plantilla..." : "Plantilla de Listado (PDF)"}
             </Button>
+            
             {sesion.APLICA_EXAMEN && (
-              <Button
-                variant="outline"
-                className="w-full justify-start bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 transition"
-                onClick={handleDownloadExamen}
-                disabled={loadingDownload}
-              >
-                <Download className="h-4 w-4 mr-2 text-purple-500" />
-                {loadingDownload ? "Generando enlace..." : "Plantilla de Examen (DOC)"}
-              </Button>
+              <>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer"
+                  onClick={handleDownloadExamen}
+                  disabled={loadingDownload}
+                >
+                  <Download className="h-4 w-4 mr-2 text-purple-500" />
+                  {loadingDownload ? "Generando enlace..." : "Plantilla de Examen (DOC)"}
+                </Button>
+                
+                <Button
+                  variant="outline"
+                  className="w-full justify-start bg-transparent hover:bg-gray-100 dark:hover:bg-gray-700 transition cursor-pointer"
+                  onClick={handleGenerarExamenCargado}
+                  disabled={loadingDownload}
+                >
+                  <FileCheck className="h-4 w-4 mr-2 text-green-500" />
+                  {loadingDownload ? "Generando examen..." : "Generar Examen Cargado (PDF)"}
+                </Button>
+              </>
             )}
           </div>
         </div>

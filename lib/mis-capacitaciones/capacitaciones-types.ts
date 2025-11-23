@@ -247,6 +247,42 @@ export interface AsistenteListado {
   nota?: string
 }
 
+export type TipoPregunta = "OPEN" | "MULTIPLE_CHOICE" | "ESSAY";
+
+export interface OpcionMultiple {
+  label: string; // "A", "B", "C", "D"
+  text: string;
+}
+
+export interface Question {
+  type: TipoPregunta;
+  question: string;
+  lines?: number; // Para OPEN y ESSAY
+  options?: OpcionMultiple[]; // Para MULTIPLE_CHOICE
+}
+
+export interface Serie {
+  numero: number;
+  title: string; // "I SERIE", "II SERIE", etc.
+  instructions: string;
+  questions: Question[];
+}
+
+export interface PlantillaExamen {
+  series: Serie[];
+}
+
+export interface ExamenCompleto {
+  collaboratorName: string;
+  documentCode: string;
+  department: string;
+  trainingName: string;
+  internal: string; // "X" or ""
+  external: string; // "X" or ""
+  passingScore: string; // e.g., "70"
+  series: Serie[];
+}
+
 // Helper functions
 export function calcularDuracionMinutos(horaInicio: string, horaFin: string): number {
   const [horasInicio, minutosInicio] = horaInicio.split(":").map(Number)

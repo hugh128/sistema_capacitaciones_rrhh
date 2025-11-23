@@ -325,7 +325,7 @@ export default function MisCapacitacionesPage() {
                       >
                         <div className="flex-1 space-y-2">
                           <div className="flex items-center gap-3 flex-wrap">
-                            <h4 className="font-semibold text-lg group-hover:text-primary transition-colors">
+                            <h4 className="font-semibold text-lg group-hover:text-primary dark:group-hover:text-foreground transition-colors">
                               {cap.NOMBRE}
                             </h4>
                             <Badge className={getEstadoColor(cap.ESTADO)}>{cap.ESTADO}</Badge>
@@ -353,7 +353,7 @@ export default function MisCapacitacionesPage() {
                           </div>
                         </div>
                         <Link href={`/mis-capacitaciones/${cap.ID_CAPACITACION}`}>
-                          <Button size="lg" className="ml-4">
+                          <Button size="lg" className="ml-4 cursor-pointer">
                             <Eye className="h-4 w-4 mr-2" />
                             Ver Detalle
                           </Button>
@@ -427,13 +427,13 @@ export default function MisCapacitacionesPage() {
                     capacitacionesFiltradas.map((cap) => (
                       <Card
                         key={cap.ID_CAPACITACION}
-                        className="hover:shadow-lg transition-all border-2 hover:border-primary/50 group"
+                        className="hover:shadow-lg transition-all border-2 hover:border-primary/50 dark:hover:border-primary group"
                       >
                         <CardContent className="p-6">
                           <div className="flex items-start justify-between gap-4">
                             <div className="flex-1 space-y-3">
                               <div className="flex items-center gap-3 flex-wrap">
-                                <h3 className="font-bold text-xl group-hover:text-primary transition-colors">
+                                <h3 className="font-bold text-xl group-hover:text-primary transition-colors dark:group-hover:text-foreground">
                                   {cap.NOMBRE}
                                 </h3>
                                 <Badge className={`${getEstadoColor(cap.ESTADO)} text-xs px-3 py-1`}>{cap.ESTADO}</Badge>
@@ -473,7 +473,7 @@ export default function MisCapacitacionesPage() {
                               </div>
                             </div>
                             <Link href={`/mis-capacitaciones/${cap.ID_SESION}`}>
-                              <Button size="lg" className="shrink-0">
+                              <Button size="lg" className="shrink-0 cursor-pointer">
                                 <Eye className="h-4 w-4 mr-2" />
                                 Ver Detalle
                               </Button>
