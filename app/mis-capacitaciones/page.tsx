@@ -447,7 +447,7 @@ export default function MisCapacitacionesPage() {
                                 </p>
                               )}
                               <p className="text-sm text-muted-foreground leading-relaxed">{cap.GRUPO_OBJETIVO}</p>
-                              <div className="flex flex-wrap gap-6 text-sm pt-2">
+                              <div className="flex flex-wrap gap-4 text-sm pt-2">
                                 <span className="flex items-center gap-2 text-muted-foreground">
                                   <Calendar className="h-4 w-4 text-blue-600" />
                                   <span className="font-medium">

@@ -85,15 +85,21 @@ export default function AsignarCapacitacionPage() {
     fetchData()
   }, [capacitacionId, obtenerDetallesCapacitacion, obtenerCapacitadores, obtenerColaboradoresSinSesion])
 
-  // Filter colaboradores
+  // Filtrado simple y eficiente
   const colaboradoresFiltrados = useMemo(() => {
+    if (!searchTerm.trim()) return colaboradoresDisponibles ?? [];
+    
+    const searchLower = searchTerm.toLowerCase();
     return (colaboradoresDisponibles ?? []).filter(
       (col) =>
-        col.NOMBRE_COMPLETO.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        col.DEPARTAMENTO.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        col.PUESTO.toLowerCase().includes(searchTerm.toLowerCase()),
+        col.NOMBRE_COMPLETO.toLowerCase().includes(searchLower) ||
+        col.DEPARTAMENTO.toLowerCase().includes(searchLower) ||
+        col.PUESTO.toLowerCase().includes(searchLower),
     )
   }, [searchTerm, colaboradoresDisponibles])
+
+  // Memoizar para evitar recrear el Set en cada render
+  const selectedSet = useMemo(() => new Set(selectedColaboradores), [selectedColaboradores])
 
   if (isLoading) {
     return (
@@ -143,41 +149,25 @@ export default function AsignarCapacitacionPage() {
   }
 
   const handleAsignar = async () => {
-    // Validations
     const errors: string[] = [];
 
-    // 1. Capacitador
-    if (!capacitadorId) {
-      errors.push("Selecciona un capacitador.");
-    }
-
-    // 2. Fecha de Inicio
-    if (!fechaInicio) {
-      errors.push("Selecciona una fecha de inicio.");
-    }
-
-    // 3. Horas y lógica de horario
+    if (!capacitadorId) errors.push("Selecciona un capacitador.");
+    if (!fechaInicio) errors.push("Selecciona una fecha de inicio.");
+    
     if (!horaInicio || !horaFin) {
       errors.push("Debes seleccionar hora de inicio y fin.");
     } else if (horaFin <= horaInicio) {
       errors.push("La hora de fin debe ser posterior a la hora de inicio.");
     }
 
-    // 4. Colaboradores Seleccionados
-    if (selectedColaboradores.length === 0) {
-      errors.push("Selecciona al menos un colaborador.");
-    }
-
-    // 5. Nota Mínima (si aplica examen)
+    if (selectedColaboradores.length === 0) errors.push("Selecciona al menos un colaborador.");
+    
     if (aplicaExamen && (!notaMinima || Number(notaMinima) < 0 || Number(notaMinima) > 100)) {
       errors.push("Ingresa una nota mínima válida entre 0 y 100.");
     }
     
     setValidationErrors(errors);
-
-    if (errors.length > 0) {
-      return;
-    }
+    if (errors.length > 0) return;
 
     const payloadCapacitacion: AsignarCapacitacion = {
       idCapacitacion: capacitacionId,
@@ -206,41 +196,40 @@ export default function AsignarCapacitacionPage() {
       await asignarCapacitacion(payloadCapacitacion);
       await asignarSesion(payloadSesion);
       router.push("/capacitaciones");
-        
     } catch (error) {
       console.error("Error al completar la asignación:", error);
     }
   }
+
+  const allSelected = colaboradoresFiltrados.length > 0 && 
+    selectedColaboradores.length === colaboradoresFiltrados.length;
 
   return (
     <RequirePermission requiredPermissions={["manage_trainings"]}>
       <div className="flex h-screen bg-background">
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
-
           <AppHeader title="Gestión de Capacitaciones" subtitle="Panel de control para administrar todas las capacitaciones de la empresa" />
 
           <main className="flex-1 p-6 space-y-6 overflow-auto custom-scrollbar">
+            {validationErrors.length > 0 && (
+              <Alert variant="destructive">
+                <AlertCircle className="h-4 w-4" />
+                <AlertTitle>Se encontraron {validationErrors.length} errores</AlertTitle>
+                <AlertDescription>
+                  <p>Por favor, corrige los siguientes problemas antes de continuar:</p>
+                  <ul className="list-inside list-disc text-sm mt-2 space-y-1">
+                    {validationErrors.map((error, index) => (
+                      <li key={index} className="text-destructive-foreground">{error}</li>
+                    ))}
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
 
-          {validationErrors.length > 0 && (
-            <Alert variant="destructive">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Se encontraron {validationErrors.length} errores</AlertTitle>
-              <AlertDescription>
-                <p>Por favor, corrige los siguientes problemas antes de continuar:</p>
-                <ul className="list-inside list-disc text-sm mt-2 space-y-1">
-                  {validationErrors.map((error, index) => (
-                    <li key={index} className="text-destructive-foreground">{error}</li>
-                  ))}
-                </ul>
-              </AlertDescription>
-            </Alert>
-          )}
-
-            {/* Header */}
             <div className="flex items-center gap-4">
               <Link href="/capacitaciones">
-                <Button variant="outline" size="icon">
+                <Button variant="outline" size="icon" className="cursor-pointer dark:hover:text-foreground dark:hover:border-gray-600">
                   <ArrowLeft className="h-4 w-4" />
                 </Button>
               </Link>
@@ -250,9 +239,7 @@ export default function AsignarCapacitacionPage() {
               </div>
             </div>
 
-            {/* Form */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Left Column - Form */}
               <div className="lg:col-span-2 space-y-6">
                 <Card>
                   <CardHeader>
@@ -261,10 +248,10 @@ export default function AsignarCapacitacionPage() {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
+                      <div className="space-y-2">
                         <Label htmlFor="capacitador">Capacitador *</Label>
                         <Select value={capacitadorId} onValueChange={setCapacitadorId}>
-                          <SelectTrigger id="capacitador">
+                          <SelectTrigger id="capacitador" className="w-full">
                             <SelectValue placeholder="Seleccionar capacitador" />
                           </SelectTrigger>
                           <SelectContent>
@@ -277,50 +264,40 @@ export default function AsignarCapacitacionPage() {
                         </Select>
                       </div>
 
-                      <div>
+                      <div className="space-y-2">
                         <Label htmlFor="fecha">Fecha de Inicio *</Label>
-                        <Input
-                          id="fecha"
-                          type="date"
-                          value={fechaInicio}
-                          onChange={(e) => setFechaInicio(e.target.value)}
-                        />
+                        <Input id="fecha" type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} />
                       </div>
 
-                      <div>
+                      <div className="space-y-2">
                         <Label htmlFor="horaInicio">Hora de Inicio *</Label>
-                        <Input
-                          id="horaInicio"
-                          type="time"
-                          value={horaInicio}
-                          onChange={(e) => setHoraInicio(e.target.value)}
-                        />
+                        <Input id="horaInicio" type="time" value={horaInicio} onChange={(e) => setHoraInicio(e.target.value)} />
                       </div>
 
-                      <div>
+                      <div className="space-y-2">
                         <Label htmlFor="horaFin">Hora de Fin *</Label>
                         <Input id="horaFin" type="time" value={horaFin} onChange={(e) => setHoraFin(e.target.value)} />
                       </div>
 
-                      <div>
+                      <div className="space-y-2">
                         <Label htmlFor="tipo">Tipo de Capacitación *</Label>
                         <Select value={tipoCapacitacion} onValueChange={setTipoCapacitacion}>
-                          <SelectTrigger id="tipo">
+                          <SelectTrigger id="tipo" className="w-full">
                             <SelectValue placeholder="Seleccionar tipo" />
                           </SelectTrigger>
                           <SelectContent>
-                            <SelectItem value="TALLER">TALLER</SelectItem>
                             <SelectItem value="CURSO">CURSO</SelectItem>
+                            <SelectItem value="TALLER">TALLER</SelectItem>
                             <SelectItem value="CHARLA">CHARLA</SelectItem>
                             <SelectItem value="OTRO">OTRO</SelectItem>
                           </SelectContent>
                         </Select>
                       </div>
 
-                      <div>
+                      <div className="space-y-2">
                         <Label htmlFor="modalidad">Modalidad *</Label>
                         <Select value={modalidad} onValueChange={setModalidad}>
-                          <SelectTrigger id="modalidad">
+                          <SelectTrigger id="modalidad" className="w-full">
                             <SelectValue placeholder="Seleccionar modalidad" />
                           </SelectTrigger>
                           <SelectContent>
@@ -331,7 +308,7 @@ export default function AsignarCapacitacionPage() {
                       </div>
                     </div>
 
-                    <div>
+                    <div className="space-y-2">
                       <Label htmlFor="grupoObjetivo">Grupo Objetivo</Label>
                       <Input
                         id="grupoObjetivo"
@@ -341,7 +318,7 @@ export default function AsignarCapacitacionPage() {
                       />
                     </div>
 
-                    <div>
+                    <div className="space-y-2">
                       <Label htmlFor="objetivo">Objetivo</Label>
                       <Textarea
                         id="objetivo"
@@ -358,7 +335,6 @@ export default function AsignarCapacitacionPage() {
                           id="aplicaExamen"
                           checked={aplicaExamen}
                           onCheckedChange={(checked) => setAplicaExamen(checked as boolean)}
-                          className="cursor-pointer"
                         />
                         <Label htmlFor="aplicaExamen" className="cursor-pointer">
                           Aplica Examen
@@ -386,7 +362,6 @@ export default function AsignarCapacitacionPage() {
                           id="aplicaDiploma"
                           checked={aplicaDiploma}
                           onCheckedChange={(checked) => setAplicaDiploma(checked as boolean)}
-                          className="cursor-pointer"
                         />
                         <Label htmlFor="aplicaDiploma" className="cursor-pointer">
                           Aplica Diploma
@@ -394,7 +369,7 @@ export default function AsignarCapacitacionPage() {
                       </div>
                     </div>
 
-                    <div>
+                    <div className="space-y-2">
                       <Label htmlFor="observaciones">Observaciones</Label>
                       <Textarea
                         id="observaciones"
@@ -407,20 +382,17 @@ export default function AsignarCapacitacionPage() {
                   </CardContent>
                 </Card>
 
-                {/* Colaboradores Selection */}
                 <Card>
                   <CardHeader>
                     <CardTitle>Seleccionar Participantes</CardTitle>
                     <CardDescription>Selecciona los colaboradores que participarán en esta capacitación</CardDescription>
                   </CardHeader>
                   <CardContent className="space-y-4">
-                    <div>
-                      <Input
-                        placeholder="Buscar colaboradores..."
-                        value={searchTerm}
-                        onChange={(e) => setSearchTerm(e.target.value)}
-                      />
-                    </div>
+                    <Input
+                      placeholder="Buscar colaboradores..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                    />
 
                     <div className="border rounded-lg max-h-96 overflow-y-auto">
                       <Table>
@@ -428,8 +400,7 @@ export default function AsignarCapacitacionPage() {
                           <TableRow>
                             <TableHead className="w-12">
                               <Checkbox
-                                className="cursor-pointer"
-                                checked={selectedColaboradores.length === colaboradoresFiltrados.length}
+                                checked={allSelected}
                                 onCheckedChange={(checked) => {
                                   if (checked) {
                                     setSelectedColaboradores(colaboradoresFiltrados.map((c) => c.ID_COLABORADOR))
@@ -449,8 +420,7 @@ export default function AsignarCapacitacionPage() {
                             <TableRow key={col.ID_COLABORADOR}>
                               <TableCell>
                                 <Checkbox
-                                  className="cursor-pointer"
-                                  checked={selectedColaboradores.includes(col.ID_COLABORADOR)}
+                                  checked={selectedSet.has(col.ID_COLABORADOR)}
                                   onCheckedChange={(checked) => {
                                     if (checked) {
                                       setSelectedColaboradores([...selectedColaboradores, col.ID_COLABORADOR])
@@ -481,7 +451,6 @@ export default function AsignarCapacitacionPage() {
                 </Card>
               </div>
 
-              {/* Right Column - Summary */}
               <div className="space-y-6">
                 <Card>
                   <CardHeader>
@@ -508,7 +477,7 @@ export default function AsignarCapacitacionPage() {
                         <Label className="text-muted-foreground">Fecha</Label>
                         <p className="font-medium flex items-center gap-2">
                           <Calendar className="h-4 w-4" />
-                          {new Date(fechaInicio).toLocaleDateString("es-GT")}
+                          {new Date(fechaInicio + 'T00:00:00').toLocaleDateString("es-GT")}
                         </p>
                       </div>
                     )}

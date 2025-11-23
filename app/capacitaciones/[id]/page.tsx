@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ArrowLeft, CheckCircle2, XCircle, Calendar, Clock, Users, BookOpen, Eye } from "lucide-react"
+import { ArrowLeft, CheckCircle2, XCircle, Calendar, Clock, Users, BookOpen, Eye, FileText, Target, TrendingUp, Download } from "lucide-react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { getEstadoCapacitacionColor, getEstadoColaboradorColor } from "@/lib/capacitaciones/capacitaciones-types"
@@ -97,11 +97,11 @@ export default function CapacitacionDetailPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="w-96">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Cargando Detalles...</CardTitle>
-            <CardDescription>Obteniendo información de la sesion y capacitadores.</CardDescription>
+            <CardDescription>Obteniendo información de la sesión y capacitadores.</CardDescription>
           </CardHeader>
           <CardContent className="flex justify-center">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
@@ -113,15 +113,15 @@ export default function CapacitacionDetailPage() {
 
   if (!sesion) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
-        <Card className="w-96">
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <Card className="w-full max-w-md">
           <CardHeader>
             <CardTitle>Capacitación no encontrada</CardTitle>
             <CardDescription>La capacitación solicitada no existe.</CardDescription>
           </CardHeader>
           <CardContent>
             <Link href="/capacitaciones">
-              <Button>Volver a Gestión</Button>
+              <Button className="w-full">Volver a Gestión</Button>
             </Link>
           </CardContent>
         </Card>
@@ -129,18 +129,17 @@ export default function CapacitacionDetailPage() {
     )
   }
 
-  // Helper function to determine if HR can navigate to assignment or review
   const getNavigationButtons = () => {
     if (sesion.ESTADO === "PENDIENTE_ASIGNACION" || sesion.ESTADO === "ASIGNADA" || sesion.ESTADO === "CREADA") {
       return (
         <Link href={`/capacitaciones/asignar/${sesion.ID_CAPACITACION}`}>
-          <Button>Ir a Asignación</Button>
+          <Button className="w-full sm:w-auto">Ir a Asignación</Button>
         </Link>
       )
     } else if (sesion.ESTADO === "FINALIZADA_CAPACITADOR" || sesion.ESTADO === "EN_REVISION") {
       return (
         <Link href={`/capacitaciones/revisar/${sesionId}`}>
-          <Button>Ir a Revisión</Button>
+          <Button className="w-full sm:w-auto">Ir a Revisión</Button>
         </Link>
       )
     }
@@ -152,160 +151,146 @@ export default function CapacitacionDetailPage() {
       <div className="flex h-screen bg-background">
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
-          <AppHeader title="Gestión de Capacitaciones" subtitle="Panel de control para administrar todas las capacitaciones de la empresa" />
+          <AppHeader 
+            title="Gestión de Capacitaciones" 
+            subtitle="Panel de control para administrar todas las capacitaciones de la empresa" 
+          />
 
-          <main className="flex-1 p-6 space-y-6 overflow-auto custom-scrollbar">
-            {/* Header */}
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
+          <main className="flex-1 p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1600px] mx-auto w-full overflow-auto custom-scrollbar">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div className="flex items-start gap-3 sm:gap-4">
                 <Link href="/capacitaciones">
-                  <Button variant="outline" size="icon">
+                  <Button variant="outline" size="icon" className="shrink-0 mt-1 cursor-pointer dark:hover:text-foreground dark:hover:border-gray-600">
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
                 </Link>
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    <h1 className="text-3xl font-bold text-foreground">Detalle de Capacitación</h1>
-                    <Badge className={getEstadoCapacitacionColor(sesion.ESTADO)}>{sesion.ESTADO}</Badge>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 mb-1">
+                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
+                      Detalle de Capacitación
+                    </h1>
+                    <Badge className={getEstadoCapacitacionColor(sesion.ESTADO)}>
+                      {sesion.ESTADO}
+                    </Badge>
                   </div>
-                  <p className="text-muted-foreground">{sesion.CAPACITACION_NOMBRE}</p>
+                  <p className="text-sm sm:text-base text-muted-foreground break-words">
+                    {sesion.CAPACITACION_NOMBRE}
+                  </p>
                 </div>
               </div>
-              <div>{getNavigationButtons()}</div>
+              <div className="w-full sm:w-auto">{getNavigationButtons()}</div>
             </div>
 
-            {/* Info Card */}
             <Card>
               <CardHeader>
-                <CardTitle>Información General</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Información General
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <div>
-                    <Label className="text-muted-foreground">Código</Label>
-                    <p className="font-medium">{sesion.CODIGO_DOCUMENTO || "N/A"}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Capacitador</Label>
-                    <p className="font-medium">{sesion.CAPACITADOR_NOMBRE}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Tipo</Label>
-                    <p className="font-medium">{sesion.TIPO_CAPACITACION}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Departamento</Label>
-                    <p className="font-medium">{sesion.DEPARTAMENTO}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Fecha de Inicio</Label>
-                    <p className="font-medium flex items-center gap-2">
-                      <Calendar className="h-4 w-4" />
-                      {sesion.FECHA_INICIO
-                        ? new Date(sesion.FECHA_INICIO).toLocaleDateString("es-GT")
-                        : "Sin fecha"}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Horario</Label>
-                    <p className="font-medium flex items-center gap-2">
-                      <Clock className="h-4 w-4" />
-                      {sesion.HORARIO_FORMATO_12H}
-                    </p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Duración</Label>
-                    <p className="font-medium">{sesion.DURACION_FORMATO}</p>
-                  </div>
-                  <div>
-                    <Label className="text-muted-foreground">Nota Mínima</Label>
-                    <p className="font-medium">{sesion.NOTA_MINIMA || "N/A"}</p>
-                  </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
+                  <InfoItem 
+                    label="Código" 
+                    value={sesion.CODIGO_DOCUMENTO || "N/A"} 
+                  />
+                  <InfoItem 
+                    label="Capacitador" 
+                    value={sesion.CAPACITADOR_NOMBRE} 
+                  />
+                  <InfoItem 
+                    label="Tipo" 
+                    value={sesion.TIPO_CAPACITACION} 
+                  />
+                  <InfoItem 
+                    label="Departamento" 
+                    value={sesion.DEPARTAMENTO ?? "N/A"} 
+                  />
+                  <InfoItem 
+                    label="Fecha de Inicio" 
+                    value={sesion.FECHA_INICIO
+                      ? new Date(sesion.FECHA_INICIO).toLocaleDateString("es-GT")
+                      : "Sin fecha"}
+                    icon={<Calendar className="h-4 w-4" />}
+                  />
+                  <InfoItem 
+                    label="Horario" 
+                    value={sesion.HORARIO_FORMATO_12H}
+                    icon={<Clock className="h-4 w-4" />}
+                  />
+                  <InfoItem 
+                    label="Duración" 
+                    value={sesion.DURACION_FORMATO} 
+                  />
+                  <InfoItem 
+                    label="Nota Mínima" 
+                    value={sesion.NOTA_MINIMA !== null && sesion.NOTA_MINIMA !== undefined ? String(sesion.NOTA_MINIMA) : "N/A"} 
+                  />
                 </div>
               </CardContent>
             </Card>
 
-            {/* Objective */}
             <Card>
               <CardHeader>
-                <CardTitle>Objetivo</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5" />
+                  Objetivo
+                </CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-muted-foreground">{sesion.OBJETIVO}</p>
+                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                  {sesion.OBJETIVO}
+                </p>
               </CardContent>
             </Card>
 
-            {/* Stats Cards */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium flex items-center gap-2">
-                    <Users className="h-4 w-4" />
-                    Total Participantes
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.total}</div>
-                </CardContent>
-              </Card>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
+              <StatCard
+                icon={<Users className="h-4 w-4 sm:h-5 sm:w-5" />}
+                title="Total Participantes"
+                value={stats.total}
+              />
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Asistencias</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.asistencias}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {stats.total > 0 ? ((stats.asistencias / stats.total) * 100).toFixed(0) : 0}% del total
-                  </p>
-                </CardContent>
-              </Card>
+              <StatCard
+                icon={<CheckCircle2 className="h-4 w-4 sm:h-5 sm:w-5" />}
+                title="Asistencias"
+                value={stats.asistencias}
+                subtitle={`${stats.total > 0 ? ((stats.asistencias / stats.total) * 100).toFixed(0) : 0}% del total`}
+              />
 
               {sesion.APLICA_EXAMEN && (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Exámenes</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">
-                      {stats.examenes} / {stats.asistencias}
-                    </div>
-                  </CardContent>
-                </Card>
+                <StatCard
+                  icon={<FileText className="h-4 w-4 sm:h-5 sm:w-5" />}
+                  title="Exámenes"
+                  value={`${stats.examenes}/${stats.asistencias}`}
+                />
               )}
 
               {sesion.APLICA_DIPLOMA && (
-                <Card>
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm font-medium">Diplomas</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{stats.diplomas}</div>
-                  </CardContent>
-                </Card>
+                <StatCard
+                  icon={<BookOpen className="h-4 w-4 sm:h-5 sm:w-5" />}
+                  title="Diplomas"
+                  value={stats.diplomas}
+                />
               )}
 
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-sm font-medium">Aprobados</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-2xl font-bold">{stats.aprobados}</div>
-                  <p className="text-xs text-muted-foreground">
-                    {stats.asistencias > 0 ? ((stats.aprobados / stats.asistencias) * 100).toFixed(0) : 0}% de asistentes
-                  </p>
-                </CardContent>
-              </Card>
+              <StatCard
+                icon={<TrendingUp className="h-4 w-4 sm:h-5 sm:w-5" />}
+                title="Aprobados"
+                value={stats.aprobados}
+                subtitle={`${stats.asistencias > 0 ? ((stats.aprobados / stats.asistencias) * 100).toFixed(0) : 0}% de asistentes`}
+              />
             </div>
 
-            {/* Participants Table */}
             <Card>
               <CardHeader>
                 <CardTitle>Detalle de Participantes</CardTitle>
-                <CardDescription>Lista de colaboradores asignados a esta capacitación</CardDescription>
+                <CardDescription>
+                  Lista de colaboradores asignados a esta capacitación
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="border rounded-lg overflow-x-auto">
+                <div className="hidden md:block border rounded-lg overflow-x-auto">
                   <Table>
                     <TableHeader>
                       <TableRow>
@@ -321,7 +306,7 @@ export default function CapacitacionDetailPage() {
                     <TableBody>
                       {colaboradoresAsignados.length === 0 ? (
                         <TableRow>
-                          <TableCell colSpan={6} className="text-center py-8">
+                          <TableCell colSpan={7} className="text-center py-8">
                             <BookOpen className="h-8 w-8 mx-auto mb-2 opacity-50" />
                             <p className="text-muted-foreground">No hay participantes asignados</p>
                           </TableCell>
@@ -383,35 +368,105 @@ export default function CapacitacionDetailPage() {
                     </TableBody>
                   </Table>
                 </div>
+
+                <div className="md:hidden space-y-3">
+                  {colaboradoresAsignados.length === 0 ? (
+                    <div className="text-center py-8">
+                      <BookOpen className="h-8 w-8 mx-auto mb-2 opacity-50" />
+                      <p className="text-muted-foreground">No hay participantes asignados</p>
+                    </div>
+                  ) : (
+                    colaboradoresAsignados.map((col) => (
+                      <Card key={col.ID_COLABORADOR}>
+                        <CardContent className="pt-4 space-y-3">
+                          <div>
+                            <p className="font-semibold text-sm">{col.NOMBRE_COMPLETO}</p>
+                            <p className="text-xs text-muted-foreground">{col.CORREO}</p>
+                          </div>
+                          
+                          <div className="grid grid-cols-2 gap-2 text-xs">
+                            <div>
+                              <span className="text-muted-foreground">Departamento:</span>
+                              <p className="font-medium">{col.DEPARTAMENTO}</p>
+                            </div>
+                            <div>
+                              <span className="text-muted-foreground">Estado:</span>
+                              <Badge className={`${getEstadoColaboradorColor(col.ESTADO_COLABORADOR)} text-xs mt-1`}>
+                                {col.ESTADO_COLABORADOR}
+                              </Badge>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center justify-between pt-2 border-t">
+                            <div className="flex items-center gap-1">
+                              <span className="text-xs text-muted-foreground">Asistencia:</span>
+                              {col.ASISTIO === true ? (
+                                <CheckCircle2 className="h-4 w-4 text-green-600" />
+                              ) : col.ASISTIO === false ? (
+                                <XCircle className="h-4 w-4 text-red-600" />
+                              ) : (
+                                <span className="text-muted-foreground text-xs">-</span>
+                              )}
+                            </div>
+                            
+                            {sesion.APLICA_EXAMEN && (
+                              <div className="flex items-center gap-1">
+                                <span className="text-xs text-muted-foreground">Nota:</span>
+                                <span className="text-xs font-medium">
+                                  {col.NOTA_OBTENIDA !== null ? col.NOTA_OBTENIDA : "-"}
+                                </span>
+                              </div>
+                            )}
+                            
+                            {sesion.APLICA_EXAMEN && col.URL_EXAMEN && (
+                              <div className="flex items-center gap-1">
+                                <FileText className="h-4 w-4 text-green-600" />
+                              </div>
+                            )}
+                            
+                            {sesion.APLICA_DIPLOMA && col.URL_DIPLOMA && (
+                              <div className="flex items-center gap-1">
+                                <BookOpen className="h-4 w-4 text-green-600" />
+                              </div>
+                            )}
+                          </div>
+                        </CardContent>
+                      </Card>
+                    ))
+                  )}
+                </div>
               </CardContent>
             </Card>
 
-            {/* Asistencia */}
             <Card>
               <CardHeader>
-                <CardTitle>Listado de asistencia</CardTitle>
+                <CardTitle className="flex items-center gap-2">
+                  <Download className="h-5 w-5" />
+                  Listado de Asistencia
+                </CardTitle>
               </CardHeader>
               <CardContent>
                 <Button
-                  variant="link"
+                  variant="default"
                   onClick={handleDownload}
                   disabled={loadingDownload}
-                  className="h-auto p-0 text-sm cursor-pointer dark:text-blue-800 dark:font-bold"
+                  className="w-full sm:w-auto cursor-pointer"
                 >
-                  <Eye className="h-3 w-3 mr-1" />
-                  Ver documento
+                  <Eye className="h-4 w-4 mr-2" />
+                  {loadingDownload ? "Cargando..." : "Ver Documento"}
                 </Button>
               </CardContent>
             </Card>
 
-            {/* Observations */}
             {sesion.OBSERVACIONES && (
               <Card>
                 <CardHeader>
                   <CardTitle>Observaciones</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">{sesion.OBSERVACIONES}</p>
+                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                    {sesion.OBSERVACIONES}
+                  </p>
                 </CardContent>
               </Card>
             )}
@@ -419,5 +474,48 @@ export default function CapacitacionDetailPage() {
         </div>
       </div>
     </RequirePermission>
+  )
+}
+
+function InfoItem({ label, value, icon }: { label: string; value: string; icon?: React.ReactNode }) {
+  return (
+    <div className="space-y-1">
+      <Label className="text-xs sm:text-sm text-muted-foreground">{label}</Label>
+      <p className="font-medium text-sm sm:text-base flex items-center gap-2">
+        {icon}
+        <span className="break-words">{value}</span>
+      </p>
+    </div>
+  )
+}
+
+function StatCard({ 
+  icon, 
+  title, 
+  value, 
+  subtitle 
+}: { 
+  icon: React.ReactNode; 
+  title: string; 
+  value: number | string; 
+  subtitle?: string 
+}) {
+  return (
+    <Card className="hover:shadow-md transition-shadow">
+      <CardHeader className="pb-2 space-y-0">
+        <CardTitle className="text-xs sm:text-sm font-medium flex items-center gap-2 text-muted-foreground">
+          {icon}
+          <span className="line-clamp-2">{title}</span>
+        </CardTitle>
+      </CardHeader>
+      <CardContent>
+        <div className="text-xl sm:text-2xl font-bold">{value}</div>
+        {subtitle && (
+          <p className="text-xs text-muted-foreground mt-1">
+            {subtitle}
+          </p>
+        )}
+      </CardContent>
+    </Card>
   )
 }

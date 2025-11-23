@@ -105,9 +105,12 @@ export function AllCapacitacionesTab({ capacitaciones }: AllCapacitacionesTabPro
               </div>
             ) : (
               capacitacionesFiltradas.map((cap) => (
-                <Card key={cap.CLAVE_UNICA} className="hover:shadow-md transition-shadow">
-                  <CardContent className="pt-6">
-                    <div className="flex items-start justify-between gap-4">
+                <Card 
+                  key={cap.CLAVE_UNICA}
+                  className="hover:shadow-lg transition-all border-2 border-transparent hover:border-primary/50 dark:hover:border-primary group"
+                >
+                  <CardContent className="px-6 py-4">
+                    <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                       <div className="flex-1 space-y-3">
                         <div className="flex items-center gap-2 flex-wrap">
                           <h3 className="font-semibold text-lg text-foreground">{cap.CAPACITACION_NOMBRE}</h3>
@@ -123,12 +126,12 @@ export function AllCapacitacionesTab({ capacitaciones }: AllCapacitacionesTabPro
 
                         <p className="text-sm text-muted-foreground line-clamp-2">{cap.OBJETIVO}</p>
 
-                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                        <div className="flex flex-wrap gap-4 text-sm pt-2">
                           <div className="text-muted-foreground">
                             <span className="font-medium text-foreground">Capacitador:</span> {cap.CAPACITADOR_NOMBRE ?? "Por asignar"}
                           </div>
                           <div className="flex items-center gap-2 text-muted-foreground">
-                            <Calendar className="h-4 w-4" />
+                            <Calendar className="h-4 w-4 text-blue-600" />
                             <span>
                               {cap.FECHA_INICIO
                                 ? new Date(cap.FECHA_INICIO).toLocaleDateString("es-GT")
@@ -136,18 +139,18 @@ export function AllCapacitacionesTab({ capacitaciones }: AllCapacitacionesTabPro
                             </span>
                           </div>
                           <div className="flex items-center gap-2 text-muted-foreground">
-                            <Clock className="h-4 w-4" />
+                            <Clock className="h-4 w-4 text-purple-600" />
                             <span>{cap.HORARIO_FORMATO_12H ?? "Sin horario"}</span>
                           </div>
                           <div className="flex items-center gap-2 text-muted-foreground">
-                            <Users className="h-4 w-4" />
+                            <Users className="h-4 w-4 text-green-600" />
                             <span>{cap.TOTAL_COLABORADORES} participantes</span>
                           </div>
                         </div>
                       </div>
 
                       <Link href={getDetailRoute(cap)}>
-                        <Button variant="outline" className="whitespace-nowrap bg-transparent">
+                        <Button variant="default" className="cursor-pointer">
                           <Eye className="h-4 w-4 mr-2" />
                           Ver Detalle
                         </Button>

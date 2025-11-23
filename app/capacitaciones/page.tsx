@@ -1,6 +1,6 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useEffect, useState } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Sidebar } from "@/components/sidebar"
 import { AppHeader } from "@/components/app-header"
@@ -15,10 +15,18 @@ import { useCapacitaciones } from "@/hooks/useCapacitaciones"
 import { Toaster } from "react-hot-toast"
 
 export default function GestionCapacitacionesPage() {
-  const { user } = useAuth()
+  const { user, loading } = useAuth()
+  const [isInitialized, setIsInitialized] = useState(false)
+
+  useEffect(() => {
+    if (!loading && user) {
+      setIsInitialized(true)
+    }
+  }, [loading, user])
+
   const {
     capacitaciones,
-  } = useCapacitaciones(user);
+  } = useCapacitaciones(isInitialized ? user : null);
 
   // Separar por estado
   const pendientesAsignacion = useMemo(() => {
@@ -62,6 +70,23 @@ export default function GestionCapacitacionesPage() {
     }
   }, [capacitaciones, pendientesAsignacion.length, pendientesRevision.length])
 
+  // ✨ Mostrar loading mientras se inicializa
+  if (loading || !isInitialized) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="w-96">
+          <CardHeader>
+            <CardTitle>Cargando...</CardTitle>
+            <CardDescription>Inicializando sesión</CardDescription>
+          </CardHeader>
+          <div className="p-6 flex justify-center">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          </div>
+        </Card>
+      </div>
+    )
+  }
+
   if (!user || !user.ROLES.some((role) => role.NOMBRE === "RRHH")) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -83,7 +108,7 @@ export default function GestionCapacitacionesPage() {
 
           <AppHeader title="Gestión de Capacitaciones" subtitle="Panel de control para administrar todas las capacitaciones de la empresa" />
 
-          <main className="flex-1 p-6 space-y-6 overflow-auto custom-scrollbar">
+          <main className="flex-1 p-6 space-y-6 max-w-[1600px] mx-auto w-full overflow-auto custom-scrollbar">
 
             <Toaster />
 
@@ -101,10 +126,10 @@ export default function GestionCapacitacionesPage() {
 
             {/* Main Tabs */}
             <Tabs defaultValue="pendientes" className="w-full">
-              <TabsList className="w-full flex flex-wrap h-auto p-1 gap-1">
-                <TabsTrigger value="pendientes" className="flex-1 min-w-[150px] text-xs sm:text-sm whitespace-nowrap">Pendientes de Asignar ({pendientesAsignacion.length})</TabsTrigger>
-                <TabsTrigger value="revision" className="flex-1 min-w-[150px] text-xs sm:text-sm whitespace-nowrap">Pendientes de Revisión ({pendientesRevision.length})</TabsTrigger>
-                <TabsTrigger value="todas" className="flex-1 min-w-[150px] text-xs sm:text-sm whitespace-nowrap">Todas las Capacitaciones</TabsTrigger>
+              <TabsList className="flex flex-wrap w-full gap-1 p-1 h-auto">
+                <TabsTrigger value="pendientes" className="flex-1 text-sm whitespace-nowrap">Pendientes de Asignar ({pendientesAsignacion.length})</TabsTrigger>
+                <TabsTrigger value="revision" className="flex-1 text-sm whitespace-nowrap">Pendientes de Revisión ({pendientesRevision.length})</TabsTrigger>
+                <TabsTrigger value="todas" className="flex-1 text-sm whitespace-nowrap">Todas las Capacitaciones</TabsTrigger>
               </TabsList>
 
               <TabsContent value="pendientes">

@@ -39,9 +39,12 @@ export function PendingReviewsTab({ capacitaciones }: PendingReviewsTabProps) {
       <CardContent className="space-y-4">
         <div className="space-y-4">
           {capacitaciones.map((cap) => (
-            <Card key={cap.CLAVE_UNICA} className="hover:shadow-md transition-shadow border-l-4 border-l-orange-500">
-              <CardContent className="pt-6">
-                <div className="flex items-start justify-between gap-4">
+            <Card
+              key={cap.CLAVE_UNICA}
+              className="hover:shadow-md transition-shadow border-l-4 border-l-orange-500"
+            >
+              <CardContent className="px-6 py-4">
+                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                   <div className="flex-1 space-y-3">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-semibold text-lg text-foreground">{cap.CAPACITACION_NOMBRE}</h3>
@@ -54,25 +57,25 @@ export function PendingReviewsTab({ capacitaciones }: PendingReviewsTabProps) {
                       </p>
                     )}
 
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 text-sm">
+                    <div className="flex flex-wrap gap-4 text-sm pt-2">
                       <div className="text-muted-foreground">
                         <span className="font-medium text-foreground">Capacitador:</span> {cap.CAPACITADOR_NOMBRE}
                       </div>
                       <div className="flex items-center gap-2 text-muted-foreground">
-                        <Calendar className="h-4 w-4" />
+                        <Calendar className="h-4 w-4 text-blue-600" />
                         <span>
                           {cap.FECHA_INICIO ? new Date(cap.FECHA_INICIO).toLocaleDateString("es-GT") : "Sin fecha"}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-muted-foreground">
-                        <Users className="h-4 w-4" />
+                        <Users className="h-4 w-4 text-green-600" />
                         <span>{cap.TOTAL_COLABORADORES} participantes</span>
                       </div>
                     </div>
                   </div>
 
                   <Link href={`/capacitaciones/revisar/${cap.ID_SESION}`}>
-                    <Button className="whitespace-nowrap">
+                    <Button className="whitespace-nowrap cursor-pointer">
                       <Eye className="h-4 w-4 mr-2" />
                       Revisar
                     </Button>

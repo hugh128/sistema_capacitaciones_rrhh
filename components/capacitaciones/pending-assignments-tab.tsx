@@ -33,7 +33,7 @@ export function PendingAssignmentsTab({ capacitaciones }: PendingAssignmentsTabP
   }
 
   return (
-    <Card>
+    <Card className="shadow-sm">
       <CardHeader>
         <CardTitle>Capacitaciones Pendientes de Asignación</CardTitle>
         <CardDescription>
@@ -43,9 +43,12 @@ export function PendingAssignmentsTab({ capacitaciones }: PendingAssignmentsTabP
       <CardContent className="space-y-4">
         <div className="space-y-4">
           {capacitaciones.map((cap) => (
-            <Card key={cap.CLAVE_UNICA} className="hover:shadow-md transition-shadow">
-              <CardContent className="pt-6">
-                <div className="flex items-start justify-between gap-4">
+            <Card
+              key={cap.CLAVE_UNICA}
+              className="border border-border/40 hover:border-primary/60 dark:hover:border-primary hover:shadow-md transition-all duration-200 group"
+            >
+              <CardContent className="px-6 py-4">
+                <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
                   <div className="flex-1 space-y-3">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h3 className="font-semibold text-lg text-foreground">{cap.CAPACITACION_NOMBRE}</h3>
@@ -55,25 +58,25 @@ export function PendingAssignmentsTab({ capacitaciones }: PendingAssignmentsTabP
 
                     <p className="text-sm text-muted-foreground line-clamp-2">{cap.OBJETIVO}</p>
 
-                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                    <div className="flex flex-wrap gap-4 text-sm pt-2">
                       <div className="flex items-center gap-2 text-muted-foreground">
-                        <Calendar className="h-4 w-4" />
+                        <Calendar className="h-4 w-4 text-blue-600" />
                         <span>
                           {cap.FECHA_PROGRAMADA ? new Date(cap.FECHA_PROGRAMADA).toLocaleDateString("es-GT") : "Sin fecha"}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-muted-foreground">
-                        <Users className="h-4 w-4" />
+                        <Users className="h-4 w-4 text-green-600" />
                         <span>{cap.PENDIENTES_REGISTRAR} participantes</span>
                       </div>
                       <div className="col-span-2 sm:col-span-2 text-muted-foreground">
-                        <span className="text-xs">Origen: {cap.NOMBRE_ORIGEN}</span>
+                        <span className="">Origen: {cap.NOMBRE_ORIGEN}</span>
                       </div>
                     </div>
                   </div>
 
                   <Link href={`/capacitaciones/asignar/${cap.ID_CAPACITACION}`}>
-                    <Button className="whitespace-nowrap">
+                    <Button className="whitespace-nowrap cursor-pointer">
                       <UserPlus className="h-4 w-4 mr-2" />
                       Asignar
                     </Button>

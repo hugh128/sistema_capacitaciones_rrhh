@@ -371,7 +371,7 @@ export default function RevisarCapacitacionPage() {
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <Link href="/capacitaciones">
-                  <Button variant="outline" size="icon">
+                  <Button variant="outline" size="icon" className="cursor-pointer dark:hover:text-foreground dark:hover:border-gray-600">
                     <ArrowLeft className="h-4 w-4" />
                   </Button>
                 </Link>

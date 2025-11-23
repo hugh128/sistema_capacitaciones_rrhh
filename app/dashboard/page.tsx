@@ -97,7 +97,7 @@ export default function DashboardPage() {
       <div className="flex h-screen bg-background">
         <Sidebar />
 
-        <div className="flex-1 flex flex-col min-h-0">
+        <div className="flex-1 flex flex-col overflow-hidden">
           <AppHeader title="Dashboard" subtitle={`Bienvenido, ${user.NOMBRE} ${user.APELLIDO}`} />
 
           {/* Main Content */}
@@ -128,11 +128,8 @@ export default function DashboardPage() {
                     )}
                     {user.ROLES[0]?.NOMBRE === "Capacitador" && (
                       <>
-                        <Button variant="default" size="sm">
+                        <Button variant="default" size="sm" className="cursor-pointer">
                           Mis Capacitaciones
-                        </Button>
-                        <Button variant="outline" size="sm">
-                          Subir Documentos
                         </Button>
                       </>
                     )}

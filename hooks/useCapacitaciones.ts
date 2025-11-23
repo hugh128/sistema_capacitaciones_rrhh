@@ -65,10 +65,10 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     }
   }, [userId]);
 
+  // ✨ CAMBIO CRÍTICO: Remover toast.error y solo retornar undefined
   const obtenerDetallesCapacitacion = useCallback(async (idCapacitacion: number) => {  
     if (!userId) {
-      toast.error("Usuario no autenticado.");
-      return;
+      return undefined; // ✨ Silenciosamente retornar undefined
     }
 
     setIsMutating(true);
@@ -88,8 +88,7 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
 
   const obtenerCapacitadores = useCallback(async () => {  
     if (!userId) {
-      toast.error("Usuario no autenticado.");
-      return;
+      return []; // ✨ Retornar array vacío
     }
 
     setIsMutating(true);
@@ -102,13 +101,15 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
       const baseMessage = "Error al obtener capacitadores.";
       setError(baseMessage);
       handleApiError(err, baseMessage);
+      return [];
+    } finally {
+      setIsMutating(false);
     }
   }, [userId]);
 
   const obtenerColaboradoresSinSesion = useCallback(async (idCapacitacion: number) => {  
     if (!userId) {
-      toast.error("Usuario no autenticado.");
-      return;
+      return []; // ✨ Retornar array vacío
     }
 
     setIsMutating(true);
@@ -121,12 +122,15 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
       const baseMessage = "Error al obtener colaboradores para asignacion.";
       setError(baseMessage);
       handleApiError(err, baseMessage);
+      return [];
+    } finally {
+      setIsMutating(false);
     }
   }, [userId]);
 
   const asignarCapacitacion = useCallback(async (payload: AsignarCapacitacion) => {
     if (!userId) {
-      toast.error("Usuario no autenticado.");
+      toast.error("Usuario no autenticado."); // ✨ Solo mostrar en acciones de usuario
       return;
     }
 
@@ -149,7 +153,7 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
 
   const asignarSesion = useCallback(async (payload: AsignarSesion) => {
     if (!userId) {
-      toast.error("Usuario no autenticado.");
+      toast.error("Usuario no autenticado."); // ✨ Solo mostrar en acciones de usuario
       return;
     }
 
@@ -172,8 +176,7 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
 
   const obtenerCapacitacionesPorCapacitador = useCallback(async (idCapacitador: number) => {  
     if (!userId) {
-      toast.error("Usuario no autenticado.");
-      return;
+      return undefined;
     }
 
     setIsMutating(true);
@@ -186,13 +189,14 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
       const baseMessage = "Error al obtener capacitaciones.";
       setError(baseMessage);
       handleApiError(err, baseMessage);
+    } finally {
+      setIsMutating(false);
     }
   }, [userId]);
 
   const obtenerDetalleSesionCapacitador = useCallback(async (idSesion: number, idCapacitador: number) => {  
     if (!userId) {
-      toast.error("Usuario no autenticado.");
-      return;
+      return undefined;
     }
 
     setIsMutating(true);
@@ -212,8 +216,7 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
 
   const obtenerCapacitacionEnRevision = useCallback(async (idSesion: number) => {  
     if (!userId) {
-      toast.error("Usuario no autenticado.");
-      return;
+      return undefined;
     }
 
     setIsMutating(true);
@@ -233,8 +236,7 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
 
   const obtenerDetalleSesion = useCallback(async (idSesion: number) => {  
     if (!userId) {
-      toast.error("Usuario no autenticado.");
-      return;
+      return undefined;
     }
 
     setIsMutating(true);
@@ -424,7 +426,11 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     }
   }, [userId]);
 
-  const descargarListaAsistencia = useCallback(async (idSesion: number): Promise<string> => {
+  const descargarListaAsistencia = useCallback(async (idSesion: number): Promise<string | undefined> => {
+    if (!userId) {
+      return undefined;
+    }
+
     try {
       const { data } = await apiClient.get(`/capacitaciones/${idSesion}/lista-asistencia/descargar`);
       if (data?.url) {
@@ -437,9 +443,13 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
       handleApiError(err, "Error al descargar la lista de asistencia.");
       throw err;
     }
-  }, []);
+  }, [userId]);
 
-  const descargarExamen = useCallback(async (idSesion: number, idColaborador: number): Promise<string> => {
+  const descargarExamen = useCallback(async (idSesion: number, idColaborador: number): Promise<string | undefined> => {
+    if (!userId) {
+      return undefined;
+    }
+
     try {
       const { data } = await apiClient.get(`/capacitaciones/${idSesion}/colaboradores/${idColaborador}/examen/descargar`);
       if (data?.url) {
@@ -452,9 +462,13 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
       handleApiError(err, "Error al descargar el examen.");
       throw err;
     }
-  }, []);
+  }, [userId]);
 
-  const descargarDiploma = useCallback(async (idSesion: number, idColaborador: number): Promise<string> => {
+  const descargarDiploma = useCallback(async (idSesion: number, idColaborador: number): Promise<string | undefined> => {
+    if (!userId) {
+      return undefined;
+    }
+
     try {
       const { data } = await apiClient.get(`/capacitaciones/${idSesion}/colaboradores/${idColaborador}/diploma/descargar`);
       if (data?.url) {
@@ -467,9 +481,14 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
       handleApiError(err, "Error al descargar el diploma.");
       throw err;
     }
-  }, []);
+  }, [userId]);
 
   const descargarPlantillaAsistencia = useCallback(async (formatoDatos: ListadoAsistencia) => {
+    if (!userId) {
+      toast.error("Usuario no autenticado.");
+      return;
+    }
+
     try {
       const response = await apiClient.post(`/documents-module/asistencia`, formatoDatos, {
         responseType: "blob",
@@ -490,7 +509,7 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
       
       handleApiError(err, "Error al generar la plantilla de asistencia.");
     }
-  }, []);
+  }, [userId]);
 
   const descargarArchivoPorRuta = useCallback(async (
     folder: string,
@@ -524,8 +543,7 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
 
   const obtenerPlantillaExamen = useCallback(async (idSesion: number) => {
     if (!userId) {
-      toast.error("Usuario no autenticado.");
-      return;
+      return undefined;
     }
 
     setIsMutating(true);
@@ -569,6 +587,11 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
   }, [userId])
 
   const generarExamenIndividualPDF = useCallback(async (formatoDatos: ExamenCompleto) => {
+    if (!userId) {
+      toast.error("Usuario no autenticado.");
+      return;
+    }
+
     try {
       const response = await apiClient.post(`/documents-module/examen`, formatoDatos, {
         responseType: "blob",
@@ -589,9 +612,14 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
       
       handleApiError(err, "Error al generar el examen de la sesion.");
     }
-  }, []);
+  }, [userId]);
 
   const generarExamenPDF = useCallback(async (formatoDatosList: ExamenCompleto[]) => {
+    if (!userId) {
+      toast.error("Usuario no autenticado.");
+      return;
+    }
+
     try {
       const response = await apiClient.post(`/documents-module/examenes-combinados`, formatoDatosList, {
         responseType: "blob",
@@ -613,7 +641,7 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
       
       handleApiError(err, "Error al generar el examen de la sesion.");
     }
-  }, []);
+  }, [userId]);
 
   useEffect(() => {
     if (userId) {

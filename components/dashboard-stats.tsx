@@ -163,8 +163,8 @@ export function DashboardStats({
             {capacitacionesRecientes.length > 0 ? (
               capacitacionesRecientes.map((training, index) => (
                 <div key={index} className="flex items-center justify-between space-x-4">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-sm font-medium truncate">{training.nombre}</p>
+                  <div className="flex-1 min-w-0 flex-wrap">
+                    <p className="text-sm font-medium">{training.nombre}</p>
                     <div className="flex items-center gap-2 mt-1">
                       <Users className="h-3 w-3 text-muted-foreground" />
                       <span className="text-xs text-muted-foreground">{training.participantes} participantes</span>
@@ -198,7 +198,7 @@ export function DashboardStats({
                 actividadesProximas.map((actividad) => (
                   <div 
                     key={actividad.ID_SESION} 
-                    className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
+                    className="flex flex-wrap items-center justify-between p-3 rounded-lg bg-muted/50"
                   >
                     <div>
                       <p className="text-sm font-medium">{actividad.nombre}</p>
