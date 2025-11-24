@@ -320,7 +320,7 @@ export default function MisCapacitacionesPage() {
                   <div className="space-y-3">
                     {proximasCapacitaciones.map((cap) => (
                       <div
-                        key={cap.ID_CAPACITACION}
+                        key={cap.ID_SESION}
                         className="flex items-center justify-between p-4 border-2 rounded-xl hover:border-primary hover:bg-accent/50 transition-all group"
                       >
                         <div className="flex-1 space-y-2">
@@ -352,7 +352,7 @@ export default function MisCapacitacionesPage() {
                             </span>
                           </div>
                         </div>
-                        <Link href={`/mis-capacitaciones/${cap.ID_CAPACITACION}`}>
+                        <Link href={`/mis-capacitaciones/${cap.ID_SESION}`}>
                           <Button size="lg" className="ml-4 cursor-pointer">
                             <Eye className="h-4 w-4 mr-2" />
                             Ver Detalle
@@ -426,7 +426,7 @@ export default function MisCapacitacionesPage() {
                   ) : (
                     capacitacionesFiltradas.map((cap) => (
                       <Card
-                        key={cap.ID_CAPACITACION}
+                        key={cap.ID_SESION}
                         className="hover:shadow-lg transition-all border-2 hover:border-primary/50 dark:hover:border-primary group"
                       >
                         <CardContent className="px-6 py-4">

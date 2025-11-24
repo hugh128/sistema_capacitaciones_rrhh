@@ -53,7 +53,7 @@ export default function TrainerCapacitacionDetailPage() {
   useEffect(() => {
     if (!user || !user.PERSONA_ID) {
       setIsLoading(false);
-      return; 
+      return;
     }
 
     const fetchData = async () => {
@@ -61,6 +61,8 @@ export default function TrainerCapacitacionDetailPage() {
       try {
         const { SESION, COLABORADORES } = await obtenerDetalleSesionCapacitador(sesionId, user?.PERSONA_ID)
         
+        console.log(SESION)
+
         setSesion(SESION)
         setColaboradoresAsignados(COLABORADORES)
 

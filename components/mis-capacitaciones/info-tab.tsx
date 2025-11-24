@@ -72,26 +72,40 @@ export function InfoTab({ sesion }: InfoTabProps) {
 
       <div className="space-y-2 pt-4 border-t">
         <Label className="text-xs text-muted-foreground uppercase tracking-wide">Objetivo</Label>
-        <p className="font-medium leading-relaxed">{sesion.OBJETIVO}</p>
+        <p className="font-medium leading-relaxed">{sesion.OBJETIVO ?? "Sin objetivo"}</p>
       </div>
 
-      <div className="space-y-2">
-        <Label className="text-xs text-muted-foreground uppercase tracking-wide">
-          Temas
-        </Label>
+      {sesion.TEMAS && (
+        <div className="space-y-2">
+          <Label className="text-xs text-muted-foreground uppercase tracking-wide">
+            Temas
+          </Label>
 
-        <div className="flex flex-wrap gap-2">
-          {(sesion.TEMAS ?? "").split(",").map((tema, idx) => (
-            <Badge
-              key={idx}
-              variant="secondary"
-              className="text-sm px-3 py-1 whitespace-normal"
-            >
-              {tema.trim()}
-            </Badge>
-          ))}
+          <div className="flex flex-wrap gap-2">
+            {sesion.TEMAS.split("|").map((tema, idx) => (
+              !!tema.trim() && (
+                <Badge
+                  key={idx}
+                  variant="secondary"
+                  className="
+                    text-xs sm:text-sm px-3 py-1 rounded-2xl sm:rounded-full 
+                    bg-muted/70 
+                    dark:bg-muted/40 
+                    text-foreground/90
+                    border border-border/40
+                    dark:border-foreground/10
+                    hover:bg-muted/50
+                    transition-colors
+                    whitespace-normal
+                  "
+                >
+                  {tema}
+                </Badge>
+              )
+            ))}
+          </div>
         </div>
-      </div>
+      )}
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 border-t">
         <Card
