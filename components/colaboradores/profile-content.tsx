@@ -673,17 +673,19 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
                                         <span>Capacitador: {cap.nombreCapacitador}</span>
                                       </div>
                                     </div>
-                                    <span
-                                      className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
-                                        cap.estatus === "Completa"
-                                          ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
-                                          : cap.estatus === "En Progreso"
-                                          ? "bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300"
-                                          : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
-                                      }`}
-                                    >
-                                      {cap.estatus}
-                                    </span>
+                                      <span
+                                        className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
+                                          cap.estatus === "Completa"
+                                            ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+                                            : cap.estatus === "Pendiente"
+                                            ? "bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300"
+                                            : cap.estatus === "Reprobada"
+                                            ? "bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300"
+                                            : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                                        }`}
+                                      >
+                                        {cap.estatus}
+                                      </span>
                                   </div>
 
                                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">

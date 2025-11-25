@@ -60,8 +60,6 @@ export default function TrainerCapacitacionDetailPage() {
       setIsLoading(true);
       try {
         const { SESION, COLABORADORES } = await obtenerDetalleSesionCapacitador(sesionId, user?.PERSONA_ID)
-        
-        console.log(SESION)
 
         setSesion(SESION)
         setColaboradoresAsignados(COLABORADORES)

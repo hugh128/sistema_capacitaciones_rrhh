@@ -65,10 +65,9 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     }
   }, [userId]);
 
-  // ✨ CAMBIO CRÍTICO: Remover toast.error y solo retornar undefined
   const obtenerDetallesCapacitacion = useCallback(async (idCapacitacion: number) => {  
     if (!userId) {
-      return undefined; // ✨ Silenciosamente retornar undefined
+      return undefined;
     }
 
     setIsMutating(true);
@@ -88,7 +87,7 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
 
   const obtenerCapacitadores = useCallback(async () => {  
     if (!userId) {
-      return []; // ✨ Retornar array vacío
+      return [];
     }
 
     setIsMutating(true);
@@ -109,7 +108,7 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
 
   const obtenerColaboradoresSinSesion = useCallback(async (idCapacitacion: number) => {  
     if (!userId) {
-      return []; // ✨ Retornar array vacío
+      return [];
     }
 
     setIsMutating(true);
@@ -130,7 +129,7 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
 
   const asignarCapacitacion = useCallback(async (payload: AsignarCapacitacion) => {
     if (!userId) {
-      toast.error("Usuario no autenticado."); // ✨ Solo mostrar en acciones de usuario
+      toast.error("Usuario no autenticado.");
       return;
     }
 
@@ -153,7 +152,7 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
 
   const asignarSesion = useCallback(async (payload: AsignarSesion) => {
     if (!userId) {
-      toast.error("Usuario no autenticado."); // ✨ Solo mostrar en acciones de usuario
+      toast.error("Usuario no autenticado.");
       return;
     }
 

@@ -32,6 +32,7 @@ export function MetricsCards({
       icon: BookOpen,
       color: "text-blue-600 dark:text-blue-400",
       bgColor: "bg-blue-50 dark:bg-blue-900/20",
+      borderColorClass: "border-l-blue-500",
     },
     {
       title: "Pendientes de Asignar",
@@ -40,6 +41,7 @@ export function MetricsCards({
       icon: AlertCircle,
       color: "text-yellow-600 dark:text-yellow-400",
       bgColor: "bg-yellow-50 dark:bg-yellow-900/20",
+      borderColorClass: "border-l-yellow-500",
     },
     {
       title: "En Proceso",
@@ -48,6 +50,7 @@ export function MetricsCards({
       icon: Clock,
       color: "text-purple-600 dark:text-purple-400",
       bgColor: "bg-purple-50 dark:bg-purple-900/20",
+      borderColorClass: "border-l-purple-500",
     },
     {
       title: "Pendientes de Revisión",
@@ -56,6 +59,7 @@ export function MetricsCards({
       icon: AlertCircle,
       color: "text-orange-600 dark:text-orange-400",
       bgColor: "bg-orange-50 dark:bg-purple-900/20",
+      borderColorClass: "border-l-orange-500",
     },
     {
       title: "Finalizadas Este Mes",
@@ -64,6 +68,7 @@ export function MetricsCards({
       icon: CheckCircle2,
       color: "text-green-600 dark:text-green-400",
       bgColor: "bg-green-50 dark:bg-green-900/20",
+      borderColorClass: "border-l-green-500",
     },
     {
       title: "Total Participantes",
@@ -72,6 +77,7 @@ export function MetricsCards({
       icon: Users,
       color: "text-indigo-600 dark:text-indigo-300",
       bgColor: "bg-indigo-50 dark:bg-green-900/20",
+      borderColorClass: "border-l-indigo-600",
     },
     {
       title: "% Asistencia",
@@ -80,6 +86,7 @@ export function MetricsCards({
       icon: TrendingUp,
       color: "text-green-600 dark:text-green-400",
       bgColor: "bg-green-50 dark:bg-green-900/20",
+      borderColorClass: "border-l-green-500",
     },
     {
       title: "% Aprobación",
@@ -88,8 +95,9 @@ export function MetricsCards({
       icon: CheckCircle2,
       color: "text-green-600 dark:text-green-400",
       bgColor: "bg-green-50 dark:bg-green-900/20",
+      borderColorClass: "border-l-green-600",
     },
-  ]
+  ];
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -98,8 +106,7 @@ export function MetricsCards({
         return (
           <Card
             key={idx}
-            className="border-l-4 dark:border-l-gray-600 hover:shadow-md transition-shadow"
-            style={{ borderLeftColor: metric.color }}
+            className={`border-l-4 ${metric.borderColorClass} hover:shadow-md transition-shadow`}
           >
             <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
               <CardTitle className="text-sm font-medium">{metric.title}</CardTitle>

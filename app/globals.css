@@ -165,3 +165,11 @@
 .dark .phara-card {
   border: 1px solid #1d283a;
 }
+
+.dark .dark-mode-date-fix input[type="date"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}
+
+.dark .dark-mode-date-fix input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}

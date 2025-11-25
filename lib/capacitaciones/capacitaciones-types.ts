@@ -56,6 +56,7 @@ export interface Capacitacion {
   ID_DETALLE_PROGRAMA: number | null
   TIPO_ORIGEN: TipoOrigen
   NOMBRE_ORIGEN: string
+  DOCUMENTO_VERSION: number | null
 
   // Configuración general
   TIPO_CAPACITACION: TipoCapacitacion
@@ -219,6 +220,7 @@ export interface AsignarSesion {
   observaciones: string
   usuario: string
   objetivo?: string
+  version: number
 }
 
 

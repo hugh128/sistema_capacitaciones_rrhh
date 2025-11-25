@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -136,11 +136,53 @@ export function LoginForm() {
 
             <div className="text-center mt-8 text-sm text-primary font-medium dark:text-primary-foreground">
               <p>Sistema de Gestión de Capacitaciones</p>
+              <p className="pt-1 text-xs text-primary/80 dark:text-primary-foreground/70">
+                Powered by HO-42
+              </p>
               <p className="text-xs text-muted-foreground mt-1">versión 1.0</p>
+
+              <Signature />
             </div>
           </div>
         </div>
       </div>
     </div>
   )
+}
+
+function Signature() {
+  const [open, setOpen] = useState(false);
+
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if (e.ctrlKey && e.shiftKey && e.key.toLowerCase() === "h") {
+        e.preventDefault();
+        setOpen(true);
+      }
+    };
+
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
+
+  if (!open) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="bg-background text-foreground p-6 rounded-xl shadow-xl w-full max-w-xs text-center border border-border/30">
+        <h2 className="text-lg font-semibold mb-2">Hidden Signature</h2>
+        <p className="text-sm text-muted-foreground">
+          Crafted with precision by <strong>Hugh Ordoñez</strong>.
+        </p>
+        <p className="text-xs opacity-70 mt-2">You unlocked the secret 🔐</p>
+
+        <button
+          onClick={() => setOpen(false)}
+          className="mt-4 text-sm px-3 py-1 rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition cursor-pointer"
+        >
+          Cerrar
+        </button>
+      </div>
+    </div>
+  );
 }
