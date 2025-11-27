@@ -394,23 +394,23 @@ export default function TrainerCapacitacionDetailPage() {
 
             <Tabs defaultValue="info" className="w-full">
               <TabsList className="flex flex-wrap w-full gap-1 p-1 h-auto">
-                <TabsTrigger value="info" className="flex items-center gap-2 py-3">
+                <TabsTrigger value="info" className="flex items-center gap-2 py-3 cursor-pointer">
                   <Info className="h-4 w-4" />
                   <span className="hidden sm:inline">Información</span>
                 </TabsTrigger>
-                <TabsTrigger value="participantes" className="flex items-center gap-2 py-3">
+                <TabsTrigger value="participantes" className="flex items-center gap-2 py-3 cursor-pointer">
                   <Users className="h-4 w-4" />
                   <span className="hidden sm:inline">Participantes</span>
                 </TabsTrigger>
-                <TabsTrigger value="examen" className="flex items-center gap-2 py-3">
+                <TabsTrigger value="examen" className="flex items-center gap-2 py-3 cursor-pointer">
                   <FileEdit className="h-4 w-4" />
                   <span className="hidden sm:inline">Examen</span>
                 </TabsTrigger>
-                <TabsTrigger value="documentos" className="flex items-center gap-2 py-3">
+                <TabsTrigger value="documentos" className="flex items-center gap-2 py-3 cursor-pointer">
                   <FileText className="h-4 w-4" />
                   <span className="hidden sm:inline">Documentos</span>
                 </TabsTrigger>
-                <TabsTrigger value="finalizacion" className="flex items-center gap-2 py-3">
+                <TabsTrigger value="finalizacion" className="flex items-center gap-2 py-3 cursor-pointer">
                   <Award className="h-4 w-4" />
                   <span className="hidden sm:inline">Finalización</span>
                 </TabsTrigger>

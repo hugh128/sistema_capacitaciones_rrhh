@@ -41,6 +41,7 @@ interface PersonaFormModalProps {
   allFields: FormField[]
   onSubmit: OnSubmit
   loading: boolean
+  cambioPlanPendiente?: boolean
 }
 
 const INTERNAL_FIELDS_KEYS = ['EMPRESA_ID', 'DEPARTAMENTO_ID', 'PUESTO_ID'];
@@ -148,6 +149,7 @@ export function PersonaFormModal({
   allFields,
   onSubmit,
   loading = false,
+  cambioPlanPendiente = false,
 }: PersonaFormModalProps) {
   
   const safeInitialData = useMemo(() => {
@@ -197,9 +199,7 @@ export function PersonaFormModal({
     setFormData((prev) => ({ ...prev, [key]: finalValue }))
   }, [allFields])
   
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-
+  const handleSubmit = () => {
     let finalData = formData;
     if (!isColaborador) {
         finalData = { ...formData };
@@ -230,7 +230,7 @@ export function PersonaFormModal({
   const colaboradorValue = isColaborador;
 
   const handleOpenChange = (newOpenState: boolean) => {
-    if (loading && newOpenState === false) {
+    if ((loading || cambioPlanPendiente) && newOpenState === false) {
       return;
     }
     
@@ -242,12 +242,12 @@ export function PersonaFormModal({
       <DialogContent 
         className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto custom-scrollbar"
         onInteractOutside={(e) => {
-          if (loading) {
+          if (loading || cambioPlanPendiente) {
             e.preventDefault();
           }
         }}
         onEscapeKeyDown={(e) => {
-          if (loading) {
+          if (loading || cambioPlanPendiente) {
             e.preventDefault();
           }
         }}
@@ -257,15 +257,15 @@ export function PersonaFormModal({
           {description && <DialogDescription>{description}</DialogDescription>}
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <div className="space-y-4">
           
-          <div className={loading ? "pointer-events-none opacity-50 transition-opacity" : "transition-opacity"}>
+          <div className={loading || cambioPlanPendiente ? "pointer-events-none opacity-50 transition-opacity" : "transition-opacity"}>
             <div className="border-b pb-2">
               <FormFieldRenderer 
                 field={{ key: 'isColaborador', label: 'Colaborador Interno', type: 'checkbox' }}
                 value={colaboradorValue}
                 updateField={handleColaboradorChange}
-                disabled={loading}
+                disabled={loading || cambioPlanPendiente}
               />
             </div>
 
@@ -278,7 +278,7 @@ export function PersonaFormModal({
                         value={formData[field.key]}
                         updateField={updateField}
                         options={field.options}
-                        disabled={loading}
+                        disabled={loading || cambioPlanPendiente}
                       />
               ))}
             </div>
@@ -290,13 +290,13 @@ export function PersonaFormModal({
               variant="outline" 
               onClick={() => handleOpenChange(false)} 
               className="dark:hover:bg-accent cursor-pointer"
-              disabled={loading}
+              disabled={loading || cambioPlanPendiente}
             >
               Cancelar
             </Button>
             <Button 
-              type="submit" 
-              disabled={loading} 
+              onClick={handleSubmit}
+              disabled={loading || cambioPlanPendiente} 
               className="cursor-pointer min-w-[100px]"
             >
               {loading ? (
@@ -304,12 +304,14 @@ export function PersonaFormModal({
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                   Guardando...
                 </>
+              ) : cambioPlanPendiente ? (
+                "Esperando decisión..."
               ) : (
                 "Guardar"
               )}
             </Button>
           </DialogFooter>
-        </form>
+        </div>
       </DialogContent>
     </Dialog>
   )

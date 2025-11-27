@@ -189,11 +189,44 @@ export function useColaboradores(user: UsuarioLogin | null) {
         responseType: "blob",
       });
       
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = "induccion-documental.pdf";
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
+        }
+      }
+      
+      const nombreColaborador = formatoDatos.nombreColaborador;
+      const nombrePlan = formatoDatos.nombrePlan;
+      
+      const limpiarNombre = (texto: string) => {
+        return texto
+          .replace(/[<>:"/\\|?*]/g, '')
+          .replace(/\s+/g, '_')
+          .trim();
+      };
+      
+      const extension = filename.includes('.') ? filename.split('.').pop() : 'pdf';
+      const nombreBase = filename.replace(/\.[^/.]+$/, '');
+      
+      const nombreColaboradorLimpio = limpiarNombre(nombreColaborador);
+      const nombrePlanLimpio = limpiarNombre(nombrePlan ?? "");
+      const nombreFinal = `${nombreBase}_${nombreColaboradorLimpio}_${nombrePlanLimpio}.${extension}`;
+      
       const blob = new Blob([response.data], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
-
-      window.open(url, "_blank");
-      setTimeout(() => window.URL.revokeObjectURL(url), 5000);
+      
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = nombreFinal;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      setTimeout(() => window.URL.revokeObjectURL(url), 100);
     } catch (err) {
       const error = err as AxiosError;
 

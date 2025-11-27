@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+import { useState, useMemo, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
@@ -40,13 +40,12 @@ interface DataTableProps<T> {
   searchPlaceholder?: string
 }
 
-function getNestedValue<T>(obj: T, path: string): React.ReactNode {
+function getNestedValue<T>(obj: T, path: string): unknown {
   if (!path.includes('.')) {
-    return obj[path as keyof T] as React.ReactNode;
+    return obj[path as keyof T];
   }
   
   const parts = path.split('.');
-  
   let current: unknown = obj;
   
   for (const part of parts) {
@@ -55,7 +54,33 @@ function getNestedValue<T>(obj: T, path: string): React.ReactNode {
     }
     current = (current as Record<string, unknown>)[part];
   }
-  return current as React.ReactNode;
+  return current;
+}
+
+function getSearchableText(value: unknown): string {
+  if (value === null || value === undefined) return '';
+  if (typeof value === 'boolean') return value ? 'activo' : 'inactivo';
+  if (typeof value === 'object' && value !== null) {
+    if ('NOMBRE' in value) return String((value as Record<string, unknown>).NOMBRE);
+    return '';
+  }
+  return String(value);
+}
+
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value)
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value)
+    }, delay)
+
+    return () => {
+      clearTimeout(handler)
+    }
+  }, [value, delay])
+
+  return debouncedValue
 }
 
 type CallSiteRenderer<T> = (value: unknown, row: T) => React.ReactNode;
@@ -74,10 +99,32 @@ export function PersonaDataTable<T extends Persona>({
   const [showDialog, setShowDialog] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<T | null>(null)
 
+  const debouncedSearchTerm = useDebounce(searchTerm, 300)
 
-  const filteredData = data.filter((item) =>
-    Object.values(item).some((value) => String(value).toLowerCase().includes(searchTerm.toLowerCase())),
-  )
+  const filteredData = useMemo(() => {
+    if (!debouncedSearchTerm.trim()) return data;
+
+    const searchLower = debouncedSearchTerm.toLowerCase().trim();
+
+    return data.filter((item) => {
+      return columns.some((column) => {
+        const value = getNestedValue(item, column.key as string);
+        
+        if (column.key === 'TIPO_PERSONA') {
+          const tipoTexto = value === 'INTERNO' ? 'colaborador interno' : 'persona externa externo';
+          return tipoTexto.includes(searchLower);
+        }
+        
+        if (column.key === 'ESTADO') {
+          const estadoTexto = value ? 'activo' : 'inactivo';
+          return estadoTexto.includes(searchLower);
+        }
+        
+        const searchableText = getSearchableText(value);
+        return searchableText.toLowerCase().includes(searchLower);
+      });
+    });
+  }, [data, debouncedSearchTerm, columns]);
 
   const handleDeleteClick = (item: T) => {
     setItemToDelete(item)
@@ -99,7 +146,7 @@ export function PersonaDataTable<T extends Persona>({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h2 className="text-xl sm:text-2xl font-bold">{title}</h2>
         {onAdd && (
-          <Button onClick={onAdd} className="w-full sm:w-auto">
+          <Button onClick={onAdd} className="w-full sm:w-auto cursor-pointer">
             <Plus className="h-4 w-4 mr-2" />
             Agregar
           </Button>
@@ -116,38 +163,52 @@ export function PersonaDataTable<T extends Persona>({
         />
       </div>
 
-      <div className="border rounded-lg overflow-hidden custom-scrollbar">
+      <div className="border rounded-xl overflow-hidden shadow-sm bg-card">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="bg-muted/50 hover:bg-muted/50">
                 {columns.map((column) => (
-                  <TableHead key={column.key as string} className="whitespace-nowrap">
+                  <TableHead key={column.key as string} className="whitespace-nowrap font-semibold">
                     {column.label}
                   </TableHead>
                 ))}
-                {hasActions && <TableHead className="w-[120px] whitespace-nowrap">Acciones</TableHead>}
+                {hasActions && <TableHead className="w-[120px] whitespace-nowrap font-semibold">Acciones</TableHead>}
               </TableRow>
             </TableHeader>
             <TableBody>
               {filteredData.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={columns.length + 1} className="text-center py-8 text-muted-foreground">
-                    No se encontraron registros
+                <TableRow className="hover:bg-transparent">
+                  <TableCell colSpan={columns.length + 1} className="text-center py-12">
+                    <div className="flex flex-col items-center gap-2">
+                      <Search className="h-8 w-8 text-muted-foreground/50" />
+                      <p className="text-muted-foreground font-medium">
+                        {debouncedSearchTerm ? 'No se encontraron resultados' : 'No hay registros disponibles'}
+                      </p>
+                      {debouncedSearchTerm && (
+                        <p className="text-sm text-muted-foreground/70">
+                          Intenta con otros términos de búsqueda
+                        </p>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (
                 filteredData.map((item, index) => (
-                  <TableRow key={item.ID_PERSONA || index}>
+                  <TableRow key={item.ID_PERSONA || index} className="hover:bg-muted/30 transition-colors">
                     {columns.map((column) => {
                       const value = getNestedValue(item, column.key as string);
+                      const isEmpty = value === undefined || value === null || value === '';
 
                       return (
                         <TableCell key={column.key as string} className="whitespace-nowrap">
-                          {column.render
-                            ? (column.render as CallSiteRenderer<T>)(value, item) 
-                            : (value !== undefined && value !== null ? value : 'N/A')
-                          }
+                          {column.render ? (
+                            (column.render as CallSiteRenderer<T>)(value, item)
+                          ) : isEmpty ? (
+                            <span className="text-muted-foreground/50 italic text-sm">Sin información</span>
+                          ) : (
+                            <span className="text-foreground">{String(value)}</span>
+                          )}
                         </TableCell>
                       )
                     })}
@@ -155,25 +216,28 @@ export function PersonaDataTable<T extends Persona>({
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" className="hover:bg-muted">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                          <DropdownMenuContent align="end" className="w-40">
                             {onViewDetail && (
-                              <DropdownMenuItem onClick={() => onViewDetail(item)}>
+                              <DropdownMenuItem onClick={() => onViewDetail(item)} className="cursor-pointer">
                                 <Eye className="h-4 w-4 mr-2" />
                                 Ver Detalle
                               </DropdownMenuItem>
                             )}
                             {onEdit && (
-                              <DropdownMenuItem onClick={() => onEdit(item)}>
+                              <DropdownMenuItem onClick={() => onEdit(item)} className="cursor-pointer">
                                 <Edit className="h-4 w-4 mr-2" />
                                 Editar
                               </DropdownMenuItem>
                             )}
                             {onDelete && (
-                              <DropdownMenuItem onClick={() => handleDeleteClick(item)} className="text-destructive">
+                              <DropdownMenuItem 
+                                onClick={() => handleDeleteClick(item)} 
+                                className="text-destructive cursor-pointer focus:text-destructive focus:bg-destructive/10"
+                              >
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 Inactivar
                               </DropdownMenuItem>
@@ -193,20 +257,19 @@ export function PersonaDataTable<T extends Persona>({
       <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar inactivacion</AlertDialogTitle>
+            <AlertDialogTitle>Confirmar inactivación</AlertDialogTitle>
             <AlertDialogDescription>
               ¿Estás seguro de que deseas inactivar este registro? Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="cursor-pointer">Cancelar</AlertDialogCancel>
+            <AlertDialogCancel className="dark:text-foreground dark:hover:border-foreground/30 cursor-pointer">Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive hover:bg-destructive cursor-pointer">
               Inactivar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
     </div>
   )
 }

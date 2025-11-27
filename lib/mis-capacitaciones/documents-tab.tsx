@@ -194,6 +194,7 @@ export function DocumentsTab({
         external: sesion.MODALIDAD === 'EXTERNA' ? 'X' : '', 
         passingScore: sesion.NOTA_MINIMA ? sesion.NOTA_MINIMA.toString() : 'N/A',
         series: plantillaExamen.series, 
+        sesion: sesion.NOMBRE_SESION,
       }));
 
       await generarExamenPDF(listaExamenesData);

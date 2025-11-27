@@ -18,6 +18,7 @@ interface CambioPlanModalProps {
   open: boolean
   onOpenChange: (open: boolean) => void
   onCancel?: () => void
+  onGuardarSinCambio?: () => void
   verificacionData: CambiarPlanResponse | null
   onConfirm: (capacitacionesSeleccionadas: number[]) => Promise<boolean>
   onAnalizar: () => Promise<AnalizarCambioPlanResponse | null>
@@ -28,6 +29,7 @@ export function CambioPlanModal({
   open,
   onOpenChange,
   onCancel,
+  onGuardarSinCambio,
   verificacionData,
   onConfirm,
   onAnalizar,
@@ -78,12 +80,16 @@ export function CambioPlanModal({
   }
 
   const handleCancelar = () => {
-    onOpenChange(false)
-    
     if (onCancel) {
-      setTimeout(() => {
-        onCancel()
-      }, 100)
+      onCancel()
+    } else {
+      onOpenChange(false)
+    }
+  }
+
+  const handleGuardarSinCambio = () => {
+    if (onGuardarSinCambio) {
+      onGuardarSinCambio()
     }
   }
 
@@ -112,7 +118,7 @@ export function CambioPlanModal({
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent 
-        className="max-w-4xl max-h-[90vh] overflow-y-auto"
+        className="sm:max-w-[620px] max-h-[90vh] overflow-y-auto"
         onInteractOutside={(e) => {
           if (isAnalyzing || isConfirming) {
             e.preventDefault()
@@ -125,31 +131,31 @@ export function CambioPlanModal({
         }}
       >
         <DialogHeader>
-          <DialogTitle>Cambio de Plan de Capacitación</DialogTitle>
-          <DialogDescription>
-            Se detectó un cambio de departamento o puesto que requiere actualizar el plan de capacitación
+          <DialogTitle className="text-lg sm:text-xl">Cambio de Plan de Capacitación Detectado</DialogTitle>
+          <DialogDescription className="text-sm">
+            El cambio de departamento o puesto puede requerir actualizar el plan de capacitación
           </DialogDescription>
         </DialogHeader>
 
         {step === 'verificacion' && (
-          <div className="space-y-4">
+          <div className="space-y-4 px-1">
             <Alert>
-              <Info className="h-4 w-4" />
-              <AlertDescription className="ml-2">
+              <Info className="h-4 w-4 flex-shrink-0" />
+              <AlertDescription className="ml-2 text-sm">
                 {verificacionData.MENSAJE}
               </AlertDescription>
             </Alert>
 
-            <div className="grid grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 p-4 bg-muted rounded-lg">
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Plan Actual</p>
-                <p className="text-lg font-semibold">
+                <p className="text-base sm:text-lg font-semibold break-words">
                   {verificacionData.PLAN_ACTUAL_NOMBRE || 'Sin plan'}
                 </p>
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">Plan Nuevo</p>
-                <p className="text-lg font-semibold text-primary dark:text-blue-500">
+                <p className="text-base sm:text-lg font-semibold text-primary dark:text-blue-500 break-words">
                   {verificacionData.PLAN_NUEVO_NOMBRE || 'Sin plan disponible'}
                 </p>
               </div>
@@ -157,20 +163,31 @@ export function CambioPlanModal({
 
             {!verificacionData.REQUIERE_CAMBIO_PLAN ? (
               <Alert>
-                <CheckCircle2 className="h-4 w-4 text-green-500" />
-                <AlertDescription className="ml-2">
+                <CheckCircle2 className="h-4 w-4 text-green-500 flex-shrink-0" />
+                <AlertDescription className="ml-2 text-sm">
                   El colaborador puede mantener su plan actual. No se requiere acción adicional.
                 </AlertDescription>
               </Alert>
             ) : !verificacionData.PLAN_NUEVO_ID ? (
               <Alert variant="destructive">
-                <AlertTriangle className="h-4 w-4" />
-                <AlertDescription className="ml-2">
+                <AlertTriangle className="h-4 w-4 flex-shrink-0" />
+                <AlertDescription className="ml-2 text-sm">
                   No existe un plan activo para el nuevo departamento/puesto. 
-                  Debe crear un plan antes de continuar.
+                  Debe crear un plan antes de continuar con el cambio de plan.
                 </AlertDescription>
               </Alert>
-            ) : null}
+            ) : (
+              <Alert className="bg-blue-50 border-blue-200 dark:bg-blue-950/20 dark:border-blue-900">
+                <Info className="h-4 w-4 text-blue-600 flex-shrink-0" />
+                <AlertDescription className="ml-2 text-sm text-blue-900 dark:text-blue-100">
+                  <strong>Tienes dos opciones:</strong>
+                  <ul className="list-disc list-inside mt-2 space-y-1">
+                    <li>Actualizar sin cambiar el plan (mantener capacitaciones actuales)</li>
+                    <li>Analizar y cambiar al nuevo plan de capacitación</li>
+                  </ul>
+                </AlertDescription>
+              </Alert>
+            )}
           </div>
         )}
 
@@ -285,20 +302,33 @@ export function CambioPlanModal({
           </div>
         )}
 
-        <DialogFooter>
+        <DialogFooter className="flex-col sm:flex-row gap-2 sm:gap-0">
           {step === 'verificacion' && (
             <>
               <Button 
                 variant="outline" 
                 onClick={handleCancelar}
                 disabled={isAnalyzing}
+                className="cursor-pointer dark:hover:bg-accent w-full sm:w-auto"
               >
-                Cancelar
+                Volver al Formulario
               </Button>
+              
+              {onGuardarSinCambio && verificacionData.REQUIERE_CAMBIO_PLAN && (
+                <Button 
+                  variant="secondary"
+                  onClick={handleGuardarSinCambio}
+                  disabled={isAnalyzing}
+                  className="cursor-pointer w-full sm:w-auto"
+                >
+                  Guardar sin Cambiar Plan
+                </Button>
+              )}
+              
               {verificacionData.REQUIERE_CAMBIO_PLAN && verificacionData.PLAN_NUEVO_ID && (
-                <Button onClick={handleAnalizar} disabled={isAnalyzing}>
+                <Button onClick={handleAnalizar} disabled={isAnalyzing} className="cursor-pointer w-full sm:w-auto">
                   {isAnalyzing && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
-                  Analizar Cambio
+                  Analizar y Cambiar Plan
                 </Button>
               )}
             </>
@@ -310,11 +340,11 @@ export function CambioPlanModal({
                 variant="outline" 
                 onClick={() => setStep('verificacion')}
                 disabled={isConfirming}
-                className="cursor-pointer dark:hover:text-foreground dark:hover:border-white/20"
+                className="cursor-pointer dark:hover:bg-accent dark:hover:border-white/20 w-full sm:w-auto"
               >
                 Atrás
               </Button>
-              <Button onClick={handleConfirmar} disabled={isConfirming} className="cursor-pointer">
+              <Button onClick={handleConfirmar} disabled={isConfirming} className="cursor-pointer w-full sm:w-auto">
                 {isConfirming && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Confirmar Cambio ({capacitacionesSeleccionadas.length} migraciones)
               </Button>

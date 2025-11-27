@@ -141,8 +141,9 @@ export default function PersonasPage() {
   const handleSubmit = async (formData: FormValues) => {
     const isInterno = formData.TIPO_PERSONA === 'INTERNO'
     const isEditing = !!editingPersona
+    const eraInternoAntes = editingPersona?.TIPO_PERSONA === 'INTERNO'
     
-    if (isInterno && isEditing && editingPersona) {
+    if (isInterno && isEditing && editingPersona && eraInternoAntes) {
       const departamentoChanged = 
         formData.DEPARTAMENTO_ID && 
         Number(formData.DEPARTAMENTO_ID) !== editingPersona.DEPARTAMENTO_ID
@@ -166,7 +167,6 @@ export default function PersonasPage() {
             
             if (verificacion.REQUIERE_CAMBIO_PLAN && verificacion.PLAN_NUEVO_ID) {
               setCambioPlanModalOpen(true)
-              setModalOpen(false)
             } else {
               await finalizarGuardado(formData)
             }
@@ -276,13 +276,21 @@ export default function PersonasPage() {
     }
   }
 
+  const handleGuardarSinCambioPlan = async () => {
+    if (!pendingFormData) return
+    
+    setCambioPlanModalOpen(false)
+    
+    await finalizarGuardado(pendingFormData)
+    
+    setTimeout(() => {
+      setPendingFormData(null)
+      setVerificacionPlan(null)
+    }, 100)
+  }
+
   const handleCancelarCambioPlan = () => {
     setCambioPlanModalOpen(false)
-    setPendingFormData(null)
-    setVerificacionPlan(null)
-    setTimeout(() => {
-      setModalOpen(true)
-    }, 150)
   }
 
   return (
@@ -321,6 +329,7 @@ export default function PersonasPage() {
           onSubmit={handleSubmit}
           initialPersonaData={editingPersona}
           loading={isMutating}
+          cambioPlanPendiente={cambioPlanModalOpen}
         />
 
         <PersonaDetailModal
@@ -333,6 +342,7 @@ export default function PersonasPage() {
           open={cambioPlanModalOpen}
           onOpenChange={setCambioPlanModalOpen}
           onCancel={handleCancelarCambioPlan}
+          onGuardarSinCambio={handleGuardarSinCambioPlan}
           verificacionData={verificacionPlan}
           onAnalizar={handleAnalizarCambioPlan}
           onConfirm={handleConfirmarCambioPlan}

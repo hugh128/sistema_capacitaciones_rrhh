@@ -176,6 +176,10 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
       (cap) => cap.ID_PLAN === idPlan
     );
 
+    const planColaborador = detallePlanColaborador.PLANES.filter(
+      (plan) => plan.ID_PLAN = idPlan
+    )
+    
     const gruposPorDepartamento = capacitacionesPlan.reduce((acc, cap) => {
       if (!acc[cap.departamentoCapacitacion]) {
         acc[cap.departamentoCapacitacion] = [];
@@ -205,6 +209,7 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
     const plan = detallePlanColaborador.PLANES.find((p) => p.ID_PLAN === idPlan);
 
     const dataInduccion: InduccionDocumental = {
+      nombrePlan: planColaborador[0].nombrePlan,
       nombreColaborador: detallePlanColaborador.INFORMACION_COLABORADOR.nombreColaborador,
       departamentoColaborador: detallePlanColaborador.INFORMACION_COLABORADOR.departamentoColaborador,
       cargo: detallePlanColaborador.INFORMACION_COLABORADOR.cargo,

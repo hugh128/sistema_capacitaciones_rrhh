@@ -282,6 +282,7 @@ export interface ExamenCompleto {
   external: string; // "X" or ""
   passingScore: string; // e.g., "70"
   series: Serie[];
+  sesion?: string
 }
 
 // Helper functions

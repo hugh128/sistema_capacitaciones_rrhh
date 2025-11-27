@@ -2,9 +2,9 @@ import { Badge } from "@/components/ui/badge"
 import { Persona } from "@/lib/types";
 
 export const PERSONA_COLUMNS = [
-  { key: "NOMBRE", label: "Nombre" },
-  { key: "APELLIDO", label: "Apellido" },
-  { key: "CORREO", label: "Correo" },
+  { key: "NOMBRE", label: "Nombres" },
+  { key: "APELLIDO", label: "Apellidos" },
+  /* { key: "CORREO", label: "Correo" }, */
 /*   { key: "TELEFONO", label: "Teléfono" },
   { key: "DPI", label: "DPI" }, */
   {
@@ -50,8 +50,8 @@ export const PERSONA_COLUMNS = [
 ]
 
 export const PERSONA_FORM_FIELDS = [
-  { key: "NOMBRE", label: "Nombre", type: "text" as const, required: true },
-  { key: "APELLIDO", label: "Apellido", type: "text" as const, required: true },
+  { key: "NOMBRE", label: "Nombres", type: "text" as const, required: true },
+  { key: "APELLIDO", label: "Apellidos", type: "text" as const, required: true },
   { key: "CORREO", label: "Correo", type: "email" as const, required: true },
   { key: "TELEFONO", label: "Teléfono", type: "tel" as const },
   { key: "DPI", label: "DPI", type: "text" as const },

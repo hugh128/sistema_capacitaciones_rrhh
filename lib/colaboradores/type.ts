@@ -109,6 +109,7 @@ export interface GrupoCapacitacion {
 }
 
 export interface InduccionDocumental {
+  nombrePlan?: string
   nombreColaborador: string
   departamentoColaborador: string
   cargo: string

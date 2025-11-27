@@ -488,16 +488,77 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
       return;
     }
 
+    // Vista previs mas descarga
+/*     try {
+      const response = await apiClient.post(`/documents-module/asistencia`, formatoDatos, {
+        responseType: "blob",
+      });
+      
+      const blob = new Blob([response.data], { type: "application/pdf" });
+      const url = window.URL.createObjectURL(blob);
+      
+      // Abrir en nueva pestaña para vista previa
+      const newWindow = window.open(url, "_blank");
+      
+      // Opcional: también ofrecer descarga automática
+      if (newWindow) {
+        // El usuario puede ver y luego descargar desde el navegador
+        setTimeout(() => window.URL.revokeObjectURL(url), 10000);
+      } else {
+        // Si el popup fue bloqueado, forzar descarga
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = "listado-asistencia.pdf";
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        setTimeout(() => window.URL.revokeObjectURL(url), 100);
+      } */
+
+    // Descarga directa
     try {
       const response = await apiClient.post(`/documents-module/asistencia`, formatoDatos, {
         responseType: "blob",
       });
-
+      
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = "induccion-documental.pdf";
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
+        }
+      }
+      
+      const nombreCapacitacion = formatoDatos.nombreCapacitacion;
+      const sesion = formatoDatos.sesion;
+      
+      const limpiarNombre = (texto: string) => {
+        return texto
+          .replace(/[<>:"/\\|?*]/g, '')
+          .replace(/\s+/g, '_')
+          .trim();
+      };
+      
+      const extension = filename.includes('.') ? filename.split('.').pop() : 'pdf';
+      const nombreBase = filename.replace(/\.[^/.]+$/, '');
+      
+      const nombreCapacitacionLimpio = limpiarNombre(nombreCapacitacion);
+      const sesionLimpia = limpiarNombre(sesion);
+      const nombreFinal = `${nombreBase}_${nombreCapacitacionLimpio}_${sesionLimpia}.${extension}`;
+      
       const blob = new Blob([response.data], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
-
-      window.open(url, "_blank");
-      setTimeout(() => window.URL.revokeObjectURL(url), 5000);
+      
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = nombreFinal;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      setTimeout(() => window.URL.revokeObjectURL(url), 100);
     } catch (err) {
       const error = err as AxiosError;
 
@@ -623,13 +684,45 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
       const response = await apiClient.post(`/documents-module/examenes-combinados`, formatoDatosList, {
         responseType: "blob",
       });
-
+      
+      const contentDisposition = response.headers['content-disposition'];
+      let filename = "examenes_combinados.pdf";
+      
+      if (contentDisposition) {
+        const filenameMatch = contentDisposition.match(/filename[^;=\n]*=((['"]).*?\2|[^;\n]*)/);
+        if (filenameMatch && filenameMatch[1]) {
+          filename = filenameMatch[1].replace(/['"]/g, '');
+        }
+      }
+      
+      const nombreCapacitacion = formatoDatosList[0]?.trainingName;
+      const sesion = formatoDatosList[0]?.sesion || 'sesion';
+      
+      const limpiarNombre = (texto: string) => {
+        return texto
+          .replace(/[<>:"/\\|?*]/g, '')
+          .replace(/\s+/g, '_')
+          .trim();
+      };
+      
+      const extension = filename.includes('.') ? filename.split('.').pop() : 'pdf';
+      const nombreBase = filename.replace(/\.[^/.]+$/, '');
+      
+      const nombreCapacitacionLimpio = limpiarNombre(nombreCapacitacion);
+      const sesionLimpia = limpiarNombre(sesion);
+      const nombreFinal = `${nombreBase}_${nombreCapacitacionLimpio}_${sesionLimpia}.${extension}`;
+      
       const blob = new Blob([response.data], { type: "application/pdf" });
       const url = window.URL.createObjectURL(blob);
       
-      window.open(url, "_blank"); 
-      setTimeout(() => window.URL.revokeObjectURL(url), 5000);
-
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = nombreFinal;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      setTimeout(() => window.URL.revokeObjectURL(url), 100);
     } catch (err) {
       const error = err as AxiosError;
 

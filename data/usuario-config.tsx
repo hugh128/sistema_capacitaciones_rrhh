@@ -1,5 +1,5 @@
 import { Badge } from "@/components/ui/badge"
-import type { Persona, Usuario } from "@/lib/types"
+import type { Persona } from "@/lib/types"
 import type { Rol } from "@/lib/auth";
 
 export interface FormFieldConfig {
@@ -21,8 +21,8 @@ export interface UsuarioFormFields {
 }
 
 export const getUsuarioColumns = () => [
-    { key: "PERSONA.NOMBRE", label: "Nombre" },
-    { key: "PERSONA.APELLIDO", label: "Apellido" },
+    { key: "PERSONA.NOMBRE", label: "Nombres" },
+    { key: "PERSONA.APELLIDO", label: "Apellidos" },
     { key: "USERNAME", label: "Username" },
     {
       key: "USUARIO_ROLES",
