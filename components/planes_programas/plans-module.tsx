@@ -1,7 +1,7 @@
 "use client"
 
 import type React from "react"
-import { useEffect, useState } from "react"
+import { useEffect, useState, useCallback } from "react"
 import PlansListView from "./plans-list-view"
 import CreatePlan from "./create-plan"
 import PlanDetails from "./plan-details"
@@ -70,46 +70,49 @@ export default function PlansModule() {
     }
   }, [user]);
 
+  const handleCreatePlan = useCallback(() => {
+    setCurrentView("create")
+  }, [])
+  
+  const handleImport = useCallback(() => {
+    setCurrentView("import")
+  }, [])
 
-  const handleCreatePlan = () => setCurrentView("create")
-  const handleImport = () => setCurrentView("import")
-
-  const handleViewDetails = (plan: PlanCapacitacion) => {
+  const handleViewDetails = useCallback((plan: PlanCapacitacion) => {
     setSelectedPlan(plan)
     setCurrentView("details")
-  }
+  }, [])
 
-  const handleEditPlan = (plan: PlanCapacitacion) => {
+  const handleEditPlan = useCallback((plan: PlanCapacitacion) => {
     setSelectedPlan(plan)
     setCurrentView("edit")
-  }
+  }, [])
 
-  const handleBackToList = () => {
+  const handleBackToList = useCallback(() => {
     setCurrentView("list")
     setSelectedPlan(null)
-  }
+  }, [])
 
-  const handleSavePlan = async (newPlan: Partial<PlanCapacitacion>) => {
+  const handleSavePlan = useCallback(async (newPlan: Partial<PlanCapacitacion>) => {
     await savePlanesCapacitacion(newPlan);
     setCurrentView("list");
-  };
+  }, [savePlanesCapacitacion])
 
-  const handleUpdatePlan = async (updatedPlan: Partial<PlanCapacitacion>, idPlan: number) => {
+  const handleUpdatePlan = useCallback(async (updatedPlan: Partial<PlanCapacitacion>, idPlan: number) => {
     await savePlanesCapacitacion(updatedPlan, idPlan);
     setCurrentView("list")
-  }
+  }, [savePlanesCapacitacion])
 
-  const handleImportPlans = () => {
+  const handleImportPlans = useCallback(() => {
     setCurrentView("list")
-  }
+  }, [])
 
-  const handleAssingPlan = async (aplicarPlan: AplicarPlan) => {
+  const handleAssingPlan = useCallback(async (aplicarPlan: AplicarPlan) => {
     await aplicarPlanCapacitacion(aplicarPlan);
-  }
+  }, [aplicarPlanCapacitacion])
 
   return (
-    <div className="h-full px-6">
-
+    <div className="space-y-6">
       <Toaster />
 
       {currentView === "list" && (

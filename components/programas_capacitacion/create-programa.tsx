@@ -133,13 +133,13 @@ export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: Cre
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col items-start gap-4">
-        <Button variant="ghost" onClick={onCancel} className="hover:bg-muted">
+      <div className="flex flex-col items-start gap-2">
+        <Button variant="ghost" onClick={onCancel} className="hover:bg-muted cursor-pointer">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Volver
         </Button>
         <div>
-          <h1 className="text-3xl font-bold text-foreground">Crear Programa de Capacitación</h1>
+          <h1 className="text-2xl sm:text-3xl font-bold text-foreground">Crear Programa de Capacitación</h1>
           <p className="text-muted-foreground mt-1">Complete la información del programa y agregue capacitaciones</p>
         </div>
       </div>
@@ -158,7 +158,8 @@ export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: Cre
                   id="nombre"
                   value={nombre}
                   onChange={(e) => setNombre(e.target.value)}
-                  placeholder={`Ej: Programa de Formación ${new Date().getFullYear()}`}
+                  placeholder={`Ej: Programa Formación ${new Date().getFullYear()}`}
+                  className="placeholder:text-xs"
                   required
                 />
               </div>
@@ -212,6 +213,7 @@ export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: Cre
                 onChange={(e) => setDescripcion(e.target.value)}
                 placeholder="Describe el objetivo y alcance del programa"
                 rows={3}
+                className="placeholder:text-xs"
                 required
               />
             </div>
@@ -377,6 +379,7 @@ export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: Cre
                   id="training-diploma"
                   checked={newTraining.APLICA_DIPLOMA}
                   onCheckedChange={(checked) => setNewTraining({ ...newTraining, APLICA_DIPLOMA: checked as boolean })}
+                  className="dark:border dark:border-gray-500 data-[state=checked]:dark:border-transparent"
                 />
                 <Label htmlFor="training-diploma" className="cursor-pointer">
                   Aplica Diploma
@@ -388,6 +391,7 @@ export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: Cre
                   <Checkbox
                     id="training-todos-colab"
                     checked={newTraining.APLICA_TODOS_COLABORADORES}
+                    className="dark:border dark:border-gray-500 data-[state=checked]:dark:border-transparent"
                     onCheckedChange={(checked) =>
                       setNewTraining({
                         ...newTraining,
@@ -411,6 +415,7 @@ export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: Cre
                             <div key={dept.ID_DEPARTAMENTO} className="flex items-center space-x-2">
                               <Checkbox
                                 id={`dept-${dept.ID_DEPARTAMENTO}`}
+                                className="dark:border dark:border-gray-500 data-[state=checked]:dark:border-transparent"
                                 checked={newTraining.DEPARTAMENTO_RELACIONES.some(
                                   (d) => d.ID_DEPARTAMENTO === dept.ID_DEPARTAMENTO,
                                 )}
@@ -438,7 +443,7 @@ export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: Cre
                   type="button"
                   onClick={handleAddTraining}
                   disabled={!isTrainingValid()}
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer"
                 >
                   Agregar
                 </Button>
@@ -446,7 +451,7 @@ export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: Cre
                   type="button"
                   variant="outline"
                   onClick={() => setShowAddTraining(false)}
-                  className="border-border"
+                  className="border-border dark:text-foreground dark:hover:border-foreground/30 cursor-pointer"
                 >
                   Cancelar
                 </Button>
@@ -460,11 +465,11 @@ export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: Cre
           <Button
             type="submit"
             disabled={!nombre || !descripcion || detalles.length === 0}
-            className="bg-primary text-primary-foreground hover:bg-primary/90"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer"
           >
             Crear Programa
           </Button>
-          <Button type="button" variant="outline" onClick={onCancel} className="border-border bg-transparent">
+          <Button type="button" variant="outline" onClick={onCancel} className="border-border bg-transparent dark:text-foreground dark:border-1 dark:hover:border-foreground/30 cursor-pointer">
             Cancelar
           </Button>
         </div>
@@ -515,6 +520,7 @@ const PuestosFiltrados = ({ newTraining, setNewTraining, puestos }: PuestosFiltr
           <div key={puesto.ID_PUESTO} className="flex items-center space-x-2">
             <Checkbox
               id={`puesto-${puesto.ID_PUESTO}`}
+              className="dark:border dark:border-gray-500 data-[state=checked]:dark:border-transparent"
               checked={newTraining.PUESTO_RELACIONES.some(
                 (p) => p.ID_PUESTO === puesto.ID_PUESTO,
               )}

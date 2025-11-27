@@ -1,8 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { Search, Plus, Eye, BookOpen, Calendar, Building2, UserPlus, Check, Loader2, Info, AlertTriangle } from "lucide-react"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Search, Plus, Eye, BookOpen, Calendar, Building2, UserPlus, Check, Loader2, Info, AlertTriangle, Filter, X } from "lucide-react"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
@@ -57,13 +57,13 @@ export const getEstatusBadgeVariant = (estatus: string): BadgeVariant => {
 export const getTypeBadgeColor = (type: string) => {
   switch (type) {
     case "induccion":
-      return "bg-green-500 text-white dark:bg-green-700 dark:text-white"
-      case "programa":
-      return "bg-[#4B93E7] text-white dark:bg-[#4B93E7] dark:text-white"
+      return "bg-emerald-500/10 text-emerald-700 border border-emerald-500/20 dark:bg-emerald-500/10 dark:text-emerald-400 dark:border-emerald-500/30"
+    case "programa":
+      return "bg-blue-500/10 text-blue-700 border border-blue-500/20 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/30"
     case "individual":
-      return "bg-[#A855F7] text-white dark:bg-[#A855F7] dark:text-white"
+      return "bg-purple-500/10 text-purple-700 border border-purple-500/20 dark:bg-purple-500/10 dark:text-purple-400 dark:border-purple-500/30"
     default:
-      return "bg-muted text-muted-foreground"
+      return "bg-muted text-muted-foreground border border-border"
   }
 };
 
@@ -71,11 +71,13 @@ export default function PlansListView({ plans, onCreatePlan, onViewDetails, onAs
   const [searchQuery, setSearchQuery] = useState("")
   const [typeFilter, setTypeFilter] = useState<string>("all")
   const [statusFilter, setStatusFilter] = useState<string>("all")
+  const [showFilters, setShowFilters] = useState(false)
 
   const [planParaAsignar, setPlanParaAsignar] = useState<PlanCapacitacion | null>(null);
   const [colaboradores, setColaboradores] = useState<ColaboradorDisponible[]>([]);
   const [isLoadingColaboradores, setIsLoadingColaboradores] = useState(false);
   const [errorCargaColaboradores, setErrorCargaColaboradores] = useState<string | null>(null);
+  const [searchColaborador, setSearchColaborador] = useState("")
 
   const featuredPlans = plans.slice(0, 6)
 
@@ -88,29 +90,30 @@ export default function PlansListView({ plans, onCreatePlan, onViewDetails, onAs
     return matchesSearch && matchesType && matchesStatus
   })
 
+  const filteredColaboradores = colaboradores.filter(c =>
+    c.NOMBRE_COMPLETO.toLowerCase().includes(searchColaborador.toLowerCase()) ||
+    c.PUESTO.toLowerCase().includes(searchColaborador.toLowerCase())
+  )
+
+  const activeFiltersCount = [typeFilter !== "all", statusFilter !== "all"].filter(Boolean).length
+
   const handleAssignClick = async (plan: PlanCapacitacion) => {
     setPlanParaAsignar(plan);
     setErrorCargaColaboradores(null);
     setColaboradores([]); 
+    setSearchColaborador("")
     setIsLoadingColaboradores(true);
 
     try {
       const colaboradoresDisponibles = await onObtenerColaboradores(plan.ID_PLAN);
-
       const colaboradoresIniciales = colaboradoresDisponibles
         .filter(c => !c.PLAN_YA_APLICADO)
-        .map(c => ({
-          ...c,
-          seleccionado: false,
-        }));
-
+        .map(c => ({ ...c, seleccionado: false }));
       setColaboradores(colaboradoresIniciales);
-
     } catch (error) {
       console.error("Error al cargar colaboradores:", error);
       setErrorCargaColaboradores("No se pudo cargar la lista de colaboradores. Intente de nuevo.");
       setColaboradores([]);
-      
     } finally {
       setIsLoadingColaboradores(false);
     }
@@ -118,166 +121,266 @@ export default function PlansListView({ plans, onCreatePlan, onViewDetails, onAs
 
   const handleToggleColaborador = (id: number) => {
     setColaboradores(prev =>
-      prev.map(c =>
-        c.ID_COLABORADOR === id ? { ...c, seleccionado: !c.seleccionado } : c
+      prev.map(c => c.ID_COLABORADOR === id ? { ...c, seleccionado: !c.seleccionado } : c)
+    );
+  };
+
+  const handleSelectAll = () => {
+    const allSelected = filteredColaboradores.every(c => c.seleccionado)
+    setColaboradores(prev =>
+      prev.map(c => 
+        filteredColaboradores.find(fc => fc.ID_COLABORADOR === c.ID_COLABORADOR)
+          ? { ...c, seleccionado: !allSelected }
+          : c
       )
     );
   };
 
   const handleFinalAssign = () => {
-    if (!usuario) {
-      console.error("Error: Usuario no logueado para asignar programa.");
-      return;
-    }
-
-    if (!planParaAsignar) return;
-
-    const selectedEmployeeIds = colaboradores
-      .filter(c => c.seleccionado)
-      .map(c => c.ID_COLABORADOR); 
-
-    const usuarioActual = usuario?.USERNAME
-
+    if (!usuario || !planParaAsignar) return;
+    const selectedEmployeeIds = colaboradores.filter(c => c.seleccionado).map(c => c.ID_COLABORADOR);
     const payload: AplicarPlan = {
       idPlan: planParaAsignar.ID_PLAN,
       idsColaboradores: selectedEmployeeIds,
-      usuario: usuarioActual,
+      usuario: usuario.USERNAME,
       NOMBRE: planParaAsignar.NOMBRE,
     };
-
     onAssign(payload);
-
     setPlanParaAsignar(null);
   };
   
-  const handleCloseModal = () => setPlanParaAsignar(null);
+  const handleCloseModal = () => {
+    setPlanParaAsignar(null);
+    setSearchColaborador("");
+  };
+
+  const clearFilters = () => {
+    setTypeFilter("all")
+    setStatusFilter("all")
+  }
+
+  const selectedCount = colaboradores.filter(c => c.seleccionado).length;
 
   return (
-    <div className="h-full flex flex-col">
-
-      <div className="my-6">
-        <h1 className="text-3xl font-bold text-foreground">Planes de Capacitación</h1>
-        <p className="text-muted-foreground mt-1">Gestiona los planes de capacitación de tu organización</p>
+    <div className="flex flex-col space-y-6 pb-6">
+      <div className="flex justify-between flex-col md:flex-row md:items-center gap-4 pb-6 border-b">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight bg-gradient-to-r from-foreground to-foreground/70 bg-clip-text text-transparent">
+            Planes de Capacitación
+          </h1>
+          <p className="text-muted-foreground mt-2">
+            Gestiona y asigna planes de capacitación para tu equipo
+          </p>
+        </div>
+        <div className="flex gap-3">
+          <Button onClick={onCreatePlan} size="lg" className="shadow-sm cursor-pointer">
+            <Plus className="w-4 h-4 mr-2" />
+            Nuevo Plan
+          </Button>
+        </div>
       </div>
 
-      {/* Featured Plans Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        {featuredPlans.map((plan) => (
-          <Card
-            key={plan.ID_PLAN}
-            className="hover:shadow-md transition-shadow"
-          >
-            {/* Card Header */}
-            <CardHeader className="flex flex-col justify-between h-full">
-              <div className="flex items-start gap-2 w-full">
-                <div className="flex-1 min-w-0">
-                  <CardTitle className="text-lg font-semibold mb-1 leading-snug break-words">
-                    {plan.NOMBRE}
-                  </CardTitle>
-                  <CardDescription className="text-sm text-muted-foreground break-words">
-                    {`ID-${plan.ID_PLAN}`}
-                  </CardDescription>
-                </div>
-                <div className="flex-shrink-0">
-                  <Badge variant={getEstatusBadgeVariant(plan.ESTADO.toLowerCase())}>
-                    {plan.ESTADO}
-                  </Badge>
-                </div>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <Card className="border-l-4 border-l-emerald-500">
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Total de Planes</p>
+                <p className="text-2xl font-bold">{plans.length}</p>
               </div>
-              <div className="mt-1">
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${getTypeBadgeColor(plan.TIPO.toLowerCase())}`}>
-                  {plan.TIPO}
-                </span>
+              <BookOpen className="w-8 h-8 text-emerald-500 opacity-80" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-blue-500">
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Planes Activos</p>
+                <p className="text-2xl font-bold">
+                  {plans.filter(p => p.ESTADO.toLowerCase() === "activo").length}
+                </p>
               </div>
-            </CardHeader>
+              <Check className="w-8 h-8 text-blue-500 opacity-80" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="border-l-4 border-l-purple-500">
+          <CardContent className="pt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">En Borrador</p>
+                <p className="text-2xl font-bold">
+                  {plans.filter(p => p.ESTADO.toLowerCase() === "borrador").length}
+                </p>
+              </div>
+              <Eye className="w-8 h-8 text-purple-500 opacity-80" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
-            {/* Card Content (Detalles) */}
-            <CardContent className="space-y-2">
-              <div className="flex items-center gap-2 text-sm text-foreground">
-                <BookOpen className="w-4 h-4 text-muted-foreground" />
-                <span>
-                  <span className="font-semibold">{plan.DOCUMENTOS_PLANES.length || 0}</span> capacitaciones
-                </span>
-              </div>
-              {plan.DEPARTAMENTO && (
-                <div className="flex items-center gap-2 text-sm text-foreground">
-                  <Building2 className="w-4 h-4 text-muted-foreground" />
-                  <span className="text-card-foreground">{`${plan.DEPARTAMENTO.CODIGO} - ${plan.DEPARTAMENTO.NOMBRE}`}</span>
-                </div>
-              )}
-              <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                <Calendar className="w-4 h-4 text-muted-foreground" />
-                <span>Creado: {plan.FECHA_CREACION}</span>
-              </div>
-            </CardContent>
-
-            {/* Card Footer (Botón) */}
-            <CardFooter className="px-6 py-2">
-              <Button
-                onClick={() => onViewDetails(plan)}
-                variant="outline"
-                className="w-full"
+      {featuredPlans.length > 0 && (
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <h2 className="text-xl font-semibold">Planes Destacados</h2>
+            <Badge variant="secondary" className="text-xs">
+              {featuredPlans.length} planes
+            </Badge>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {featuredPlans.map((plan) => (
+              <Card
+                key={plan.ID_PLAN}
+                className="group hover:shadow-lg transition-all duration-200 hover:-translate-y-1 border-2 hover:border-primary/20 flex flex-col py-5"
               >
-                <Eye className="w-4 h-4 mr-2" />
-                Ver Detalles
+                <CardHeader className="space-y-3 flex-grow">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1 min-w-0 space-y-1">
+                      <CardTitle className="text-lg font-semibold leading-tight break-words group-hover:text-primary transition-colors">
+                        {plan.NOMBRE}
+                      </CardTitle>
+                      <CardDescription className="text-xs font-mono">
+                        ID-{plan.ID_PLAN}
+                      </CardDescription>
+                    </div>
+                    <Badge variant={getEstatusBadgeVariant(plan.ESTADO.toLowerCase())} className="shrink-0">
+                      {plan.ESTADO}
+                    </Badge>
+                  </div>
+                  <span className={`inline-flex items-center px-3 py-1.5 rounded-full text-xs font-medium w-fit self-end ${getTypeBadgeColor(plan.TIPO.toLowerCase())}`}>
+                    {plan.TIPO}
+                  </span>
+                </CardHeader>
+
+                <CardContent className="space-y-3">
+                  <div className="flex items-center gap-3 text-sm">
+                    <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
+                      <BookOpen className="w-4 h-4 text-primary" />
+                    </div>
+                    <div>
+                      <p className="font-semibold">{plan.DOCUMENTOS_PLANES.length || 0}</p>
+                      <p className="text-xs text-muted-foreground">Capacitaciones</p>
+                    </div>
+                  </div>
+                  
+                  {plan.DEPARTAMENTO && (
+                    <div className="flex items-center gap-3 text-sm">
+                      <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-blue-500/10">
+                        <Building2 className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div className="min-w-0">
+                        <p className="font-medium truncate">{plan.DEPARTAMENTO.NOMBRE}</p>
+                        <p className="text-xs text-muted-foreground">{plan.DEPARTAMENTO.CODIGO}</p>
+                      </div>
+                    </div>
+                  )}
+                  
+                  <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                    <Calendar className="w-4 h-4 shrink-0" />
+                    <span className="text-xs">{plan.FECHA_CREACION}</span>
+                  </div>
+                </CardContent>
+
+                <div className="border-t px-4 pt-4">
+                  <Button
+                    onClick={() => onViewDetails(plan)}
+                    variant="ghost"
+                    className="w-full group-hover:bg-primary group-hover:text-primary-foreground transition-colors cursor-pointer"
+                  >
+                    <Eye className="w-4 h-4 mr-2" />
+                    Ver Detalles
+                  </Button>
+                </div>
+              </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div className="space-y-4">
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="flex-1 relative">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+            <Input
+              placeholder="Buscar planes por nombre o descripción..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10 h-11"
+            />
+            {searchQuery && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
+                onClick={() => setSearchQuery("")}
+              >
+                <X className="h-4 w-4" />
               </Button>
-            </CardFooter>
-          </Card>
-        ))}
-      </div>
+            )}
+          </div>
 
-      {/* Actions Bar */}
-      <div className="flex gap-3 mb-6">
-        <Button onClick={onCreatePlan} className="cursor-pointer">
-          <Plus className="w-4 h-4 mr-2" />
-          Crear Nuevo Plan
-        </Button>
-{/*         <Button onClick={onImport} variant="outline" className="cursor-pointer dark:hover:bg-accent">
-          <Upload className="w-4 h-4 mr-2" />
-          Importar CSV/Excel
-        </Button> */}
-      </div>
-
-      {/* Filters and Search */}
-      <div className="flex flex-wrap gap-4 mb-6">
-        {/* Input de búsqueda */}
-        <div className="flex-1 relative min-w-[250px]">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          <Input
-            placeholder="Buscar por nombre o código..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-10"
-          />
+          <Button
+            variant={showFilters ? "default" : "outline"}
+            onClick={() => setShowFilters(!showFilters)}
+            className="sm:w-auto relative"
+          >
+            <Filter className="w-4 h-4 mr-2" />
+            Filtros
+            {activeFiltersCount > 0 && (
+              <Badge className="ml-2 h-5 w-5 p-0 flex items-center justify-center" variant="secondary">
+                {activeFiltersCount}
+              </Badge>
+            )}
+          </Button>
         </div>
 
-        {/* Select de tipo */}
-        <Select value={typeFilter} onValueChange={setTypeFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Todos los tipos" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los tipos</SelectItem>
-            <SelectItem value="INDIVIDUAL">INDUCCION</SelectItem>
-            <SelectItem value="INDIVUDUAL">INDIVIDUAL</SelectItem>
-          </SelectContent>
-        </Select>
+        {showFilters && (
+          <Card className="p-4 animate-in slide-in-from-top-2 duration-200">
+            <div className="flex flex-wrap gap-4">
+              <div className="flex-1 min-w-[200px]">
+                <Label className="text-xs font-medium mb-2 block">Tipo de Plan</Label>
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todos los tipos" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los tipos</SelectItem>
+                    <SelectItem value="INDUCCION">Inducción</SelectItem>
+                    <SelectItem value="PROGRAMA">Programa</SelectItem>
+                    <SelectItem value="INDIVIDUAL">Individual</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-        {/* Select de estado */}
-        <Select value={statusFilter} onValueChange={setStatusFilter}>
-          <SelectTrigger className="w-[180px]">
-            <SelectValue placeholder="Todos los estados" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">Todos los estados</SelectItem>
-            <SelectItem value="Activo">Activo</SelectItem>
-            <SelectItem value="Inactivo">Inactivo</SelectItem>
-            <SelectItem value="Borrador">Borrador</SelectItem>
-          </SelectContent>
-        </Select>
+              <div className="flex-1 min-w-[200px]">
+                <Label className="text-xs font-medium mb-2 block">Estado</Label>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Todos los estados" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Todos los estados</SelectItem>
+                    <SelectItem value="Activo">Activo</SelectItem>
+                    <SelectItem value="Inactivo">Inactivo</SelectItem>
+                    <SelectItem value="Borrador">Borrador</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {activeFiltersCount > 0 && (
+                <div className="flex items-end">
+                  <Button variant="ghost" size="sm" onClick={clearFilters}>
+                    <X className="w-4 h-4 mr-2" />
+                    Limpiar
+                  </Button>
+                </div>
+              )}
+            </div>
+          </Card>
+        )}
       </div>
 
-      {/* Plans Table */}
       <PlansTable
         title="Todos los Planes"
         filteredPlans={filteredPlans}
@@ -286,80 +389,127 @@ export default function PlansListView({ plans, onCreatePlan, onViewDetails, onAs
       />
 
       {planParaAsignar && (
-        <Dialog
-          open={!!planParaAsignar} 
-          onOpenChange={(open) => !open && handleCloseModal()}
-        >
-          <DialogContent className="sm:max-w-md md:max-w-lg">
-            <DialogHeader>
-              <DialogTitle>Asignar Plan: {planParaAsignar.NOMBRE}</DialogTitle>
-              <DialogDescription>
-                Selecciona los colaboradores que deben completar el plan de capacitación.
-              </DialogDescription>
+        <Dialog open={!!planParaAsignar} onOpenChange={(open) => !open && handleCloseModal()}>
+          <DialogContent className="sm:max-w-2xl">
+            <DialogHeader className="space-y-3">
+              <DialogTitle className="text-2xl">Asignar Plan de Capacitación</DialogTitle>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-xs">
+                    {planParaAsignar.TIPO}
+                  </Badge>
+                  <span className="text-sm font-medium">{planParaAsignar.NOMBRE}</span>
+                </div>
+                <DialogDescription>
+                  Selecciona los colaboradores que participarán en este plan de capacitación
+                </DialogDescription>
+              </div>
             </DialogHeader>
 
-            <Separator className="" />
-            
-            <div className="flex items-center space-x-2">
-              <UserPlus className="h-4 w-4 text-primary" />
-              <h4 className="font-semibold text-sm">Selección de Colaboradores</h4>
+            <Separator />
+
+            <div className="space-y-4">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  placeholder="Buscar colaboradores..."
+                  value={searchColaborador}
+                  onChange={(e) => setSearchColaborador(e.target.value)}
+                  className="pl-10"
+                  disabled={isLoadingColaboradores}
+                />
+              </div>
+
+              {!isLoadingColaboradores && !errorCargaColaboradores && colaboradores.length > 0 && (
+                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    <UserPlus className="h-4 w-4 text-primary" />
+                    <span className="text-sm font-medium">
+                      {selectedCount} de {filteredColaboradores.length} seleccionados
+                    </span>
+                  </div>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSelectAll}
+                  >
+                    {filteredColaboradores.every(c => c.seleccionado) ? "Deseleccionar" : "Seleccionar"} todos
+                  </Button>
+                </div>
+              )}
+
+              <ScrollArea className="h-[400px] rounded-lg border">
+                <div className="p-4 space-y-2">
+                  {isLoadingColaboradores ? (
+                    <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
+                      <Loader2 className="w-8 h-8 animate-spin mb-4" />
+                      <p className="font-medium">Cargando colaboradores...</p>
+                    </div>
+                  ) : errorCargaColaboradores ? (
+                    <div className="flex flex-col items-center justify-center h-[300px] text-center space-y-4">
+                      <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center">
+                        <AlertTriangle className="w-6 h-6 text-destructive" />
+                      </div>
+                      <div>
+                        <p className="font-semibold mb-2">Error al cargar colaboradores</p>
+                        <p className="text-sm text-muted-foreground">{errorCargaColaboradores}</p>
+                      </div>
+                      <Button onClick={() => handleAssignClick(planParaAsignar)}>
+                        Reintentar
+                      </Button>
+                    </div>
+                  ) : filteredColaboradores.length === 0 ? (
+                    <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
+                      <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
+                        <Info className="w-6 h-6" />
+                      </div>
+                      <p className="font-medium">
+                        {searchColaborador ? "No se encontraron colaboradores" : "No hay colaboradores disponibles"}
+                      </p>
+                      <p className="text-sm mt-1">
+                        {searchColaborador ? "Intenta con otros términos de búsqueda" : "para este plan"}
+                      </p>
+                    </div>
+                  ) : (
+                    filteredColaboradores.map((colaborador) => (
+                      <div
+                        key={colaborador.ID_COLABORADOR}
+                        className={`flex items-center gap-4 p-4 rounded-lg border-2 transition-all cursor-pointer hover:bg-accent ${
+                          colaborador.seleccionado ? "border-primary bg-primary/5" : "border-transparent"
+                        }`}
+                        onClick={() => handleToggleColaborador(colaborador.ID_COLABORADOR)}
+                      >
+                        <Checkbox
+                          id={`colaborador-${colaborador.ID_COLABORADOR}`}
+                          checked={colaborador.seleccionado}
+                          onCheckedChange={() => handleToggleColaborador(colaborador.ID_COLABORADOR)}
+                          className="h-5 w-5"
+                        />
+                        <Label
+                          htmlFor={`colaborador-${colaborador.ID_COLABORADOR}`}
+                          className="flex-1 cursor-pointer space-y-1"
+                        >
+                          <p className="font-medium">{colaborador.NOMBRE_COMPLETO}</p>
+                          <p className="text-sm text-muted-foreground">{colaborador.PUESTO}</p>
+                        </Label>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </ScrollArea>
             </div>
 
-            <ScrollArea className="h-[320px] w-full border rounded-md p-4">
-              <div className="space-y-3">
-                {isLoadingColaboradores ? (
-                  <div className="flex flex-col items-center justify-center h-full py-16 text-muted-foreground">
-                    <Loader2 className="w-6 h-6 animate-spin mb-3" />
-                    <span>Cargando colaboradores aplicables...</span>
-                  </div>
-                ) : errorCargaColaboradores ? (
-                  <div className="flex flex-col items-center justify-center h-full py-16 text-destructive">
-                    <AlertTriangle className="w-6 h-6 mb-3" />
-                    <span className="text-center font-medium">{errorCargaColaboradores}</span>
-                    <Button 
-                      variant="outline" 
-                      onClick={() => handleAssignClick(planParaAsignar!)} 
-                      className="mt-4"
-                    >
-                      Reintentar Carga
-                    </Button>
-                  </div>
-                ) : colaboradores.length === 0 ? (
-                  <div className="flex flex-col items-center justify-center h-full py-16 text-muted-foreground">
-                    <Info className="w-6 h-6 mb-3" />
-                    <span>No se encontraron colaboradores que apliquen a este plan.</span>
-                  </div>
-                ) : (
-                  colaboradores.map((colaborador) => (
-                    <div key={colaborador.ID_COLABORADOR} className="flex items-center justify-between p-2 hover:bg-muted/50 rounded-md transition-colors">
-                      <Label htmlFor={`colaborador-${colaborador.ID_COLABORADOR}`} className="flex flex-col flex-grow cursor-pointer">
-                        <span className="font-medium">{colaborador.NOMBRE_COMPLETO}</span> 
-                        <span className="text-sm text-muted-foreground">{colaborador.PUESTO}</span>
-                      </Label>
-                      <Checkbox
-                        id={`colaborador-${colaborador.ID_COLABORADOR}`}
-                        checked={colaborador.seleccionado}
-                        onCheckedChange={() => handleToggleColaborador(colaborador.ID_COLABORADOR)} 
-                        className="h-5 w-5 ml-4"
-                      />
-                    </div>
-                  ))
-                )}
-              </div>
-            </ScrollArea>
-
-            <DialogFooter>
+            <DialogFooter className="gap-2 sm:gap-0">
               <Button variant="outline" onClick={handleCloseModal}>
                 Cancelar
               </Button>
-              <Button 
+              <Button
                 onClick={handleFinalAssign}
-                disabled={colaboradores.filter(c => c.seleccionado).length === 0 || !!errorCargaColaboradores}
-                className="bg-primary hover:bg-primary/90"
+                disabled={selectedCount === 0 || !!errorCargaColaboradores}
+                className="min-w-[140px]"
               >
                 <Check className="h-4 w-4 mr-2" />
-                Asignar a {colaboradores.filter(c => c.seleccionado).length}{" "}
-                {colaboradores.filter(c => c.seleccionado).length === 1 ? "Colaborador" : "Colaboradores"}
+                Asignar ({selectedCount})
               </Button>
             </DialogFooter>
           </DialogContent>

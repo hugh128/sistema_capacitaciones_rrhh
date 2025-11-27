@@ -137,7 +137,8 @@ export function DocumentsTab({
           area: col.DEPARTAMENTO_CODIGO,
           nota: col.NOTA_OBTENIDA?.toString()
         })) || [],
-        observaciones: sesion.OBSERVACIONES || "Sin observaciones"
+        observaciones: sesion.OBSERVACIONES || "Sin observaciones",
+        sesion: sesion.NOMBRE_SESION || ""
       };
 
       await descargarPlantillaAsistencia(datos);

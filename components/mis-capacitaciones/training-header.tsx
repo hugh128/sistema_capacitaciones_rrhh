@@ -13,12 +13,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import {
-  Tooltip,
-  TooltipTrigger,
-  TooltipContent,
-  TooltipProvider
-} from "@/components/ui/tooltip"
 
 import { ArrowLeft, Play } from "lucide-react"
 import Link from "next/link"
@@ -34,14 +28,13 @@ interface TrainingHeaderProps {
 
 export function TrainingHeader({ sesion, onChangeEstado, usuario }: TrainingHeaderProps) {
   const [day, month, year] = (sesion.FECHA_FORMATO ?? "").split("/").map(Number)
-
-  //const fechaSesion = new Date(2025, 10, 25);
   const fechaSesion = new Date(year, month - 1, day)
-
+  
+  //const fechaSesion = new Date(2025, 10, 27);
   const hoy = new Date()
   hoy.setHours(0, 0, 0, 0)
-
-  const puedeIniciar = hoy >= fechaSesion
+  
+  const esAnticipada = fechaSesion > hoy
 
   return (
     <div className="flex flex-col sm:flex-row flex-wrap justify-between space-y-4">
@@ -67,45 +60,32 @@ export function TrainingHeader({ sesion, onChangeEstado, usuario }: TrainingHead
         {(sesion.ESTADO === "ASIGNADA" || sesion.ESTADO === "PROGRAMADA") && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild disabled={puedeIniciar}>
-                    <div>
-                      <Button
-                        size="lg"
-                        disabled={!puedeIniciar}
-                        className={`
-                          ${!puedeIniciar
-                            ? "opacity-50 cursor-not-allowed bg-green-600"
-                            : "bg-green-600 hover:bg-green-700 cursor-pointer"
-                          }
-                        `}
-                      >
-                        <Play className="h-5 w-5 mr-2" />
-                        Iniciar Capacitación
-                      </Button>
-                    </div>
-                  </TooltipTrigger>
-
-                  {!puedeIniciar && (
-                    <TooltipContent side="top">
-                      La capacitación solo puede iniciarse en la fecha programada.
-                    </TooltipContent>
-                  )}
-                </Tooltip>
-              </TooltipProvider>
+              <Button
+                size="lg"
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <Play className="h-5 w-5 mr-2" />
+                Iniciar Capacitación
+              </Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>Iniciar Capacitación</AlertDialogTitle>
                 <AlertDialogDescription>
-                  ¿Estás seguro de que deseas iniciar esta capacitación? El estado cambiará a En Proceso y podrás
+                  ¿Estás seguro de que deseas iniciar esta capacitación? El estado cambiará a &quot;En Proceso&quot; y podrás
                   comenzar a registrar asistencias.
+                  {esAnticipada && (
+                    <span className="block mt-3 font-semibold text-amber-600">
+                      ⚠️ Nota: Esta capacitación está programada para el {sesion.FECHA_FORMATO}. Estás iniciándola antes de la fecha programada.
+                    </span>
+                  )}
                 </AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={() => onChangeEstado(sesion.ID_SESION, usuario.PERSONA_ID, sesion.OBSERVACIONES)}>Sí, Iniciar</AlertDialogAction>
+                <AlertDialogCancel className="dark:text-foreground dark:hover:border-destructive/50 cursor-pointer">Cancelar</AlertDialogCancel>
+                <AlertDialogAction className="cursor-pointer" onClick={() => onChangeEstado(sesion.ID_SESION, usuario.PERSONA_ID, sesion.OBSERVACIONES)}>
+                  Sí, Iniciar
+                </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
           </AlertDialog>

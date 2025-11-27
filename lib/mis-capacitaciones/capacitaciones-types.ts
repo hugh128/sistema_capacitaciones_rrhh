@@ -239,6 +239,7 @@ export interface ListadoAsistencia {
   horasCapacitacion: string
   asistentes: AsistenteListado[]
   observaciones: string
+  sesion: string
 }
 
 export interface AsistenteListado {

@@ -81,7 +81,7 @@ export default function ProgramsModule() {
   }
 
   const handleDelete = (id: number) => {
-/*     setProgramas(programas.filter((p) => p.ID_PROGRAMA !== id)) */
+    // Implementar si es necesario
   }
 
   const handleBack = () => {
@@ -98,55 +98,50 @@ export default function ProgramsModule() {
   }
 
   return (
-    <div className="flex h-screen overflow-hidden bg-background">
-      <div className="flex-1 flex flex-col overflow-hidden">
+    <div className="space-y-6">
+      <Toaster />
 
-        <Toaster />
+      {viewState === "list" && (
+        <ProgramasCapacitacionList
+          programas={programasCapacitacion}
+          onCreateNew={handleCreate}
+          onEdit={handleEdit}
+          onAssign={handleAssingProgram}
+          onViewDetails={handleViewDetails}
+          onDelete={handleDelete}
+          usuario={user}
+        />
+      )}
 
-        <main className="flex-1 overflow-auto p-6">
-          {viewState === "list" && (
-            <ProgramasCapacitacionList
-              programas={programasCapacitacion}
-              onCreateNew={handleCreate}
-              onEdit={handleEdit}
-              onAssign={handleAssingProgram}
-              onViewDetails={handleViewDetails}
-              onDelete={handleDelete}
-              usuario={user}
-            />
-          )}
+      {viewState === "create" && (
+        <CreatePrograma
+          departamentos={departamentosList}
+          puestos={puestosList}
+          onSave={handleSaveNew}
+          onCancel={handleBack}
+        />
+      )}
 
-          {viewState === "create" && (
-            <CreatePrograma
-              departamentos={departamentosList}
-              puestos={puestosList}
-              onSave={handleSaveNew}
-              onCancel={handleBack}
-            />
-          )}
+      {viewState === "edit" && selectedPrograma && (
+        <EditPrograma
+          programa={selectedPrograma}
+          departamentos={departamentosList}
+          puestos={puestosList}
+          onSave={handleSaveEdit}
+          onCancel={handleBack}
+        />
+      )}
 
-          {viewState === "edit" && selectedPrograma && (
-            <EditPrograma
-              programa={selectedPrograma}
-              departamentos={departamentosList}
-              puestos={puestosList}
-              onSave={handleSaveEdit}
-              onCancel={handleBack}
-            />
-          )}
-
-          {viewState === "details" && selectedPrograma && (
-            <ProgramaDetails
-              programa={selectedPrograma}
-              departamentos={departamentosList}
-              puestos={puestosList}
-              onEdit={handleEdit}
-              onBack={handleBack}
-              onUpdate={handleNewDetalle}
-            />
-          )}
-        </main>
-      </div>
+      {viewState === "details" && selectedPrograma && (
+        <ProgramaDetails
+          programa={selectedPrograma}
+          departamentos={departamentosList}
+          puestos={puestosList}
+          onEdit={handleEdit}
+          onBack={handleBack}
+          onUpdate={handleNewDetalle}
+        />
+      )}
     </div>
   )
 }
