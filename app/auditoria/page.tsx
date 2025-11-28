@@ -56,7 +56,6 @@ export default function AuditoriaPage() {
         return persona ? `${persona.nombre} ${persona.apellido}` : `Usuario ${value}`
       },
     },
-    { key: "ip", label: "IP" },
     {
       key: "id",
       label: "Acciones",

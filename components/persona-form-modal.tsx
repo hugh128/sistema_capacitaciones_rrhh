@@ -16,8 +16,9 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Loader2 } from "lucide-react"
-import { Persona } from "@/lib/types"
+import { Persona, Puesto } from "@/lib/types"
 import { FormData } from "./form-modal"
+import { toast } from 'react-hot-toast'
 
 type OnSubmit = (data: FormData) => void;
 
@@ -42,6 +43,7 @@ interface PersonaFormModalProps {
   onSubmit: OnSubmit
   loading: boolean
   cambioPlanPendiente?: boolean
+  puestosList: Puesto[]
 }
 
 const INTERNAL_FIELDS_KEYS = ['EMPRESA_ID', 'DEPARTAMENTO_ID', 'PUESTO_ID'];
@@ -49,7 +51,7 @@ const INTERNAL_FIELDS_KEYS = ['EMPRESA_ID', 'DEPARTAMENTO_ID', 'PUESTO_ID'];
 const DEFAULT_TIPO_PERSONA = 'EXTERNO';
 
 interface FormFieldRendererProps {
-  field: FormField;
+  field: FormField & { disabled?: boolean };
   value: FormData[string];
   updateField: (key: string, value: string | boolean) => void;
   options?: Option[];
@@ -66,7 +68,8 @@ const FormFieldRenderer = React.memo(({ field, value, updateField, options, disa
     updateField(field.key, checked);
   };
   
-  const fieldOptions = options || field.options; 
+  const fieldOptions = options || field.options;
+  const isFieldDisabled = disabled || field.disabled;
 
   if (field.type === 'checkbox') {
     return (
@@ -75,11 +78,11 @@ const FormFieldRenderer = React.memo(({ field, value, updateField, options, disa
           id={field.key} 
           checked={!!value} 
           onCheckedChange={handleCheckboxChange}
-          disabled={disabled}
+          disabled={isFieldDisabled}
         />
         <Label 
           htmlFor={field.key} 
-          className={`text-base ${disabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
+          className={`text-base ${isFieldDisabled ? 'cursor-not-allowed opacity-50' : 'cursor-pointer'}`}
         >
           {field.label}
           {field.required && <span className="text-destructive ml-1">*</span>}
@@ -102,24 +105,30 @@ const FormFieldRenderer = React.memo(({ field, value, updateField, options, disa
           value={String(value ?? "")}
           onChange={handleChange}
           required={field.required}
-          disabled={disabled}
+          disabled={isFieldDisabled}
         />
       ) : field.type === "select" && fieldOptions ? (
         <Select
           value={value !== undefined && value !== null ? String(value) : ""}
           onValueChange={(selectValue) => updateField(field.key, selectValue)}
           required={field.required}
-          disabled={disabled}
+          disabled={isFieldDisabled}
         >
           <SelectTrigger className="w-full">
-            <SelectValue placeholder={field.placeholder} />
+            <SelectValue placeholder={field.placeholder || "Seleccionar..."} />
           </SelectTrigger>
           <SelectContent>
-            {fieldOptions.map((option) => (
-              <SelectItem key={String(option.value)} value={String(option.value)}>
-                {option.label}
-              </SelectItem>
-            ))}
+            {fieldOptions.length === 0 ? (
+              <div className="p-2 text-sm text-muted-foreground text-center">
+                {field.key === 'PUESTO_ID' ? 'Primero selecciona un departamento' : 'No hay opciones disponibles'}
+              </div>
+            ) : (
+              fieldOptions.map((option) => (
+                <SelectItem key={String(option.value)} value={String(option.value)}>
+                  {option.label}
+                </SelectItem>
+              ))
+            )}
           </SelectContent>
         </Select>
       ) : (
@@ -130,7 +139,7 @@ const FormFieldRenderer = React.memo(({ field, value, updateField, options, disa
           value={String(value ?? "")}
           onChange={handleChange}
           required={field.required}
-          disabled={disabled}
+          disabled={isFieldDisabled}
         />
       )}
     </div>
@@ -150,6 +159,7 @@ export function PersonaFormModal({
   onSubmit,
   loading = false,
   cambioPlanPendiente = false,
+  puestosList,
 }: PersonaFormModalProps) {
   
   const safeInitialData = useMemo(() => {
@@ -158,7 +168,7 @@ export function PersonaFormModal({
         TIPO_PERSONA: (initialFormData?.TIPO_PERSONA as string) || DEFAULT_TIPO_PERSONA
     } as FormData;
   }, [initialFormData]);
-    
+
   const [formData, setFormData] = useState<FormData>(safeInitialData)
   
   const [isColaborador, setIsColaborador] = useState(
@@ -183,7 +193,6 @@ export function PersonaFormModal({
     }));
   }, [])
 
-
   const updateField = React.useCallback((key: string, value: string | boolean) => {
     const fieldDef = allFields.find(f => f.key === key); 
     let finalValue: FormData[string] = value;
@@ -196,10 +205,51 @@ export function PersonaFormModal({
       }
     }
 
-    setFormData((prev) => ({ ...prev, [key]: finalValue }))
+    setFormData((prev) => {
+      const newData = { ...prev, [key]: finalValue };
+      
+      // Si cambia el departamento, limpiar el puesto seleccionado
+      if (key === 'DEPARTAMENTO_ID') {
+        newData.PUESTO_ID = null;
+      }
+      
+      return newData;
+    });
   }, [allFields])
   
+  // Filtrar puestos según departamento seleccionado
+  const puestosFiltrados = useMemo(() => {
+    const departamentoId = formData.DEPARTAMENTO_ID;
+    
+    if (!departamentoId) {
+      return [];
+    }
+
+    return puestosList
+      .filter(puesto => puesto.DEPARTAMENTO_ID === Number(departamentoId))
+      .map(puesto => ({
+        value: String(puesto.ID_PUESTO),
+        label: puesto.NOMBRE
+      }));
+  }, [formData.DEPARTAMENTO_ID, puestosList]);
+
   const handleSubmit = () => {
+    // Validar campos requeridos para colaborador interno
+    if (isColaborador) {
+      if (!formData.EMPRESA_ID) {
+        toast.error('Debe seleccionar una empresa para colaboradores internos');
+        return;
+      }
+      if (!formData.DEPARTAMENTO_ID) {
+        toast.error('Debe seleccionar un departamento para colaboradores internos');
+        return;
+      }
+      if (!formData.PUESTO_ID) {
+        toast.error('Debe seleccionar un puesto para colaboradores internos');
+        return;
+      }
+    }
+
     let finalData = formData;
     if (!isColaborador) {
         finalData = { ...formData };
@@ -223,11 +273,39 @@ export function PersonaFormModal({
         field.key !== 'TIPO_PERSONA'
     );
     
-    return filteredFields;
+    // Reemplazar opciones de PUESTO_ID con puestos filtrados
+    return filteredFields.map(field => {
+      if (field.key === 'PUESTO_ID') {
+        return {
+          ...field,
+          options: puestosFiltrados,
+          disabled: !formData.DEPARTAMENTO_ID || puestosFiltrados.length === 0,
+          required: isColaborador // Requerido si es colaborador
+        };
+      }
+      
+      // Marcar empresa y departamento como requeridos si es colaborador
+      if (field.key === 'EMPRESA_ID' || field.key === 'DEPARTAMENTO_ID') {
+        return {
+          ...field,
+          required: isColaborador
+        };
+      }
+      
+      return field;
+    });
 
-  }, [isColaborador, allFields]);
+  }, [isColaborador, allFields, puestosFiltrados, formData.DEPARTAMENTO_ID]);
   
   const colaboradorValue = isColaborador;
+
+  // Validar si el formulario está completo
+  const isFormValid = useMemo(() => {
+    if (isColaborador) {
+      return !!(formData.EMPRESA_ID && formData.DEPARTAMENTO_ID && formData.PUESTO_ID);
+    }
+    return true; // Si es externo, siempre es válido
+  }, [isColaborador, formData.EMPRESA_ID, formData.DEPARTAMENTO_ID, formData.PUESTO_ID]);
 
   const handleOpenChange = (newOpenState: boolean) => {
     if ((loading || cambioPlanPendiente) && newOpenState === false) {
@@ -284,6 +362,14 @@ export function PersonaFormModal({
             </div>
           </div>
 
+          {isColaborador && !isFormValid && (
+            <div className="p-3 bg-orange-50 dark:bg-orange-950/20 border border-orange-200 dark:border-orange-900 rounded-lg">
+              <p className="text-sm text-orange-800 dark:text-orange-200">
+                <strong>Campos obligatorios:</strong> Para colaboradores internos debe completar Empresa, Departamento y Puesto.
+              </p>
+            </div>
+          )}
+
           <DialogFooter className="mt-6">
             <Button 
               type="button" 
@@ -296,8 +382,9 @@ export function PersonaFormModal({
             </Button>
             <Button 
               onClick={handleSubmit}
-              disabled={loading || cambioPlanPendiente} 
+              disabled={loading || cambioPlanPendiente || !isFormValid} 
               className="cursor-pointer min-w-[100px]"
+              title={!isFormValid && isColaborador ? 'Complete empresa, departamento y puesto' : ''}
             >
               {loading ? (
                 <>

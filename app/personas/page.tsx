@@ -18,6 +18,8 @@ import { RequirePermission } from "@/components/RequirePermission"
 import { usePlanesCapacitacion } from "@/hooks/usePlanesCapacitacion"
 import { CambioPlanModal } from "@/components/planes_programas/cambio-plan"
 
+// Componente CambioPlanModal actualizado
+
 const getDepartamentosList = async () => {
   try {
     const { data } = await apiClient.get<Departamento[]>('/departamento');
@@ -143,6 +145,7 @@ export default function PersonasPage() {
     const isEditing = !!editingPersona
     const eraInternoAntes = editingPersona?.TIPO_PERSONA === 'INTERNO'
     
+    // VALIDACIÓN CRÍTICA: Solo verificar cambio de plan si YA ERA interno antes
     if (isInterno && isEditing && editingPersona && eraInternoAntes) {
       const departamentoChanged = 
         formData.DEPARTAMENTO_ID && 
@@ -165,9 +168,12 @@ export default function PersonasPage() {
           if (verificacion) {
             setVerificacionPlan(verificacion)
             
+            // Solo abrir modal si realmente requiere cambio de plan
             if (verificacion.REQUIERE_CAMBIO_PLAN && verificacion.PLAN_NUEVO_ID) {
               setCambioPlanModalOpen(true)
+              // NO cerrar el modal principal
             } else {
+              // Si no requiere cambio, guardar directamente
               await finalizarGuardado(formData)
             }
           }
@@ -180,6 +186,11 @@ export default function PersonasPage() {
       }
     }
     
+    // Guardar directamente si:
+    // 1. Es nuevo
+    // 2. Es externo
+    // 3. No hubo cambio de depto/puesto
+    // 4. Cambió de externo a interno (primera vez)
     await finalizarGuardado(formData)
   }
 
@@ -232,6 +243,7 @@ export default function PersonasPage() {
         return false
       }
       
+      // Verificar si hay otros campos que actualizar
       const hayOtrosCambios = Object.keys(pendingFormData).some(key => {
         if (key === 'ID_PERSONA' || key === 'TIPO_PERSONA' || key === 'DEPARTAMENTO_ID' || key === 'PUESTO_ID') return false
         return pendingFormData[key] !== (editingPersona as Persona)[key as keyof Persona]
@@ -259,6 +271,7 @@ export default function PersonasPage() {
       
       await fetchPersonas()
       
+      // Cerrar AMBOS modales
       setCambioPlanModalOpen(false)
       setModalOpen(false)
       
@@ -276,13 +289,16 @@ export default function PersonasPage() {
     }
   }
 
+  // NUEVO: Guardar sin cambiar plan
   const handleGuardarSinCambioPlan = async () => {
     if (!pendingFormData) return
     
     setCambioPlanModalOpen(false)
     
+    // Guardar los datos tal cual están en el form
     await finalizarGuardado(pendingFormData)
     
+    // Limpiar estados
     setTimeout(() => {
       setPendingFormData(null)
       setVerificacionPlan(null)
@@ -291,6 +307,8 @@ export default function PersonasPage() {
 
   const handleCancelarCambioPlan = () => {
     setCambioPlanModalOpen(false)
+    // NO limpiar pendingFormData ni verificacionPlan
+    // El modal principal sigue abierto con los datos
   }
 
   return (
@@ -330,6 +348,7 @@ export default function PersonasPage() {
           initialPersonaData={editingPersona}
           loading={isMutating}
           cambioPlanPendiente={cambioPlanModalOpen}
+          puestosList={puestosList}
         />
 
         <PersonaDetailModal
