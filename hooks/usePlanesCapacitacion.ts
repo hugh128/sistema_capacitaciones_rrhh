@@ -34,6 +34,26 @@ export function usePlanesCapacitacion(user: UsuarioLogin | null) {
     }
   }, [user]);
 
+  const obtenerDetallePlanColaborador = useCallback(async (idPlan: number) => {  
+    if (!user) {
+      return undefined;
+    }
+
+    setIsMutating(true);
+    setError(null);
+
+    try {
+      const { data } = await apiClient.get(`/plan-capacitacion/${idPlan}/detalle-colaboradores`);
+      return data;
+    } catch (err) {
+      const baseMessage = "Error al obtener detalle de plan de capacitacion.";
+      setError(baseMessage);
+      handleApiError(err, baseMessage);
+    } finally {
+      setIsMutating(false);
+    }
+  }, [user]);
+
   const savePlanesCapacitacion = useCallback(async (payload: planesCapacitacionPayload, idPlanCapacitacion?: number) => {
     if (!user) {
       toast.error("Usuario no autenticado.");
@@ -215,6 +235,7 @@ export function usePlanesCapacitacion(user: UsuarioLogin | null) {
     obtenerColaboradoresDisponiblesPlan,
     verificarCambioPlan,
     analizarCambioPlan,
-    cambiarPlanColaborador
+    cambiarPlanColaborador,
+    obtenerDetallePlanColaborador,
   }
 }

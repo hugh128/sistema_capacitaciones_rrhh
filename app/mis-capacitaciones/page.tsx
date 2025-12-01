@@ -55,7 +55,6 @@ export default function MisCapacitacionesPage() {
     try {
       const capacitaciones = await obtenerCapacitacionesPorCapacitador(user.PERSONA_ID)
       
-      // Validar que la respuesta sea un array
       if (Array.isArray(capacitaciones)) {
         setMisCapacitaciones(capacitaciones)
       } else {
@@ -63,12 +62,12 @@ export default function MisCapacitacionesPage() {
         setHasError(true)
         setErrorMessage("La respuesta del servidor no tiene el formato esperado")
       }
+
     } catch (error) {
       console.error('Error al cargar las capacitaciones:', error)
       setMisCapacitaciones([])
       setHasError(true)
       
-      // Determinar el tipo de error
       if (error && typeof error === 'object' && 'code' in error) {
         const axiosError = error as { code?: string; message?: string }
         if (axiosError.code === 'ERR_NETWORK') {
@@ -88,7 +87,6 @@ export default function MisCapacitacionesPage() {
     fetchCapacitaciones()
   }, [fetchCapacitaciones])
 
-  // Filter capacitaciones con validación
   const capacitacionesFiltradas = useMemo(() => {
     if (!Array.isArray(misCapacitaciones) || misCapacitaciones.length === 0) {
       return []
@@ -130,7 +128,6 @@ export default function MisCapacitacionesPage() {
     }
   }, [misCapacitaciones])
 
-  // Get upcoming trainings (next 7 days) con validación
   const proximasCapacitaciones = useMemo(() => {
     if (!Array.isArray(misCapacitaciones) || misCapacitaciones.length === 0) {
       return []
@@ -162,7 +159,6 @@ export default function MisCapacitacionesPage() {
     }
   }, [misCapacitaciones])
 
-  // Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -179,7 +175,6 @@ export default function MisCapacitacionesPage() {
     )
   }
 
-  // Permission check
   if (
     !user ||
     !user.ROLES.some(
@@ -198,7 +193,6 @@ export default function MisCapacitacionesPage() {
     )
   }
 
-  // Error state
   if (hasError) {
     return (
       <div className="flex h-screen bg-background">
@@ -344,11 +338,11 @@ export default function MisCapacitacionesPage() {
                             </span>
                             <span className="flex items-center gap-2">
                               <Clock className="h-4 w-4 text-purple-600" />
-                              {cap.HORARIO_FORMATO}
+                              {cap.HORARIO_FORMATO_12H}
                             </span>
                             <span className="flex items-center gap-2">
                               <Users className="h-4 w-4 text-green-600" />
-                              {cap.TOTAL_COLABORADORES_PENDIENTES} participantes
+                              {cap.TOTAL_COLABORADORES} participantes
                             </span>
                           </div>
                         </div>
@@ -451,8 +445,8 @@ export default function MisCapacitacionesPage() {
                                 <span className="flex items-center gap-2 text-muted-foreground">
                                   <Calendar className="h-4 w-4 text-blue-600" />
                                   <span className="font-medium">
-                                    {cap.FECHA_INICIO
-                                      ? new Date(cap.FECHA_INICIO).toLocaleDateString("es-GT", {
+                                    {cap.FECHA_PROGRAMADA
+                                      ? new Date(cap.FECHA_PROGRAMADA).toLocaleDateString("es-GT", {
                                           day: "numeric",
                                           month: "long",
                                           year: "numeric",
@@ -463,12 +457,12 @@ export default function MisCapacitacionesPage() {
                                 <span className="flex items-center gap-2 text-muted-foreground">
                                   <Clock className="h-4 w-4 text-purple-600" />
                                   <span className="font-medium">
-                                    {cap.HORARIO_FORMATO} · {cap.DURACION_FORMATO}
+                                    {cap.HORARIO_FORMATO_12H} · {cap.DURACION_FORMATO}
                                   </span>
                                 </span>
                                 <span className="flex items-center gap-2 text-muted-foreground">
                                   <Users className="h-4 w-4 text-green-600" />
-                                  <span className="font-medium">{cap.TOTAL_COLABORADORES_PENDIENTES} participantes</span>
+                                  <span className="font-medium">{cap.TOTAL_COLABORADORES} participantes</span>
                                 </span>
                               </div>
                             </div>

@@ -1,6 +1,6 @@
 import { apiClient } from "@/lib/api-client";
 import { UsuarioLogin } from "@/lib/auth";
-import type { ApiCapacitacionSesion, AsignarCapacitacion, AsignarSesion, Capacitacion } from "@/lib/capacitaciones/capacitaciones-types";
+import type { ApiCapacitacionSesion, CrearSesionAsignarColaboradores } from "@/lib/capacitaciones/capacitaciones-types";
 import type { ColaboradorAsistenciaData, ExamenCompleto, ListadoAsistencia, Serie } from "@/lib/mis-capacitaciones/capacitaciones-types";
 import { handleApiError } from "@/utils/error-handler";
 import { useCallback, useEffect, useState, useRef, useMemo } from "react";
@@ -17,32 +17,10 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     }
   }, [userId]);
 
-  const [capacitacionesPendientes, setCapacitacionesPendientes] = useState<Capacitacion[]>([]);
   const [capacitaciones, setCapacitaciones] = useState<ApiCapacitacionSesion[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isMutating, setIsMutating] = useState(false);
-
-  const refreshCapacitacionesPendientes = useCallback(async () => {
-    if (!userId) {
-      setCapacitacionesPendientes([]);
-      return;
-    }
-
-    setLoading(true);
-    setError(null);
-
-    try {
-      const { data } = await apiClient.get<Capacitacion[]>('/capacitaciones/pendientes');
-      setCapacitacionesPendientes(data);
-    } catch (err) {
-      const baseMessage = "Error al cargar capacitaciones pendientes.";
-      setError(baseMessage);
-      handleApiError(err, baseMessage)
-    } finally {
-      setLoading(false);
-    }
-  }, [userId]);
 
   const obtenerCapacitaciones = useCallback(async () => {
     if (!userId) {
@@ -127,7 +105,7 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     }
   }, [userId]);
 
-  const asignarCapacitacion = useCallback(async (payload: AsignarCapacitacion) => {
+  const crearSesionAsignarColaboradores = useCallback(async (payload: CrearSesionAsignarColaboradores) => {
     if (!userId) {
       toast.error("Usuario no autenticado.");
       return;
@@ -138,30 +116,7 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     let successMessage = "";
 
     try {
-      await apiClient.post('/capacitaciones/asignar', payload);
-      successMessage = "Capacitacion asignada exitosamente.";
-      toast.success(successMessage);
-    } catch (err) {
-      const baseMessage = "Error al asignar la capacitacion.";
-      setError(baseMessage);
-      handleApiError(err, baseMessage);
-    } finally {
-      setIsMutating(false);
-    }
-  }, [userId]);
-
-  const asignarSesion = useCallback(async (payload: AsignarSesion) => {
-    if (!userId) {
-      toast.error("Usuario no autenticado.");
-      return;
-    }
-
-    setIsMutating(true);
-    setError(null);
-    let successMessage = "";
-
-    try {
-      await apiClient.post('/capacitaciones/asignar/sesion', payload);
+      await apiClient.post('/capacitaciones/crear/sesion', payload);
       successMessage = "Sesion asignada exitosamente.";
       toast.success(successMessage);
     } catch (err) {
@@ -737,22 +692,19 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
 
   useEffect(() => {
     if (userId) {
-      refreshCapacitacionesPendientes();
       obtenerCapacitaciones();
     }
-  }, [userId, refreshCapacitacionesPendientes, obtenerCapacitaciones]);
+  }, [userId, obtenerCapacitaciones]);
 
   return useMemo(() => ({
     capacitaciones,
-    capacitacionesPendientes,
     loading,
     error,
     isMutating,
     obtenerDetallesCapacitacion,
     obtenerCapacitadores,
     obtenerColaboradoresSinSesion,
-    asignarCapacitacion,
-    asignarSesion,
+    crearSesionAsignarColaboradores,
     obtenerCapacitacionesPorCapacitador,
     obtenerDetalleSesionCapacitador,
     iniciarSesionCapacitador,
@@ -773,15 +725,13 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     generarExamenIndividualPDF
   }), [
     capacitaciones,
-    capacitacionesPendientes,
     loading,
     error,
     isMutating,
     obtenerDetallesCapacitacion,
     obtenerCapacitadores,
     obtenerColaboradoresSinSesion,
-    asignarCapacitacion,
-    asignarSesion,
+    crearSesionAsignarColaboradores,
     obtenerCapacitacionesPorCapacitador,
     obtenerDetalleSesionCapacitador,
     iniciarSesionCapacitador,

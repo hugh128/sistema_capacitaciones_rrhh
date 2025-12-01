@@ -1,11 +1,13 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { ArrowLeft, Edit, Users, BookOpen, Calendar, Building2, Briefcase } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import type { PlanCapacitacion } from "@/lib/planes_programas/types"
+import type { CapacitacionPlan, ColaboradoresPlan, DetallePlan, PlanCapacitacion } from "@/lib/planes_programas/types"
+import { usePlanesCapacitacion } from "@/hooks/usePlanesCapacitacion"
+import { useAuth } from "@/contexts/auth-context"
 
 interface PlanDetailsProps {
   plan: PlanCapacitacion
@@ -39,56 +41,37 @@ export const getEstatusDocumentoVariant = (estatus: string) => {
   }
 }
 
-// Datos de prueba para colaboradores
-const colaboradoresPrueba = [
-  {
-    id: 1,
-    nombre: "María González",
-    puesto: "Desarrolladora Senior",
-    departamento: "Tecnología",
-    fechaAsignacion: "15 Mar 2024",
-    progreso: 75,
-    capacitacionesCompletadas: 3,
-    capacitacionesTotales: 4,
-    avatar: null,
-  },
-  {
-    id: 2,
-    nombre: "Carlos Méndez",
-    puesto: "Analista de Datos",
-    departamento: "Tecnología",
-    fechaAsignacion: "10 Mar 2024",
-    progreso: 50,
-    capacitacionesCompletadas: 2,
-    capacitacionesTotales: 4,
-    avatar: null,
-  },
-  {
-    id: 3,
-    nombre: "Ana Rodríguez",
-    puesto: "Diseñadora UX",
-    departamento: "Diseño",
-    fechaAsignacion: "20 Mar 2024",
-    progreso: 100,
-    capacitacionesCompletadas: 4,
-    capacitacionesTotales: 4,
-    avatar: null,
-  },
-  {
-    id: 4,
-    nombre: "Luis Torres",
-    puesto: "Product Manager",
-    departamento: "Producto",
-    fechaAsignacion: "12 Mar 2024",
-    progreso: 25,
-    capacitacionesCompletadas: 1,
-    capacitacionesTotales: 4,
-    avatar: null,
-  },
-]
-
 export default function PlanDetails({ plan, onBack, onEdit }: PlanDetailsProps) {
+  const { user } = useAuth()
+  const {
+    obtenerDetallePlanColaborador
+  } = usePlanesCapacitacion(user)
+
   const [activeTab, setActiveTab] = useState("info")
+  const [detallaPlan, setDetallaPlan] = useState<DetallePlan>();
+  const [colaboradoresPlan, setColaboradoresPlan] = useState<ColaboradoresPlan[]>([]);
+
+  useEffect(() => {
+    if (!user || !user.PERSONA_ID) {
+      return; 
+    }
+
+    const fetchData = async () => {
+      try {
+        const {
+          DETALLE_PLAN,
+          COLABORADORES_PLAN
+        } = await obtenerDetallePlanColaborador(plan.ID_PLAN)
+        setDetallaPlan(DETALLE_PLAN)
+        setColaboradoresPlan(COLABORADORES_PLAN)
+
+      } catch (error) {
+        console.error('Error al cargar datos:', error)
+      }
+    }
+
+    fetchData()
+  }, [user, obtenerDetallePlanColaborador, plan.ID_PLAN])
 
   const getInitials = (nombre: string) => {
     return nombre
@@ -168,7 +151,7 @@ export default function PlanDetails({ plan, onBack, onEdit }: PlanDetailsProps) 
               <Users className="w-4 h-4 mr-2" />
               Colaboradores Asignados
               <span className="ml-2 px-2 py-0.5 bg-primary/10 text-primary rounded-full text-xs font-semibold">
-                {colaboradoresPrueba.length}
+                {colaboradoresPlan.length}
               </span>
             </TabsTrigger>
           </TabsList>
@@ -203,7 +186,7 @@ export default function PlanDetails({ plan, onBack, onEdit }: PlanDetailsProps) 
                         Colaboradores
                       </p>
                       <p className="text-xl md:text-2xl font-bold text-green-900 dark:text-green-100">
-                        {colaboradoresPrueba.length}
+                        {colaboradoresPlan.length}
                       </p>
                     </div>
                   </div>
@@ -292,6 +275,9 @@ export default function PlanDetails({ plan, onBack, onEdit }: PlanDetailsProps) 
                   <table className="w-full overflow-y-auto min-w-[800px]">
                     <thead className="bg-muted/30">
                       <tr>
+                        <th className="text-center px-4 text-sm font-semibold text-foreground">
+                          No.
+                        </th>
                         <th className="text-left px-4 py-3 text-sm font-semibold text-foreground">
                           Código
                         </th>
@@ -317,6 +303,11 @@ export default function PlanDetails({ plan, onBack, onEdit }: PlanDetailsProps) 
                             index % 2 === 0 ? "bg-muted/5" : ""
                           }`}
                         >
+                          <td className="px-4 text-center">
+                            <p className="text-sm text-foreground">
+                              {index + 1}
+                            </p>
+                          </td>
                           <td className="px-4 py-4 w-[140px]">
                             <p className="text-sm font-mono font-medium text-foreground">
                               {documento.CODIGO}
@@ -342,7 +333,7 @@ export default function PlanDetails({ plan, onBack, onEdit }: PlanDetailsProps) 
                             </span>
                           </td>
                           <td className="px-4 py-4 text-center">
-                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+                            <span className="inline-flex items-center justify-center w-8 h-8 rounded-full bg-primary/10 text-primary text-xs font-semibold dark:text-blue-400 dark:border dark:border-blue-500/30">
                               {documento.VERSION}
                             </span>
                           </td>
@@ -369,7 +360,7 @@ export default function PlanDetails({ plan, onBack, onEdit }: PlanDetailsProps) 
               </div>
 
               <div className="grid gap-4">
-                {colaboradoresPrueba.map((colaborador) => (
+                {colaboradoresPlan.map((colaborador) => (
                   <div
                     key={colaborador.id}
                     className="bg-card border border-border rounded-lg p-5 hover:shadow-md transition-shadow"
@@ -434,7 +425,7 @@ export default function PlanDetails({ plan, onBack, onEdit }: PlanDetailsProps) 
                 ))}
               </div>
 
-              {colaboradoresPrueba.length === 0 && (
+              {colaboradoresPlan.length === 0 && (
                 <div className="text-center py-12 bg-muted/30 rounded-lg border-2 border-dashed border-border">
                   <Users className="w-12 h-12 text-muted-foreground mx-auto mb-3" />
                   <p className="text-muted-foreground font-medium">

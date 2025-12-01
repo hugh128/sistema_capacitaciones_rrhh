@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Eye, MoreHorizontal, UserPlus, Calendar, FileText } from "lucide-react"
+import { Eye, MoreHorizontal, UserPlus, Calendar, FileText, BookOpenText } from "lucide-react"
 import type { PlanCapacitacion } from "@/lib/planes_programas/types"
 import { getEstatusBadgeVariant } from "./plans-list-view"
 import {
@@ -45,7 +45,7 @@ export const getTypeBadgeColor = (type: string) => {
 export function PlansTable({ title, filteredPlans, onViewDetails, onAssignPlan }: PlansTableProps) {
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-border/40">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border/40">
         <div className="space-y-1">
           <div className="flex items-center gap-2">
             <h2 className="text-2xl font-bold ">
@@ -53,7 +53,7 @@ export function PlansTable({ title, filteredPlans, onViewDetails, onAssignPlan }
             </h2>
           </div>
           <p className="text-sm text-muted-foreground flex items-center gap-2">
-            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-semibold">
+            <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary/10 text-primary text-xs font-semibold dark:text-blue-400 dark:border dark:border-blue-500/30">
               {filteredPlans.length}
             </span>
             {filteredPlans.length === 1 ? "plan encontrado" : "planes encontrados"}
@@ -68,8 +68,14 @@ export function PlansTable({ title, filteredPlans, onViewDetails, onAssignPlan }
               <TableRow className="bg-gradient-to-r from-muted/50 to-muted/30 hover:from-muted/60 hover:to-muted/40 transition-colors border-b border-border/50">
                 <TableHead className="whitespace-nowrap font-semibold">
                   <div className="flex items-center gap-2 py-1">
-                    <FileText className="w-4 h-4 text-primary/70" />
+                    <FileText className="w-4 h-4 text-primary/70 dark:text-foreground/70" />
                     <span>Nombre del Plan</span>
+                  </div>
+                </TableHead>
+                <TableHead className="whitespace-nowrap font-semibold">
+                  <div className="flex items-center gap-2 py-1">
+                    <BookOpenText className="w-4 h-4 text-primary/70 dark:text-foreground/70" />
+                    <span>Descripcion</span>
                   </div>
                 </TableHead>
                 <TableHead className="whitespace-nowrap font-semibold">
@@ -80,8 +86,8 @@ export function PlansTable({ title, filteredPlans, onViewDetails, onAssignPlan }
                 </TableHead>
                 <TableHead className="whitespace-nowrap font-semibold">
                   <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-primary/70" />
-                    <span>Fecha de Creación</span>
+                    <Calendar className="w-4 h-4 text-primary/70 dark:text-foreground/70" />
+                    <span>Fecha Creación</span>
                   </div>
                 </TableHead>
                 <TableHead className="w-[100px] text-center whitespace-nowrap font-semibold">
@@ -97,15 +103,16 @@ export function PlansTable({ title, filteredPlans, onViewDetails, onAssignPlan }
                     key={plan.ID_PLAN}
                     className="group hover:bg-primary/5 hover:shadow-sm transition-all duration-200 border-b border-border/30 last:border-0"
                   >
-                    <TableCell className="font-medium">
-                      <div className="flex flex-col gap-1.5 py-2">
-                        <span className="text-base group-hover:text-primary transition-colors duration-200 font-semibold">
-                          {plan.NOMBRE}
-                        </span>
-                        <span className="text-xs text-muted-foreground font-mono bg-muted/30 px-2 py-0.5 rounded-md w-fit">
-                          ID-{plan.ID_PLAN}
-                        </span>
-                      </div>
+                    <TableCell className="font-medium py-4">
+                      <span className="text-base group-hover:text-primary transition-colors duration-200 font-semibold">
+                        {plan.NOMBRE}
+                      </span>
+                    </TableCell>
+
+                    <TableCell className="max-w-sm truncate">
+                      <span className="text-base group-hover:text-primary transition-colors duration-200">
+                        {plan.DESCRIPCION}
+                      </span>
                     </TableCell>
 
                     <TableCell className="whitespace-nowrap">
@@ -124,7 +131,7 @@ export function PlansTable({ title, filteredPlans, onViewDetails, onAssignPlan }
                     </TableCell>
 
                     <TableCell className="text-muted-foreground whitespace-nowrap">
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center justify-center gap-2 text-center">
                         <div className="w-1.5 h-1.5 rounded-full bg-primary/40" />
                         <span className="text-sm">{plan.FECHA_CREACION}</span>
                       </div>

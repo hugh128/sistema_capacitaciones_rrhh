@@ -682,10 +682,14 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
                                         className={`px-3 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${
                                           cap.estatus === "Completa"
                                             ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
-                                            : cap.estatus === "Pendiente"
+                                            : cap.estatus === "Sin Sesión Asignada"
                                             ? "bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300"
                                             : cap.estatus === "Reprobada"
                                             ? "bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300"
+                                            : cap.estatus === "Incompleta"
+                                            ? "bg-orange-100 dark:bg-orange-900 text-orange-700 dark:text-orange-300"
+                                            : cap.estatus === "En Revisión"
+                                            ? "bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300"
                                             : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
                                         }`}
                                       >
@@ -835,7 +839,7 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
     <div className="flex-1">
       {/* Breadcrumb */}
       <div className="flex items-center gap-2 mb-6 text-xs">
-        <button onClick={onBack} className="text-muted-foreground hover:text-foreground">
+        <button onClick={onBack} className="text-muted-foreground hover:text-foreground cursor-pointer">
           Colaboradores
         </button>
         <ChevronRight className="w-3 h-3 text-muted-foreground" />
@@ -885,7 +889,7 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
               onClick={() => {
                 setActiveTab(tab)
               }}
-              className={`px-4 py-2 text-base font-semibold relative transition-opacity hover:opacity-100 ${
+              className={`px-4 py-2 text-base font-semibold relative transition-opacity hover:opacity-100 cursor-pointer ${
                 activeTab === tab ? "text-foreground" : "text-muted-foreground"
               }`}
             >

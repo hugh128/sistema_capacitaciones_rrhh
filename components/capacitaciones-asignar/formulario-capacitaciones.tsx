@@ -97,8 +97,8 @@ const TextAreaOptimizado = memo(function TextAreaOptimizado({
 interface FormularioCapacitacionProps {
   capacitadorId: string
   setCapacitadorId: (value: string) => void
-  fechaInicio: string
-  setFechaInicio: (value: string) => void
+  fechaProgramada: string
+  setFechaProgramada: (value: string) => void
   horaInicio: string
   setHoraInicio: (value: string) => void
   horaFin: string
@@ -125,8 +125,8 @@ interface FormularioCapacitacionProps {
 export const FormularioCapacitacion = memo(function FormularioCapacitacion({
   capacitadorId,
   setCapacitadorId,
-  fechaInicio,
-  setFechaInicio,
+  fechaProgramada,
+  setFechaProgramada,
   horaInicio,
   setHoraInicio,
   horaFin,
@@ -174,8 +174,8 @@ export const FormularioCapacitacion = memo(function FormularioCapacitacion({
           </div>
 
           <div className="space-y-2 dark-mode-date-fix">
-            <Label htmlFor="fecha">Fecha de Inicio *</Label>
-            <Input id="fecha" type="date" value={fechaInicio} onChange={(e) => setFechaInicio(e.target.value)} />
+            <Label htmlFor="fecha">Fecha Programada *</Label>
+            <Input id="fecha" type="date" value={fechaProgramada} onChange={(e) => setFechaProgramada(e.target.value)} />
           </div>
 
           <div className="space-y-2 dark-mode-date-fix">

@@ -97,6 +97,7 @@ export function AllCapacitacionesTab({ capacitaciones }: AllCapacitacionesTabPro
                 <SelectItem value="TODOS">Todos los estados</SelectItem>
                 <SelectItem value="PENDIENTE_ASIGNACION">Pendiente Asignación</SelectItem>
                 <SelectItem value="ASIGNADA">Asignada</SelectItem>
+                <SelectItem value="PROGRAMADA">Programada</SelectItem>
                 <SelectItem value="EN_PROCESO">En Proceso</SelectItem>
                 <SelectItem value="FINALIZADA_CAPACITADOR">Finalizada Capacitador</SelectItem>
                 <SelectItem value="EN_REVISION">En Revisión</SelectItem>
@@ -185,7 +186,6 @@ export function AllCapacitacionesTab({ capacitaciones }: AllCapacitacionesTabPro
 
                         {cap.OBJETIVO && (
                           <p className="text-sm text-muted-foreground line-clamp-2">{cap.OBJETIVO}</p>
-
                         )}
 
                         <div className="flex flex-wrap gap-4 text-sm pt-2">
@@ -195,8 +195,8 @@ export function AllCapacitacionesTab({ capacitaciones }: AllCapacitacionesTabPro
                           <div className="flex items-center gap-2 text-muted-foreground">
                             <Calendar className="h-4 w-4 text-blue-600" />
                             <span>
-                              {cap.FECHA_INICIO
-                                ? new Date(cap.FECHA_INICIO).toLocaleDateString("es-GT")
+                              {cap.FECHA_PROGRAMADA
+                                ? new Date(cap.FECHA_PROGRAMADA).toLocaleDateString("es-GT")
                                 : "Sin fecha"}
                             </span>
                           </div>

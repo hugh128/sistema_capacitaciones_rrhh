@@ -54,7 +54,6 @@ export default function DashboardPage() {
       try {
         const responseData = await obtenerEstadisticasDashboard(idToSend)
 
-        // Verificar si la respuesta es válida
         if (!responseData) {
           setHasError(true)
           setEstadisticas(null)
@@ -100,10 +99,8 @@ export default function DashboardPage() {
         <div className="flex-1 flex flex-col overflow-hidden">
           <AppHeader title="Dashboard" subtitle={`Bienvenido, ${user.NOMBRE} ${user.APELLIDO}`} />
 
-          {/* Main Content */}
           <main className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar">
             <div className="max-w-7xl mx-auto">
-              {/* Welcome Section */}
               <div className="mb-8">
                 <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg p-4 sm:p-6 border">
                   <h2 className="text-lg sm:text-xl font-semibold mb-2">Sistema de Gestión de Capacitaciones</h2>
@@ -147,7 +144,6 @@ export default function DashboardPage() {
                 </div>
               </div>
 
-              {/* Dashboard Stats */}
               <DashboardStats
                 estadisticas={estadisticas}
                 capacitacionesRecientes={capacitacionReciente}

@@ -1,4 +1,5 @@
 import { CodigoPadre } from "../codigos/types"
+import { detallePlan } from "../colaboradores/type"
 import { Departamento, Puesto } from "../types"
 
 export type PlanType = "INDUCCION" | "INDIVIDUAL"
@@ -176,4 +177,55 @@ export interface AnalizarCambioPlanResponse {
   INFORMACION_COLABORADOR: InformacionPlanColaborador
   CAPACITACIONES_MIGRAR: CapacitacionMigrar[]
   CAPACITACIONES_NUEVAS: CapacitacionNueva[]
+}
+
+export interface DetallePlan {
+    id: number
+    nombre: string
+    descripcion: string
+    tipo: string
+    departamento: string
+    codigoDepartamento: string
+    aplicaTodosPuestos: boolean
+    fechaCreacion: string
+    estado: string
+    totalCapacitaciones: number
+    totalColaboradoresAsignados: number
+    colaboradoresCompletaron: number
+}
+
+export interface ColaboradoresPlan {
+    id: number
+    nombre: string
+    puesto: string
+    departamento: string
+    fechaAsignacion: string
+    progreso: number
+    capacitacionesCompletadas: number
+    capacitacionesTotales: number
+    avatar: null
+    correo: string
+    telefono: string
+    fechaAsignacionRaw: string
+    estadoAsignacion: string
+    planCompletado: boolean
+    ultimaActividad: string
+}
+
+export interface CapacitacionPlan {
+    id: number,
+    codigo: string
+    nombre: string
+    version: number
+    tipo: string
+    departamento: string
+    estado: string
+    colaboradoresCompletaron: number
+    totalColaboradoresAsignados: number
+}
+
+export interface PlanConColaboradores {
+  DETALLE_PLAN: detallePlan
+  COLABORADORES_PLAN: ColaboradoresPlan[]
+  CAPACITACIONES_PLAN: CapacitacionPlan[]
 }

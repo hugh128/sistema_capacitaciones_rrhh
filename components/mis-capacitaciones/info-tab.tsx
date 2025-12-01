@@ -11,6 +11,7 @@ interface InfoTabProps {
 }
 
 export function InfoTab({ sesion }: InfoTabProps) {
+
   return (
   <Card className="shadow-sm">
     <CardHeader className="py-2 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
@@ -37,8 +38,8 @@ export function InfoTab({ sesion }: InfoTabProps) {
           <Label className="text-xs text-muted-foreground uppercase tracking-wide">Fecha Programada</Label>
           <p className="font-semibold flex items-center gap-2">
             <Calendar className="h-4 w-4 text-blue-600" />
-            {sesion.FECHA_INICIO
-              ? new Date(sesion.FECHA_INICIO).toLocaleDateString("es-GT", {
+            {sesion.FECHA_PROGRAMADA
+              ? new Date(sesion.FECHA_PROGRAMADA).toLocaleDateString("es-GT", {
                   day: "numeric",
                   month: "long",
                   year: "numeric",
@@ -75,7 +76,7 @@ export function InfoTab({ sesion }: InfoTabProps) {
         <p className="font-medium leading-relaxed">{sesion.OBJETIVO ?? "Sin objetivo"}</p>
       </div>
 
-      {sesion.TEMAS && (
+      {(sesion.TEMAS && (sesion.ESTADO === "PROGRAMADA" || sesion.ESTADO === "EN_PROCESO"))  && (
         <div className="space-y-2">
           <Label className="text-xs text-muted-foreground uppercase tracking-wide">
             Temas
@@ -87,17 +88,7 @@ export function InfoTab({ sesion }: InfoTabProps) {
                 <Badge
                   key={idx}
                   variant="secondary"
-                  className="
-                    text-xs sm:text-sm px-3 py-1 rounded-2xl sm:rounded-full 
-                    bg-muted/70 
-                    dark:bg-muted/40 
-                    text-foreground/90
-                    border border-border/40
-                    dark:border-foreground/10
-                    hover:bg-muted/50
-                    transition-colors
-                    whitespace-normal
-                  "
+                  className="text-xs sm:text-sm px-3 py-1 rounded-2xl sm:rounded-full bg-muted/70 dark:bg-muted/40 text-foreground/90 border border-border/40 dark:border-foreground/10 hover:bg-muted/50 transition-colors whitespace-normal"
                 >
                   {tema}
                 </Badge>

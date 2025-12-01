@@ -51,8 +51,8 @@ export interface Capacitacion {
 }
 
 export interface CapacitacionSesion {
-  ID_SESION: number;              // ⭐ NUEVO - ID único de la sesión
-  ID_CAPACITACION: number;        // ID de la capacitación padre
+  ID_SESION: number;
+  ID_CAPACITACION: number;
   CODIGO_DOCUMENTO: string | null
   NOMBRE: string
   OBJETIVO: string
@@ -60,7 +60,7 @@ export interface CapacitacionSesion {
   ES_SISTEMA_DOCUMENTAL: boolean
   TIPO_CAPACITACION: TipoCapacitacion
   MODALIDAD: Modalidad
-  NUMERO_SESION: number;          // ⭐ NUEVO - Número de sesión (1, 2, 3...)
+  NUMERO_SESION: number;
   NOMBRE_SESION: string | null; 
   GRUPO_OBJETIVO: string
   CAPACITADOR_ID: number | null
@@ -83,7 +83,8 @@ export interface CapacitacionSesion {
   NOMBRE_ORIGEN: string
   DEPARTAMENTO: string
   TEMAS: string // String separado por comas
-  TOTAL_COLABORADORES_PENDIENTES: number
+  TOTAL_COLABORADORES_PENDIENTES?: number
+  TOTAL_COLABORADORES: number
   TOTAL_ASISTENCIAS: number
   TOTAL_AUSENCIAS: number
   PENDIENTES_REGISTRAR: number

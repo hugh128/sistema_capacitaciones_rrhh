@@ -223,6 +223,25 @@ export interface AsignarSesion {
   version: number
 }
 
+export interface CrearSesionAsignarColaboradores {
+  idCapacitacion: number
+  idsColaboradores: number[]
+  capacitadorId: number,
+  fechaProgramada: string
+  horaInicio: string
+  horaFin: string
+  nombreSesion?: string
+  tipoCapacitacion: string
+  modalidad: string
+  grupoObjetivo: string
+  objetivo?: string
+  aplicaExamen: boolean
+  notaMinima: number | null
+  aplicaDiploma: boolean
+  observaciones: string
+  usuario: string
+}
+
 
 // ========================================
 // FUNCIONES HELPER

@@ -9,7 +9,7 @@ interface ResumenCapacitacionProps {
   capacitacion: Capacitacion
   capacitadorId: string
   capacitadores: Capacitador[]
-  fechaInicio: string
+  fechaProgramada: string
   horaInicio: string
   horaFin: string
   selectedColaboradores: number[]
@@ -23,7 +23,7 @@ export const ResumenCapacitacion = memo(function ResumenCapacitacion({
   capacitacion,
   capacitadorId,
   capacitadores,
-  fechaInicio,
+  fechaProgramada,
   horaInicio,
   horaFin,
   selectedColaboradores,
@@ -54,12 +54,12 @@ export const ResumenCapacitacion = memo(function ResumenCapacitacion({
           </div>
         )}
 
-        {fechaInicio && (
+        {fechaProgramada && (
           <div>
             <Label className="text-muted-foreground">Fecha</Label>
             <p className="font-medium flex items-center gap-2">
               <Calendar className="h-4 w-4" />
-              {new Date(fechaInicio + 'T00:00:00').toLocaleDateString("es-GT")}
+              {new Date(fechaProgramada + 'T00:00:00').toLocaleDateString("es-GT")}
             </p>
           </div>
         )}

@@ -236,12 +236,12 @@ export default function PlansListView({ plans, onCreatePlan, onViewDetails, onAs
               >
                 <CardHeader className="space-y-3 flex-grow">
                   <div className="flex items-start justify-between gap-3">
-                    <div className="flex-1 min-w-0 space-y-1">
+                    <div className="flex-1 min-w-0 space-y-2">
                       <CardTitle className="text-lg font-semibold leading-tight break-words group-hover:text-primary transition-colors">
                         {plan.NOMBRE}
                       </CardTitle>
-                      <CardDescription className="text-xs font-mono">
-                        ID-{plan.ID_PLAN}
+                      <CardDescription className="text-sm">
+                        {plan.DESCRIPCION}
                       </CardDescription>
                     </div>
                     <Badge variant={getEstatusBadgeVariant(plan.ESTADO.toLowerCase())} className="shrink-0">
@@ -390,12 +390,12 @@ export default function PlansListView({ plans, onCreatePlan, onViewDetails, onAs
 
       {planParaAsignar && (
         <Dialog open={!!planParaAsignar} onOpenChange={(open) => !open && handleCloseModal()}>
-          <DialogContent className="sm:max-w-2xl">
+          <DialogContent className="sm:max-w-xl flex flex-col">
             <DialogHeader className="space-y-3">
               <DialogTitle className="text-2xl">Asignar Plan de Capacitación</DialogTitle>
               <div className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <Badge variant="outline" className="text-xs">
+                  <Badge variant="default" className="text-xs">
                     {planParaAsignar.TIPO}
                   </Badge>
                   <span className="text-sm font-medium">{planParaAsignar.NOMBRE}</span>
@@ -408,7 +408,7 @@ export default function PlansListView({ plans, onCreatePlan, onViewDetails, onAs
 
             <Separator />
 
-            <div className="space-y-4">
+            <div className="space-y-2">
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                 <Input
@@ -421,24 +421,27 @@ export default function PlansListView({ plans, onCreatePlan, onViewDetails, onAs
               </div>
 
               {!isLoadingColaboradores && !errorCargaColaboradores && colaboradores.length > 0 && (
-                <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg">
+                <div className="flex flex-col sm:flex-row items-center justify-between p-3 bg-muted/50 rounded-lg gap-4">
                   <div className="flex items-center gap-2">
                     <UserPlus className="h-4 w-4 text-primary" />
                     <span className="text-sm font-medium">
                       {selectedCount} de {filteredColaboradores.length} seleccionados
                     </span>
                   </div>
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={handleSelectAll}
-                  >
-                    {filteredColaboradores.every(c => c.seleccionado) ? "Deseleccionar" : "Seleccionar"} todos
-                  </Button>
+                  <div className="w-full sm:max-w-[200px]">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleSelectAll}
+                      className="cursor-pointer w-full"
+                    >
+                      {filteredColaboradores.every(c => c.seleccionado) ? "Deseleccionar" : "Seleccionar"} todos
+                    </Button>
+                  </div>
                 </div>
               )}
 
-              <ScrollArea className="h-[400px] rounded-lg border">
+              <ScrollArea className="h-[350px] rounded-lg border">
                 <div className="p-4 space-y-2">
                   {isLoadingColaboradores ? (
                     <div className="flex flex-col items-center justify-center h-[300px] text-muted-foreground">
@@ -471,42 +474,54 @@ export default function PlansListView({ plans, onCreatePlan, onViewDetails, onAs
                       </p>
                     </div>
                   ) : (
-                    filteredColaboradores.map((colaborador) => (
-                      <div
-                        key={colaborador.ID_COLABORADOR}
-                        className={`flex items-center gap-4 p-4 rounded-lg border-2 transition-all cursor-pointer hover:bg-accent ${
-                          colaborador.seleccionado ? "border-primary bg-primary/5" : "border-transparent"
-                        }`}
-                        onClick={() => handleToggleColaborador(colaborador.ID_COLABORADOR)}
-                      >
-                        <Checkbox
-                          id={`colaborador-${colaborador.ID_COLABORADOR}`}
-                          checked={colaborador.seleccionado}
-                          onCheckedChange={() => handleToggleColaborador(colaborador.ID_COLABORADOR)}
-                          className="h-5 w-5"
-                        />
-                        <Label
-                          htmlFor={`colaborador-${colaborador.ID_COLABORADOR}`}
-                          className="flex-1 cursor-pointer space-y-1"
+                    filteredColaboradores.map((colab) => {
+                      const id = `colaborador-${colab.ID_COLABORADOR}`;
+
+                      return (
+                        <div
+                          key={colab.ID_COLABORADOR}
+                          role="button"
+                          className={`
+                            flex items-start gap-4 p-4 rounded-xl border transition-all select-none
+                            cursor-pointer hover:bg-accent
+                            ${colab.seleccionado ? "border-primary bg-primary/5" : "border-border"}
+                          `}
+                          onClick={() => handleToggleColaborador(colab.ID_COLABORADOR)}
                         >
-                          <p className="font-medium">{colaborador.NOMBRE_COMPLETO}</p>
-                          <p className="text-sm text-muted-foreground">{colaborador.PUESTO}</p>
-                        </Label>
-                      </div>
-                    ))
+                          <Checkbox
+                            id={id}
+                            checked={colab.seleccionado}
+                            onCheckedChange={() => handleToggleColaborador(colab.ID_COLABORADOR)}
+                            className="h-5 w-5 mt-1"
+                          />
+
+                          <Label htmlFor={id} className="flex-1 cursor-pointer space-y-1">
+                            <div className="flex-1 space-y-1">
+                              <p className="font-semibold leading-tight">{colab.NOMBRE_COMPLETO}</p>
+                              <p className="text-sm text-muted-foreground leading-tight">
+                                {colab.PUESTO}
+                              </p>
+                            </div>
+                            <p className="text-xs text-muted-foreground/80 leading-tight">
+                              {colab.DEPARTAMENTO}
+                            </p>
+                          </Label>
+                        </div>
+                      );
+                    })
                   )}
                 </div>
               </ScrollArea>
             </div>
 
             <DialogFooter className="gap-2 sm:gap-0">
-              <Button variant="outline" onClick={handleCloseModal}>
+              <Button variant="outline" onClick={handleCloseModal} className="dark:text-foreground dark:hover:border-foreground/30 cursor-pointer">
                 Cancelar
               </Button>
               <Button
                 onClick={handleFinalAssign}
                 disabled={selectedCount === 0 || !!errorCargaColaboradores}
-                className="min-w-[140px]"
+                className="min-w-[140px] cursor-pointer"
               >
                 <Check className="h-4 w-4 mr-2" />
                 Asignar ({selectedCount})

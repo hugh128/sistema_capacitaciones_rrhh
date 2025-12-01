@@ -28,7 +28,6 @@ export default function GestionCapacitacionesPage() {
     capacitaciones,
   } = useCapacitaciones(isInitialized ? user : null);
 
-  // Separar por estado
   const pendientesAsignacion = useMemo(() => {
     return capacitaciones.filter(
       (c) => c.ESTADO === "PENDIENTE_ASIGNACION" || c.ESTADO === "CREADA" || c.ESTADO === "ASIGNADA" || c.ESTADO_SESION === "PENDIENTE_ASIGNACION"
@@ -41,7 +40,6 @@ export default function GestionCapacitacionesPage() {
     )
   }, [capacitaciones])
 
-  // Calculate metrics
   const metrics = useMemo(() => {
     const total = capacitaciones.length
 
@@ -70,7 +68,6 @@ export default function GestionCapacitacionesPage() {
     }
   }, [capacitaciones, pendientesAsignacion.length, pendientesRevision.length])
 
-  // ✨ Mostrar loading mientras se inicializa
   if (loading || !isInitialized) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
@@ -112,7 +109,6 @@ export default function GestionCapacitacionesPage() {
 
             <Toaster />
 
-            {/* Metrics Cards */}
             <MetricsCards
               total={metrics.total}
               pendientesAsignacion={metrics.pendientesAsignacion}
@@ -124,12 +120,11 @@ export default function GestionCapacitacionesPage() {
               aprobacionPromedio={metrics.aprobacionPromedio}
             />
 
-            {/* Main Tabs */}
             <Tabs defaultValue="pendientes" className="w-full">
               <TabsList className="flex flex-wrap w-full gap-1 p-1 h-auto">
                 <TabsTrigger value="pendientes" className="flex-1 text-sm whitespace-nowrap">Pendientes de Asignar ({pendientesAsignacion.length})</TabsTrigger>
                 <TabsTrigger value="revision" className="flex-1 text-sm whitespace-nowrap">Pendientes de Revisión ({pendientesRevision.length})</TabsTrigger>
-                <TabsTrigger value="todas" className="flex-1 text-sm whitespace-nowrap">Todas las Capacitaciones</TabsTrigger>
+                <TabsTrigger value="todas" className="flex-1 text-sm whitespace-nowrap">Todas las Capacitaciones ({capacitaciones.length})</TabsTrigger>
               </TabsList>
 
               <TabsContent value="pendientes">

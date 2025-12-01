@@ -11,7 +11,7 @@ import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { RequirePermission } from "@/components/RequirePermission"
 import { useCapacitaciones } from "@/hooks/useCapacitaciones"
-import type { Capacitador, Capacitacion, AsignarCapacitacion, ColaboradoresSinSesion, AsignarSesion } from "@/lib/capacitaciones/capacitaciones-types"
+import type { Capacitador, Capacitacion, ColaboradoresSinSesion, CrearSesionAsignarColaboradores } from "@/lib/capacitaciones/capacitaciones-types"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { FormularioCapacitacion } from "@/components/capacitaciones-asignar/formulario-capacitaciones"
 import { TablaColaboradores } from "@/components/capacitaciones-asignar/tabla-colaboradores"
@@ -26,8 +26,7 @@ export default function AsignarCapacitacionPage() {
     obtenerDetallesCapacitacion,
     obtenerCapacitadores,
     obtenerColaboradoresSinSesion,
-    asignarCapacitacion,
-    asignarSesion,
+    crearSesionAsignarColaboradores,
   } = useCapacitaciones(user);
 
   const [capacitacion, setCapacitacion] = useState<Capacitacion>()
@@ -37,7 +36,7 @@ export default function AsignarCapacitacionPage() {
   const [validationErrors, setValidationErrors] = useState<string[]>([]);
 
   const [capacitadorId, setCapacitadorId] = useState("")
-  const [fechaInicio, setFechaInicio] = useState("")
+  const [fechaProgramada, setFechaProgramada] = useState("")
   const [horaInicio, setHoraInicio] = useState("")
   const [horaFin, setHoraFin] = useState("")
   const [tipoCapacitacion, setTipoCapacitacion] = useState("")
@@ -49,7 +48,6 @@ export default function AsignarCapacitacionPage() {
   const [aplicaDiploma, setAplicaDiploma] = useState(false)
   const [observaciones, setObservaciones] = useState("")
   const [selectedColaboradores, setSelectedColaboradores] = useState<number[]>([])
-  const [version, setVersion] = useState<number>(0);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -64,7 +62,6 @@ export default function AsignarCapacitacionPage() {
           if (detalle.APLICA_DIPLOMA !== undefined) setAplicaDiploma(detalle.APLICA_DIPLOMA);
           if (detalle.APLICA_EXAMEN !== undefined) setAplicaExamen(detalle.APLICA_EXAMEN);
           if (detalle.NOTA_MINIMA) setNotaMinima(String(detalle.NOTA_MINIMA));
-          if (detalle.DOCUMENTO_VERSION) setVersion(detalle.DOCUMENTO_VERSION);
         }
 
         const lista = await obtenerCapacitadores()
@@ -86,7 +83,7 @@ export default function AsignarCapacitacionPage() {
     const errors: string[] = [];
 
     if (!capacitadorId) errors.push("Selecciona un capacitador.");
-    if (!fechaInicio) errors.push("Selecciona una fecha de inicio.");
+    if (!fechaProgramada) errors.push("Selecciona una fecha para programar la sesion.");
     
     if (!horaInicio || !horaFin) {
       errors.push("Debes seleccionar hora de inicio y fin.");
@@ -109,49 +106,40 @@ export default function AsignarCapacitacionPage() {
       return;
     }
 
-    const payloadCapacitacion: AsignarCapacitacion = {
+    const payloadCrearSesionAsignarColaboradores: CrearSesionAsignarColaboradores = {
       idCapacitacion: capacitacionId,
       idsColaboradores: selectedColaboradores,
+      capacitadorId: Number(capacitadorId),
+      fechaProgramada: fechaProgramada,
+      horaInicio: horaInicio,
+      horaFin: horaFin,
       tipoCapacitacion: tipoCapacitacion,
       modalidad: modalidad,
+      grupoObjetivo: grupoObjetivo,
+      objetivo: objetivo,
       aplicaExamen: aplicaExamen,
       notaMinima: aplicaExamen ? Number(notaMinima) : null,
       aplicaDiploma: aplicaDiploma,
-    };
-    
-    const payloadSesion: AsignarSesion = {
-      idCapacitacion: capacitacionId,
-      capacitadorId: Number(capacitadorId),
-      fechaInicio: fechaInicio,
-      horaInicio: horaInicio,
-      horaFin: horaFin,
-      idsColaboradores: selectedColaboradores,
-      grupoObjetivo: grupoObjetivo,
       observaciones: observaciones,
       usuario: user.USERNAME,
-      objetivo: objetivo,
-      version: Number(version)
-    };
-
-    console.log(payloadSesion)
+    }
 
     try {
-      await asignarCapacitacion(payloadCapacitacion);
-      await asignarSesion(payloadSesion);
+      await crearSesionAsignarColaboradores(payloadCrearSesionAsignarColaboradores)
       router.push("/capacitaciones");
     } catch (error) {
       console.error("Error al completar la asignación:", error);
     }
   }, [
-    capacitadorId, fechaInicio, horaInicio, horaFin, selectedColaboradores,
+    capacitadorId, fechaProgramada, horaInicio, horaFin, selectedColaboradores,
     aplicaExamen, notaMinima, capacitacionId, tipoCapacitacion, modalidad,
-    aplicaDiploma, grupoObjetivo, observaciones, user, objetivo, version,
-    asignarCapacitacion, asignarSesion, router
+    aplicaDiploma, grupoObjetivo, observaciones, user, objetivo, router,
+    crearSesionAsignarColaboradores,
   ])
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center">
+      <div className="fixed inset-0 bg-background/5 z-[100] flex items-center justify-center">
         <Card className="w-96">
           <CardHeader>
             <CardTitle>Cargando Detalles...</CardTitle>
@@ -242,8 +230,8 @@ export default function AsignarCapacitacionPage() {
                 <FormularioCapacitacion
                   capacitadorId={capacitadorId}
                   setCapacitadorId={setCapacitadorId}
-                  fechaInicio={fechaInicio}
-                  setFechaInicio={setFechaInicio}
+                  fechaProgramada={fechaProgramada}
+                  setFechaProgramada={setFechaProgramada}
                   horaInicio={horaInicio}
                   setHoraInicio={setHoraInicio}
                   horaFin={horaFin}
@@ -279,7 +267,7 @@ export default function AsignarCapacitacionPage() {
                   capacitacion={capacitacion}
                   capacitadorId={capacitadorId}
                   capacitadores={capacitadores}
-                  fechaInicio={fechaInicio}
+                  fechaProgramada={fechaProgramada}
                   horaInicio={horaInicio}
                   horaFin={horaFin}
                   selectedColaboradores={selectedColaboradores}

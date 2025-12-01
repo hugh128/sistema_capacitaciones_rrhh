@@ -54,7 +54,6 @@ export default function CapacitacionDetailPage() {
     fetchData()
   }, [user, sesionId, obtenerDetalleSesion])
 
-  // Calculate stats
   const stats = useMemo(() => {
     const total = colaboradoresAsignados.length
     const asistencias = colaboradoresAsignados.filter((c) => c.ASISTIO === true).length
@@ -166,14 +165,14 @@ export default function CapacitacionDetailPage() {
                 </Link>
                 <div className="flex-1 min-w-0">
                   <div className="flex flex-wrap items-center gap-2 mb-1">
-                    <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-foreground">
+                    <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold text-foreground">
                       Detalle de Capacitación
                     </h1>
                     <Badge className={getEstadoCapacitacionColor(sesion.ESTADO)}>
                       {sesion.ESTADO}
                     </Badge>
                   </div>
-                  <p className="text-sm sm:text-base text-muted-foreground break-words">
+                  <p className="text-xl sm:text-2xl lg:xl text-foreground/80 break-words">
                     {sesion.CAPACITACION_NOMBRE}
                   </p>
                 </div>
@@ -208,8 +207,8 @@ export default function CapacitacionDetailPage() {
                   />
                   <InfoItem 
                     label="Fecha de Inicio" 
-                    value={sesion.FECHA_INICIO
-                      ? new Date(sesion.FECHA_INICIO).toLocaleDateString("es-GT")
+                    value={sesion.FECHA_PROGRAMADA
+                      ? new Date(sesion.FECHA_PROGRAMADA).toLocaleDateString("es-GT")
                       : "Sin fecha"}
                     icon={<Calendar className="h-4 w-4" />}
                   />

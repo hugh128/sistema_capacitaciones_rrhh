@@ -81,7 +81,6 @@ export default function RevisarCapacitacionPage() {
         setSesion(SESION)
         setColaboradoresAsignados(COLABORADORES)
 
-        // Inicializar los estados desde la data que viene del backend
         const initialAsistencia: Record<number, boolean> = {};
         const initialNotas: Record<number, number | null> = {};
         const initialExamenes: Record<number, boolean> = {};
@@ -106,7 +105,6 @@ export default function RevisarCapacitacionPage() {
     fetchData()
   }, [user, sesionId, obtenerCapacitacionEnRevision, setAsistenciaState, setNotasState])
 
-  // Calculate stats
   const stats = useMemo(() => {
     const total = colaboradoresAsignados.length
     const asistencias = colaboradoresAsignados.filter((c) => c.ASISTIO === true).length
@@ -117,7 +115,6 @@ export default function RevisarCapacitacionPage() {
     return { total, asistencias, examenes, diplomas, aprobados }
   }, [colaboradoresAsignados])
 
-  // Validation checks
   const validations = useMemo(() => {
     if (!sesion) return { allAttendance: false, allExams: false, allDiplomas: false, hasAttendanceList: false }
 
@@ -367,7 +364,6 @@ export default function RevisarCapacitacionPage() {
           <AppHeader title="Gestión de Capacitaciones" subtitle="Panel de control para administrar todas las capacitaciones de la empresa" />
 
           <main className="flex-1 p-6 space-y-6 overflow-auto custom-scrollbar">
-            {/* Header */}
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <Link href="/capacitaciones">
@@ -400,8 +396,8 @@ export default function RevisarCapacitacionPage() {
                     <Label className="text-muted-foreground">Fecha</Label>
                     <p className="font-medium flex items-center gap-2">
                       <Calendar className="h-4 w-4" />
-                      {sesion.FECHA_INICIO
-                        ? new Date(sesion.FECHA_INICIO).toLocaleDateString("es-GT")
+                      {sesion.FECHA_PROGRAMADA
+                        ? new Date(sesion.FECHA_PROGRAMADA).toLocaleDateString("es-GT")
                         : "Sin fecha"}
                     </p>
                   </div>
@@ -420,7 +416,6 @@ export default function RevisarCapacitacionPage() {
               </CardContent>
             </Card>
 
-            {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
               <Card>
                 <CardHeader className="pb-2">
@@ -480,7 +475,6 @@ export default function RevisarCapacitacionPage() {
               </Card>
             </div>
 
-            {/* Validation Checklist */}
             <Card>
               <CardHeader>
                 <CardTitle>Checklist de Validación</CardTitle>
@@ -745,7 +739,7 @@ export default function RevisarCapacitacionPage() {
                                         </div>
                                       )}
 
-                                      <div>
+{/*                                       <div>
                                         <Label>Observaciones</Label>
                                         <Textarea
                                           value={editObservaciones}
@@ -754,7 +748,7 @@ export default function RevisarCapacitacionPage() {
                                           rows={3}
                                           className="mt-2"
                                         />
-                                      </div>
+                                      </div> */}
                                     </div>
                                     <DialogFooter>
                                       <Button variant="outline" onClick={() => setIsEditDialogOpen(false)}> {/* Cierra el Dialog */}
@@ -774,7 +768,6 @@ export default function RevisarCapacitacionPage() {
               </CardContent>
             </Card>
 
-            {/* Observations from Trainer */}
             {sesion.OBSERVACIONES && (
               <Card>
                 <CardHeader>
@@ -790,7 +783,8 @@ export default function RevisarCapacitacionPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Revisión de RRHH</CardTitle>
-                <CardDescription>Agrega observaciones y aprueba o devuelve la capacitación</CardDescription>
+                {/* <CardDescription>Agrega observaciones y aprueba o devuelve la capacitación</CardDescription> */}
+                <CardDescription>Agrega observaciones y aprueba la capacitación</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>

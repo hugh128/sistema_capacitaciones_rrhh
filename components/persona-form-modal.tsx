@@ -208,7 +208,6 @@ export function PersonaFormModal({
     setFormData((prev) => {
       const newData = { ...prev, [key]: finalValue };
       
-      // Si cambia el departamento, limpiar el puesto seleccionado
       if (key === 'DEPARTAMENTO_ID') {
         newData.PUESTO_ID = null;
       }
@@ -217,7 +216,6 @@ export function PersonaFormModal({
     });
   }, [allFields])
   
-  // Filtrar puestos según departamento seleccionado
   const puestosFiltrados = useMemo(() => {
     const departamentoId = formData.DEPARTAMENTO_ID;
     
@@ -234,7 +232,6 @@ export function PersonaFormModal({
   }, [formData.DEPARTAMENTO_ID, puestosList]);
 
   const handleSubmit = () => {
-    // Validar campos requeridos para colaborador interno
     if (isColaborador) {
       if (!formData.EMPRESA_ID) {
         toast.error('Debe seleccionar una empresa para colaboradores internos');
@@ -273,18 +270,16 @@ export function PersonaFormModal({
         field.key !== 'TIPO_PERSONA'
     );
     
-    // Reemplazar opciones de PUESTO_ID con puestos filtrados
     return filteredFields.map(field => {
       if (field.key === 'PUESTO_ID') {
         return {
           ...field,
           options: puestosFiltrados,
           disabled: !formData.DEPARTAMENTO_ID || puestosFiltrados.length === 0,
-          required: isColaborador // Requerido si es colaborador
+          required: isColaborador
         };
       }
       
-      // Marcar empresa y departamento como requeridos si es colaborador
       if (field.key === 'EMPRESA_ID' || field.key === 'DEPARTAMENTO_ID') {
         return {
           ...field,
@@ -299,12 +294,11 @@ export function PersonaFormModal({
   
   const colaboradorValue = isColaborador;
 
-  // Validar si el formulario está completo
   const isFormValid = useMemo(() => {
     if (isColaborador) {
       return !!(formData.EMPRESA_ID && formData.DEPARTAMENTO_ID && formData.PUESTO_ID);
     }
-    return true; // Si es externo, siempre es válido
+    return true;
   }, [isColaborador, formData.EMPRESA_ID, formData.DEPARTAMENTO_ID, formData.PUESTO_ID]);
 
   const handleOpenChange = (newOpenState: boolean) => {
