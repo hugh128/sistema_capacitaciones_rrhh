@@ -7,6 +7,7 @@ import { Building2, Briefcase, UserCog, Settings } from "lucide-react"
 import Link from "next/link"
 import { AppHeader } from "@/components/app-header"
 import { RequirePermission } from "@/components/RequirePermission"
+import { Toaster } from "react-hot-toast"
 
 export default function ConfiguracionPage() {
   const configOptions = [
@@ -43,6 +44,8 @@ export default function ConfiguracionPage() {
           <AppHeader title="Configuración" subtitle="Administra los elementos básicos del sistema" />
 
           <main className="flex-1 overflow-auto p-6 custom-scrollbar">
+            <Toaster />
+
             <div className="max-w-4xl mx-auto">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {configOptions.map((option) => {

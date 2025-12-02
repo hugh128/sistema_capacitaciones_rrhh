@@ -30,7 +30,7 @@ export function TrainingHeader({ sesion, onChangeEstado, usuario }: TrainingHead
   const [day, month, year] = (sesion.FECHA_FORMATO ?? "").split("/").map(Number)
   const fechaSesion = new Date(year, month - 1, day)
   
-  //const fechaSesion = new Date(2025, 10, 27);
+  //const fechaSesion = new Date(2025, 11, 1);
   const hoy = new Date()
   hoy.setHours(0, 0, 0, 0)
   
@@ -62,7 +62,7 @@ export function TrainingHeader({ sesion, onChangeEstado, usuario }: TrainingHead
             <AlertDialogTrigger asChild>
               <Button
                 size="lg"
-                className="bg-green-600 hover:bg-green-700"
+                className="bg-green-600 hover:bg-green-700 cursor-pointer"
               >
                 <Play className="h-5 w-5 mr-2" />
                 Iniciar Capacitación

@@ -10,6 +10,7 @@ import { RequirePermission } from "@/components/RequirePermission"
 import { useDashboar } from "@/hooks/useDashboard"
 import { useEffect, useState } from "react"
 import { ActividadProxima, CapacitacionReciente, Estadisticas } from "@/lib/dashboard/type"
+import { Toaster } from "react-hot-toast"
 
 export default function DashboardPage() {
   const { user } = useAuth()
@@ -100,6 +101,8 @@ export default function DashboardPage() {
           <AppHeader title="Dashboard" subtitle={`Bienvenido, ${user.NOMBRE} ${user.APELLIDO}`} />
 
           <main className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar">
+            <Toaster />
+
             <div className="max-w-7xl mx-auto">
               <div className="mb-8">
                 <div className="bg-gradient-to-r from-primary/10 to-accent/10 rounded-lg p-4 sm:p-6 border">

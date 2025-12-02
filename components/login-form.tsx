@@ -105,7 +105,7 @@ export function LoginForm() {
                         type="button"
                         variant="ghost"
                         size="sm"
-                        className="absolute right-3 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-transparent"
+                        className="absolute right-3 top-1/2 transform -translate-y-1/2 h-8 w-8 p-0 hover:bg-transparent cursor-pointer"
                         onClick={() => setShowPassword(!showPassword)}
                       >
                         {showPassword ? (
@@ -125,7 +125,7 @@ export function LoginForm() {
 
                   <Button
                     type="submit"
-                    className="w-full h-12 sm:h-14 bg-[#F7AC25] hover:bg-[#F7AC25]/90 text-accent-foreground font-semibold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200"
+                    className="w-full h-12 sm:h-14 bg-[#F7AC25] hover:bg-[#F7AC25]/90 text-accent-foreground font-semibold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer"
                     disabled={loading}
                   >
                     {loading ? "Iniciando sesión..." : "Iniciar Sesión"}

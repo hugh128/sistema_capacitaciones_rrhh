@@ -9,6 +9,7 @@ import CollaboratorsList from "@/components/colaboradores/CollaboratorsList"
 import ProfileContent from "@/components/colaboradores/profile-content"
 import { useColaboradores } from "@/hooks/useColaboradores"
 import { useAuth } from "@/contexts/auth-context"
+import { Toaster } from "react-hot-toast"
 
 export default function ColaboradoresPage() {
   const { user } = useAuth()
@@ -53,6 +54,8 @@ export default function ColaboradoresPage() {
           <AppHeader title="Colaboradores" subtitle="Gestiona el perfil y estado de todos los colaboradores de tu organización" />
 
           <main className="flex-1 overflow-auto p-6 custom-scrollbar">
+            <Toaster />
+
             <div className="max-w-7xl mx-auto">
               {selectedCollaborator ? (
                   <ProfileContent 
