@@ -24,7 +24,7 @@ interface ParentCodeEditProps {
   onAddChild: (parentId: number, child: NuevoCodigoHijo) => void
   onEditChild: (parentId: number, childId: number, data: NuevoCodigoHijo) => void
   onDeleteChild: (parentId: number, childId: number) => void
-  onRecapacitar: (idDocumento: number, nuevaVersion: number, usuario: string) => Promise<Recapacitacion>
+  onRecapacitar: (idDocumento: number, nuevaVersion: number, requiereRecapacitacion: boolean, usuario: string) => Promise<Recapacitacion>
   currentUser: string
 }
 
@@ -113,26 +113,26 @@ export const ParentCodeEdit = memo(function ParentCodeEdit({
     } else {
       onUpdate(parent.ID_DOCUMENTO, data)
       setIsEditing(false)
-      toast.success("Código actualizado correctamente")
     }
   }, [parent, onUpdate])
 
-  const handleConfirmRecapacitacion = useCallback(async () => {
+  const handleProcessRecapacitacion = useCallback(async (requiereRecapacitacion: boolean) => {
     if (!parent || !pendingUpdate) return
 
     setIsProcessingRecapacitacion(true)
     isRecapacitacionInProgressRef.current = true
 
     try {
-      onUpdate(parent.ID_DOCUMENTO, pendingUpdate)
+      //await new Promise(resolve => setTimeout(resolve, 300))
       
-      await new Promise(resolve => setTimeout(resolve, 300))
-
       const result = await onRecapacitar(
         parent.ID_DOCUMENTO,
         pendingUpdate.VERSION,
+        requiereRecapacitacion,
         currentUser
       )
+
+      onUpdate(parent.ID_DOCUMENTO, pendingUpdate)
 
       dialogStateRef.current = {
         isOpen: true,
@@ -146,8 +146,6 @@ export const ParentCodeEdit = memo(function ParentCodeEdit({
         
         isRecapacitacionInProgressRef.current = false
       }, 100)
-      
-      toast.success("Versión actualizada y recapacitaciones creadas")
     } catch (error) {
       console.error("❌ Error en recapacitación:", error)
       toast.error("Error al procesar la recapacitación")
@@ -165,16 +163,13 @@ export const ParentCodeEdit = memo(function ParentCodeEdit({
     }
   }, [parent, pendingUpdate, onRecapacitar, onUpdate, currentUser])
 
-  const handleCancelRecapacitacion = useCallback(() => {
-    if (!parent || !pendingUpdate) return
+  const handleConfirmRecapacitacion = useCallback(async () => {
+    await handleProcessRecapacitacion(true)
+  }, [handleProcessRecapacitacion])
 
-    onUpdate(parent.ID_DOCUMENTO, pendingUpdate)
-    setIsEditing(false)
-    setVersionChangeDialog(false)
-    setPendingUpdate(null)
-    
-    toast.success("Versión actualizada sin recapacitación")
-  }, [parent, pendingUpdate, onUpdate])
+  const handleCancelRecapacitacion = useCallback(async () => {
+    await handleProcessRecapacitacion(false)
+  }, [handleProcessRecapacitacion])
 
   const handleCloseVersionDialog = useCallback(() => {
     setVersionChangeDialog(false)

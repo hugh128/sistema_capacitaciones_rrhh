@@ -228,85 +228,91 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
         const colors = getCompletionColors(collaborator.PORCENTAJE_CUMPLIMIENTO);
 
         return (
-          <div className="space-y-6"> 
-            
-            <div className="w-full">
-              <div className="bg-card rounded-lg p-6 border border-border"> 
-                <h2 className="text-xl font-semibold text-foreground mb-4">
-                  Estado Actual
-                </h2>
+          <div className="space-y-6">
 
-                <div className="space-y-3">
-                  
-                  <div className="flex flex-col sm:flex-row space-x-2">
-                    <span className="text-muted-foreground font-medium mb-1 sm:mb-0">Puesto: </span>
-                    <span className="px-3 py-1 self-start bg-blue-100 dark:bg-blue-900 rounded-[9px] text-sm font-semibold text-blue-700 dark:text-blue-300">
-                      {collaborator.PUESTO}
-                    </span>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row sm:space-x-2">
-                    <span className="text-muted-foreground font-medium mb-1 sm:mb-0">Jefe Inmediato: </span>
-                    <div className="flex items-center gap-2 self-start">
-                      <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 rounded-[9px] text-sm font-semibold text-blue-700 dark:text-blue-300">
-                        {collaborator.ENCARGADO}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row sm:space-x-2"> 
-                    <span className="text-muted-foreground font-medium mb-1 sm:mb-0">Fecha ingreso: </span>
-                    <span className="text-sm font-semibold text-muted-foreground">
-                      {collaborator.FECHA_INGRESO}
-                    </span>
-                  </div>
+            <div className="bg-card border border-border rounded-lg p-6">
+              <h2 className="text-xl font-semibold text-foreground mb-6">
+                Estado Actual
+              </h2>
+              {/* Info lista */}
+              <div className="space-y-4">
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                  <span className="text-muted-foreground font-medium">Puesto:</span>
+                  <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 rounded-full text-sm font-semibold text-blue-700 dark:text-blue-300">
+                    {collaborator.PUESTO}
+                  </span>
                 </div>
-
-                <div className="w-full h-0.5 bg-border my-4" />
-
-                <div className="bg-card border border-border rounded-lg p-6 flex flex-col items-center">
-                  <div className="relative w-20 h-20 mb-4">
-                    <div className={`absolute inset-0 rounded-full ${colors.lightClass}`} />
-                    
-                    <div
-                      className={`absolute inset-0 rounded-full border-4 ${colors.colorClass}`}
-                      style={{
-                        clipPath: `polygon(0 0, 100% 0, 100% ${collaborator.PORCENTAJE_CUMPLIMIENTO}%, 0 ${collaborator.PORCENTAJE_CUMPLIMIENTO}%)`,
-                      }}
-                    />
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <span className={`text-base font-semibold ${colors.textClass}`}>
-                        {collaborator.PORCENTAJE_CUMPLIMIENTO}
-                      </span>
-                    </div>
-                  </div>
-                  <p className="text-base font-semibold text-foreground mb-1">
-                    % de cumplimiento
-                  </p>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                  <span className="text-muted-foreground font-medium">Jefe Inmediato:</span>
+                  <span className="px-3 py-1 bg-blue-100 dark:bg-blue-900 rounded-full text-sm font-semibold text-blue-700 dark:text-blue-300">
+                    {collaborator.ENCARGADO}
+                  </span>
+                </div>
+                <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3">
+                  <span className="text-muted-foreground font-medium">Fecha de ingreso:</span>
+                  <span className="text-sm font-semibold text-muted-foreground">
+                    {collaborator.FECHA_INGRESO}
+                  </span>
                 </div>
               </div>
+              <div className="w-full h-px bg-border my-6" />
 
-              {/* --- Resumen del Estado de Capacitación --- */}
-              <div className="bg-card border-2 border-border rounded-lg p-6 mt-6"> 
-                <h2 className="text-base font-semibold text-foreground mb-6">
-                  Resumen del Estado de Capacitación
-                </h2>
-                <div className="space-y-4">
-                  {resumenColaborador.map((item, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <span className="text-base text-foreground">{item.ETIQUETA}</span>
+              {/* --- Porcentaje de cumplimiento --- */}
+              <div className="bg-card border border-border rounded-lg p-6 flex flex-col items-center">
+                <div className="relative w-24 h-24 mb-4">
+                  <div className={`absolute inset-0 rounded-full ${colors.lightClass}`} />
+                  <div
+                    className={`absolute inset-0 rounded-full border-4 ${colors.colorClass}`}
+                    style={{
+                      clipPath: `polygon(
+                        0 0,
+                        100% 0,
+                        100% ${collaborator.PORCENTAJE_CUMPLIMIENTO}%,
+                        0 ${collaborator.PORCENTAJE_CUMPLIMIENTO}%
+                      )`,
+                    }}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <span className={`text-base font-semibold ${colors.textClass}`}>
+                      {collaborator.PORCENTAJE_CUMPLIMIENTO}%
+                    </span>
+                  </div>
+                </div>
+                <p className="text-base font-semibold text-foreground">
+                  % de cumplimiento
+                </p>
+              </div>
+            </div>
+
+            {/* --- Resumen del Estado de Capacitación --- */}
+            <div className="bg-card border-2 border-border rounded-lg p-6">
+              <h2 className="text-lg font-semibold text-foreground mb-6">
+                Resumen del Estado de Capacitación
+              </h2>
+              <div className="space-y-4">
+                {resumenColaborador.map((item, index) => (
+                  <div
+                    key={index}
+                    className="flex items-center justify-between gap-4"
+                  >
+                    <span className="text-base text-foreground font-medium">
+                      {item.ETIQUETA}
+                    </span>
+                    <div className="flex items-center gap-2 text-right">
                       {item.VALOR && (
-                        <span className="text-base text-muted-foreground">{item.VALOR}</span>
+                        <span className="text-base text-muted-foreground">
+                          {item.VALOR}
+                        </span>
                       )}
                       {item.ESTADO === "check" && (
-                        <Check className="w-4 h-4 text-green-500" strokeWidth={3} />
+                        <Check className="w-5 h-5 text-green-500" strokeWidth={3} />
                       )}
                       {item.ESTADO === "cross" && (
-                        <X className="w-4 h-4 text-red-500" strokeWidth={3} />
+                        <X className="w-5 h-5 text-red-500" strokeWidth={3} />
                       )}
                     </div>
-                  ))}
-                </div>
+                  </div>
+                ))}
               </div>
             </div>
           </div>
@@ -330,9 +336,9 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
                   key={index}
                   className="bg-card rounded-lg p-6 border border-border hover:border-primary transition-colors"
                 >
-                  <div className="flex items-start justify-between">
+                  <div className="flex flex-col sm:flex-row gap-4 items-start justify-between">
                     <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
+                      <div className="flex items-center gap-4 mb-2">
                         <h3 className="text-base font-semibold text-foreground">{capacitacion.NOMBRE_CAPACITACION}</h3>
                         <span
                           className={`px-3 py-1 rounded-full text-xs font-semibold ${
@@ -360,7 +366,7 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
                       <button
                         onClick={() => handleDownloadAsistencia(capacitacion.ID_SESION)}
                         disabled={loadingDownload}
-                        className="flex items-center gap-2 px-4 py-2 border border-border text-foreground font-semibold rounded-lg hover:bg-muted transition-colors"
+                        className="flex text-sm items-center gap-2 px-4 py-2 border border-border text-foreground font-semibold rounded-lg hover:bg-muted transition-colors cursor-pointer"
                       >
                         <FileText className="w-4 h-4" />
                         Ver Asistencia
@@ -390,7 +396,7 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
               <h2 className="text-lg font-semibold text-foreground">Exámenes Realizados</h2>
             </div>
             {examenes.length > 0 ? (
-              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 {examenes.map((doc, index) => (
                   <DocumentCard
                     key={index}
@@ -447,7 +453,7 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
                     <h3 className="text-base font-semibold text-foreground mb-3">
                       {category}
                     </h3>
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                       {categoryDocs.map((doc, index) => {
                         
                         let downloadHandler;
@@ -591,9 +597,23 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
                     <div key={plan.ID_PLAN_COLABORADOR} className="bg-card rounded-lg border border-border overflow-hidden">
                       {/* Encabezado del Plan */}
                       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-950 dark:to-indigo-950 p-6">
-                        <div className="flex items-start justify-between mb-4">
+                        <div className="flex flex-col gap-4 sm:flex-row sm:gap-0 items-start justify-between mb-4">
                           <div className="flex-1">
-                            <h3 className="text-xl font-semibold text-white mb-2">{plan.nombrePlan}</h3>
+                            <div className="flex items-center gap-2">
+                              <h3 className="text-xl font-semibold text-white mb-2">
+                                {plan.nombrePlan}{" "}
+                                <span
+                                  className={`
+                                    px-2 py-0.5 rounded-full text-xs font-semibold align-middle
+                                    ${plan.estadoPlan === 'ACTIVO'
+                                      ? 'bg-green-200 text-green-800'
+                                      : 'bg-red-200 text-red-800'}
+                                  `}
+                                >
+                                  {plan.estadoPlan}
+                                </span>
+                              </h3>
+                            </div>
                             <p className="text-blue-100 text-sm mb-3">{plan.descripcionPlan}</p>
                             <div className="flex flex-wrap gap-3">
                               <div className="flex items-center gap-2 bg-white/20 px-3 py-1.5 rounded-lg">
@@ -621,7 +641,7 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
                           <button
                             onClick={() => handleDownloadPlanInduccion(plan.ID_PLAN)}
                             disabled={loadingDownload}
-                            className="flex items-center gap-2 px-4 py-2 bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                            className="flex items-center gap-2 px-2 sm:px-4 py-2 text-sm bg-white text-blue-600 font-semibold rounded-lg hover:bg-blue-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
                           >
                             <Download className="w-4 h-4" />
                             Descargar Plan
@@ -673,7 +693,7 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
                                           {cap.codigo}
                                         </span>
                                         <span>•</span>
-                                        <span>Versión {cap.version}</span>
+                                        <span>Versión {cap.version ?? '0'}</span>
                                         <span>•</span>
                                         <span>Capacitador: {cap.nombreCapacitador}</span>
                                       </div>
@@ -847,33 +867,45 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
       </div>
 
       {/* Profile Header Card */}
-      <div className="bg-card rounded-lg p-8 mb-4">
-        <div className="flex items-start gap-6">
+      <div className="bg-card rounded-lg p-6 sm:p-8 mb-4">
+        <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6">
+
           {/* Avatar */}
-          <div className="w-16 h-16 rounded-full bg-primary/20 dark:bg-primary/80 flex items-center justify-center flex-shrink-0">
-            <span className="text-[22px] font-semibold text-primary dark:text-foreground">{collaborator.INICIALES}</span>
+          <div className="w-20 h-20 rounded-full bg-primary/20 dark:bg-primary/80 flex items-center justify-center flex-shrink-0">
+            <span className="text-2xl font-semibold text-primary dark:text-foreground">
+              {collaborator.INICIALES}
+            </span>
           </div>
 
           {/* Profile Info */}
-          <div className="flex-1">
-            <div className="flex items-center gap-4 mb-2">
-              <h1 className="text-[22px] font-semibold text-foreground">{collaborator.NOMBRE_COMPLETO}</h1>
+          <div className="flex-1 text-center sm:text-left">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 mb-3">
+              <h1 className="text-2xl font-semibold text-foreground">
+                {collaborator.NOMBRE_COMPLETO}
+              </h1>
               <span
-                className={`px-3 py-1 rounded-[9px] text-xs font-semibold ${
-                  collaborator.ESTADO.toLowerCase() === "activo"
-                    ? "bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300"
-                    : collaborator.ESTADO === "permiso"
-                      ? "bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300"
-                      : "bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300"
-                }`}
+                className={`
+                  px-3 py-1 rounded-full text-xs font-semibold w-fit mx-auto sm:mx-0
+                  ${
+                    collaborator.ESTADO.toLowerCase() === "activo"
+                      ? "bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300"
+                      : collaborator.ESTADO.toLowerCase() === "permiso"
+                        ? "bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300"
+                        : "bg-red-100 dark:bg-red-900 text-red-700 dark:text-red-300"
+                  }
+                `}
               >
-                {collaborator.ESTADO}
+                {collaborator.ESTADO.toUpperCase()}
               </span>
             </div>
-            <div className="flex items-center gap-6 mb-3">
-              <span className="text-base text-muted-foreground">{collaborator.EMAIL}</span>
-              <div className="w-px h-5 bg-border" />
-              <span className="text-base text-muted-foreground">Tel: {collaborator.TELEFONO}</span>
+            <div className="flex flex-col sm:flex-row items-center sm:items-center gap-3 sm:gap-6">
+              <span className="text-base text-muted-foreground break-all">
+                {collaborator.EMAIL}
+              </span>
+              <div className="hidden sm:block w-px h-5 bg-border" />
+              <span className="text-base text-muted-foreground">
+                Tel: {collaborator.TELEFONO}
+              </span>
             </div>
           </div>
         </div>
@@ -882,27 +914,28 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
       {/* Main Content Card */}
       <div className="bg-card rounded-lg">
         {/* Tabs */}
-        <div className="flex items-center gap-0 px-8 pt-6 border-b-2 border-border">
+        <div className="flex items-center gap-0 px-4 sm:px-8 pt-6 border-b border-border overflow-x-auto no-scrollbar">
           {tabs.map((tab) => (
             <button
               key={tab}
-              onClick={() => {
-                setActiveTab(tab)
-              }}
-              className={`px-4 py-2 text-base font-semibold relative transition-opacity hover:opacity-100 cursor-pointer ${
-                activeTab === tab ? "text-foreground" : "text-muted-foreground"
-              }`}
+              onClick={() => setActiveTab(tab)}
+              className={`
+                relative px-4 py-2 text-sm sm:text-base font-semibold transition-colors
+                whitespace-nowrap
+                ${activeTab === tab ? "text-foreground" : "text-muted-foreground hover:text-foreground"}
+              `}
             >
               {tab}
+
               {activeTab === tab && (
-                <div className="absolute bottom-0 left-0 w-[60px] h-0.5 bg-yellow-500 rounded-t-[7px]" />
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-yellow-500 rounded-t-md transition-all duration-300"></span>
               )}
             </button>
           ))}
         </div>
 
         {/* Content */}
-        <div className="p-8">{renderTabContent()}</div>
+        <div className="p-4 sm:p-6">{renderTabContent()}</div>
       </div>
     </div>
   )

@@ -131,6 +131,7 @@ export interface plan {
   ID_PLAN: number
   nombrePlan: string
   descripcionPlan: string
+  estadoPlan: string
   tipoPlan: string
   fechaInicioInduccion: string
   fechaFinInduccion: string | null,

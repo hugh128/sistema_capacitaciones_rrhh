@@ -242,7 +242,7 @@ export const FormularioCapacitacion = memo(function FormularioCapacitacion({
               onCheckedChange={(checked) => setAplicaExamen(checked as boolean)}
               className="
                 dark:border dark:border-gray-500
-                data-[state=checked]:dark:border-transparent
+                data-[state=checked]:dark:border-transparent cursor-pointer
               "
             />
             <Label htmlFor="aplicaExamen" className="cursor-pointer">
@@ -273,7 +273,7 @@ export const FormularioCapacitacion = memo(function FormularioCapacitacion({
               onCheckedChange={(checked) => setAplicaDiploma(checked as boolean)}
               className="
                 dark:border dark:border-gray-500
-                data-[state=checked]:dark:border-transparent
+                data-[state=checked]:dark:border-transparent cursor-pointer
               "
             />
             <Label htmlFor="aplicaDiploma" className="cursor-pointer">

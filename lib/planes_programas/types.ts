@@ -107,7 +107,7 @@ export interface CambiarPlanCapacitacion {
   ID_COLABORADOR: number
   NUEVO_DEPARTAMENTO_ID: number
   NUEVO_PUESTO_ID: number
-  IDS_CAPACITACIONES_MIGRAR?: number[]
+  IDS_DOCUMENTOS_MIGRAR?: number[]
   USUARIO?: string
 }
 
@@ -124,53 +124,55 @@ export interface CambiarPlanResponse {
 }
 
 export interface InformacionPlanColaborador {
-  ID_COLABORADOR: number,
-  NOMBRE_COLABORADOR: string,
-  DEPARTAMENTO_ACTUAL_ID: number,
-  DEPARTAMENTO_ACTUAL: string,
-  PUESTO_ACTUAL_ID: number,
-  PUESTO_ACTUAL: string,
-  PLAN_ACTUAL_ID: number,
-  PLAN_ACTUAL_NOMBRE: string,
-  NUEVO_DEPARTAMENTO_ID: number,
-  NUEVO_DEPARTAMENTO: string,
-  NUEVO_PUESTO_ID: number,
-  NUEVO_PUESTO: string,
-  PLAN_NUEVO_ID: number,
-  PLAN_NUEVO_NOMBRE: string,
-  TIPO_CAMBIO: string,
-  CAPACITACIONES_PLAN_ACTUAL: number,
-  CAPACITACIONES_COMPLETADAS_PLAN_ACTUAL: number,
-  CAPACITACIONES_PLAN_NUEVO: number
+  ID_COLABORADOR: number
+  NOMBRE_COLABORADOR: string
+  DEPARTAMENTO_ACTUAL_ID: number
+  DEPARTAMENTO_ACTUAL: string
+  PUESTO_ACTUAL_ID: number
+  PUESTO_ACTUAL: string
+  PLAN_ACTUAL_ID: number
+  PLAN_ACTUAL_NOMBRE: string
+  NUEVO_DEPARTAMENTO_ID: number
+  NUEVO_DEPARTAMENTO: string
+  NUEVO_PUESTO_ID: number
+  NUEVO_PUESTO: string
+  PLAN_NUEVO_ID: number
+  PLAN_NUEVO_NOMBRE: string
+  TIPO_CAMBIO: string
+  DOCUMENTOS_PLAN_ACTUAL: number
+  DOCUMENTOS_COMPLETADOS_PLAN_ACTUAL: number
+  DOCUMENTOS_PLAN_NUEVO: number
 }
 
 export interface CapacitacionMigrar {
-  ID_CAPACITACION: number,
-  CODIGO_DOCUMENTO: string,
-  CAPACITACION_NOMBRE: string,
-  ID_DOCUMENTO: number,
-  DOCUMENTO_CODIGO: string,
-  NOMBRE_DOCUMENTO: string,
-  VERSION: number,
-  ID_SESION: number,
-  NUMERO_SESION: number,
-  FECHA_INICIO: string,
-  FECHA_COMPLETADA: string,
-  NOTA_OBTENIDA: number,
-  APROBADO: boolean,
-  URL_DIPLOMA: string | null,
-  URL_EXAMEN: string | null,
-  EXISTE_EN_NUEVO_PLAN: 1,
-  ESTADO_MIGRACION: string
+  ID_DOCUMENTO: number
+  DOCUMENTO_CODIGO: string
+  NOMBRE_DOCUMENTO: string
+  VERSION_COMPLETADA: number
+  VERSION_ACTUAL: number
+  ID_CAPACITACION: number
+  CAPACITACION_NOMBRE: string
+  ID_SESION: number
+  NUMERO_SESION: number
+  FECHA_PROGRAMADA: string
+  FECHA_COMPLETADA: string
+  NOTA_OBTENIDA: number
+  APROBADO: boolean
+  URL_DIPLOMA: string | null
+  URL_EXAMEN: string | null
+  EXISTE_EN_NUEVO_PLAN: number
+  ESTADO_MIGRACION: 'MIGRABLE_MISMA_VERSION' | 'VERSION_DESACTUALIZADA' | 'VERSION_SUPERIOR' | 'NO_APROBADO' | 'NO_APLICA_NUEVO_PLAN' // ✅ Actualizado
+  RECOMENDACION: string
 }
 
 export interface CapacitacionNueva {
-  ID_DOCUMENTO: number,
-  DOCUMENTO_CODIGO: string,
-  NOMBRE_DOCUMENTO: string,
-  VERSION: number,
-  YA_COMPLETADA_PLAN_ANTERIOR: number,
-  ESTADO: string
+  ID_DOCUMENTO: number
+  DOCUMENTO_CODIGO: string
+  NOMBRE_DOCUMENTO: string
+  VERSION: number
+  TIPO_DOCUMENTO: string
+  YA_COMPLETADA_VERSION_VALIDA: number
+  ESTADO: 'PUEDE_MIGRAR' | 'NUEVA_CAPACITACION'
 }
 
 export interface AnalizarCambioPlanResponse {

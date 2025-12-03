@@ -39,7 +39,7 @@ const getPuestosList = async () => {
 
 const getDocumentosList = async () => {
   try {
-    const { data } = await apiClient.get<CodigoPadre[]>('/documento');
+    const { data } = await apiClient.get<CodigoPadre[]>('/documento/vigentes');
     return data;
   } catch (err) {
     console.error("Error al cargar lista de documentos para select:", err);

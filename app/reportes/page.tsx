@@ -159,14 +159,11 @@ export default function ReportesPage() {
 
                   <Card>
                     <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                      <CardTitle className="text-sm font-medium">Diplomas Emitidos</CardTitle>
+                      <CardTitle className="text-sm font-medium">Diplomas</CardTitle>
                       <Award className="h-4 w-4 text-muted-foreground" />
                     </CardHeader>
                     <CardContent>
                       <div className="text-2xl font-bold">{dashboard?.RESUMEN_GENERAL?.Diplomas || 0}</div>
-                      <p className="text-xs text-muted-foreground">
-                        Promedio: {dashboard?.RESUMEN_GENERAL?.Promedio_General_Notas?.toFixed(1) || 0}
-                      </p>
                     </CardContent>
                   </Card>
                 </div>

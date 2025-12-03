@@ -64,5 +64,6 @@ export interface DetalleRecapacitacion {
 export interface RecapacitacionCambioVersion {
   idDocumento: number,
   nuevaVersion: number,
+  requiereRecapacitacion: boolean,
   usuario: string,
 }

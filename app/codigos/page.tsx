@@ -391,7 +391,8 @@ export default function CodigosAsociadosPage() {
 
   const handleRecapacitar = useCallback(async (
     idDocumento: number, 
-    nuevaVersion: number, 
+    nuevaVersion: number,
+    requiereRecapacitacion: boolean,
     usuario: string
   ): Promise<Recapacitacion> => {
     try {
@@ -400,6 +401,7 @@ export default function CodigosAsociadosPage() {
       const result = await recapacitarPorCambioVersion({
         idDocumento,
         nuevaVersion,
+        requiereRecapacitacion,
         usuario
       })
       
