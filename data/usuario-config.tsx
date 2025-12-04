@@ -44,7 +44,7 @@ export const getUsuarioColumns = () => [
         <Badge variant={value ? "default" : "destructive"}>{value ? "Activo" : "Inactivo"}</Badge>
       ),
     },
-    {
+/*     {
       key: "ULTIMO_ACCESO",
       label: "Último Acceso",
       render: (value: string | null) => {
@@ -52,7 +52,7 @@ export const getUsuarioColumns = () => [
         const date = new Date(value);
         return date.toISOString().substring(0, 10);
       },
-    },
+    }, */
     {
       key: "FECHA_CREACION",
       label: "Fecha Creación",

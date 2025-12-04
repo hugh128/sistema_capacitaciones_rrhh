@@ -2,6 +2,8 @@
 import { useAuth } from "@/contexts/auth-context";
 import { hasAnyPermission } from "@/lib/permissions";
 import React from "react";
+import { Button } from "./ui/button";
+import { useRouter } from "next/navigation";
 
 interface RequirePermissionProps {
   requiredPermissions: string[]; 
@@ -13,6 +15,7 @@ export const RequirePermission: React.FC<RequirePermissionProps> = ({
   children,
 }) => {
   const { user, loading } = useAuth();
+  const router = useRouter();
   
   const isProtected = requiredPermissions.length > 0;
   const hasAccess = user && hasAnyPermission(user, requiredPermissions);
@@ -28,6 +31,12 @@ export const RequirePermission: React.FC<RequirePermissionProps> = ({
           <div className="text-center">
             <h1 className="text-2xl font-bold text-foreground mb-2">Acceso Denegado</h1>
             <p className="text-muted-foreground">No tienes permisos para acceder a esta página</p>
+            <Button
+              onClick={() => router.push("/")}
+              className="cursor-pointer mt-4"
+            >
+              Volver al inicio
+            </Button>
           </div>
         </div>
       </div>

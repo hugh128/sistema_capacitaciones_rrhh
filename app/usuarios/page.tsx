@@ -166,7 +166,7 @@ export default function UsuariosPage() {
   }
 
   return (
-    <RequirePermission requiredPermissions={["manage_users"]}>
+    <RequirePermission requiredPermissions={["employees_access"]}>
 
       <div className="flex h-screen bg-background">
         <Sidebar />

@@ -50,7 +50,7 @@ export default function EmpresasPage() {
   };
 
   return (
-    <RequirePermission requiredPermissions={["manage_config"]}>
+    <RequirePermission requiredPermissions={["settings_access"]}>
 
       <div className="flex h-screen bg-background">
         <Sidebar />

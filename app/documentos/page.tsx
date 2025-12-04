@@ -526,7 +526,7 @@ export default function PlantillasExamenPage() {
   }
 
   return (
-    <RequirePermission requiredPermissions={["manage_documents", "view_documents"]}>
+    <RequirePermission requiredPermissions={["documents_access"]}>
       <div className="flex h-screen bg-background">
         <Toaster />
         <Sidebar />
@@ -602,7 +602,7 @@ export default function PlantillasExamenPage() {
                         variant="ghost"
                         size="icon"
                         onClick={() => handleOpenModal(plantillaActiva)}
-                        className="hover:bg-green-100 dark:hover:bg-green-800 cursor-pointer"
+                        className="hover:bg-green-100 dark:hover:bg-green-800 cursor-po"
                       >
                         <Edit className="w-5 h-5" />
                       </Button>

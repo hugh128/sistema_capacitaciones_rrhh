@@ -33,7 +33,6 @@ export function PermissionFormModal({ open, onOpenChange, initialData, categorie
   const [nombre, setNombre] = useState("")
   const [descripcion, setDescripcion] = useState("")
   const [categoriaId, setCategoriaId] = useState<string>("") 
-  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (initialData) {
@@ -47,7 +46,6 @@ export function PermissionFormModal({ open, onOpenChange, initialData, categorie
       setDescripcion("")
       setCategoriaId(String(categories[0]?.ID_CATEGORIA) || "") 
     }
-    setIsSubmitting(false);
   }, [initialData, open, categories])
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -57,8 +55,6 @@ export function PermissionFormModal({ open, onOpenChange, initialData, categorie
       toast.error("Debe seleccionar una categoría.");
       return;
     }
-
-    setIsSubmitting(true);
     
     const permisoId = initialData?.ID_PERMISO; 
     
@@ -71,8 +67,6 @@ export function PermissionFormModal({ open, onOpenChange, initialData, categorie
 
     const success = await savePermiso(payload, permisoId)
     
-    setIsSubmitting(false);
-
     if (success) {
       onOpenChange(false)
     }

@@ -308,7 +308,7 @@ export default function PersonasPage() {
   }
 
   return (
-    <RequirePermission requiredPermissions={["manage_users", "view_team"]}>
+    <RequirePermission requiredPermissions={["people_access"]}>
       <div className="flex h-screen bg-background">
         <Sidebar />
 

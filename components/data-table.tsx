@@ -90,7 +90,7 @@ export function DataTable({
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h2 className="text-xl sm:text-2xl font-bold">{title}</h2>
         {onAdd && (
-          <Button onClick={onAdd} className="w-full sm:w-auto">
+          <Button onClick={onAdd} className="w-full sm:w-auto cursor-pointer">
             <Plus className="h-4 w-4 mr-2" />
             Agregar
           </Button>
@@ -148,7 +148,7 @@ export function DataTable({
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm">
+                            <Button variant="ghost" size="sm" className="cursor-pointer">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>

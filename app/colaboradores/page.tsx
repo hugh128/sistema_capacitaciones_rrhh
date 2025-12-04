@@ -46,7 +46,7 @@ export default function ColaboradoresPage() {
   }, [user, obtenerColaboradores]);
 
   return (
-    <RequirePermission requiredPermissions={["manage_users", "view_team"]}>
+    <RequirePermission requiredPermissions={["employees_access"]}>
       <div className="flex h-screen bg-background">
         <Sidebar />
 

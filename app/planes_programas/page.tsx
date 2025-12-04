@@ -13,7 +13,7 @@ export default function ProgramasYPlanesPage() {
   const [activeTab, setActiveTab] = useState("plans")
 
   return (
-    <RequirePermission requiredPermissions={["view_trainings"]}>
+    <RequirePermission requiredPermissions={["plans_access"]}>
       <div className="flex h-screen bg-background">
         <Sidebar />
 

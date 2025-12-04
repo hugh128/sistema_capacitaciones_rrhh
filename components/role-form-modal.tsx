@@ -236,10 +236,10 @@ export function RoleFormModal({
           </div>
 
           <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)} className="cursor-pointer">
               Cancelar
             </Button>
-            <Button type="submit" disabled={loading || !nombre || selectedPermissions.length === 0}>
+            <Button type="submit" disabled={loading || !nombre || selectedPermissions.length === 0} className="cursor-pointer">
               {loading ? "Guardando..." : "Guardar"}
             </Button>
           </DialogFooter>

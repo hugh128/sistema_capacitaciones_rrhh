@@ -49,32 +49,30 @@ export default function ReportesPage() {
 
   if (error && !dashboard) {
     return (
-      <RequirePermission requiredPermissions={["view_reports"]}>
-        <div className="flex h-screen bg-background">
-          <Sidebar />
-          <div className="flex-1 flex flex-col overflow-hidden">
-            <AppHeader title="Reportes y Análisis" subtitle="Visualiza métricas y genera reportes del sistema" />
-            <main className="flex-1 overflow-auto p-6">
-              <div className="max-w-7xl mx-auto">
-                <Card className="border-destructive">
-                  <CardContent className="pt-6">
-                    <p className="text-destructive">Error al cargar los datos: {error}</p>
-                    <Button onClick={handleRefresh} className="mt-4">
-                      <RefreshCw className="w-4 h-4 mr-2" />
-                      Reintentar
-                    </Button>
-                  </CardContent>
-                </Card>
-              </div>
-            </main>
-          </div>
+      <div className="flex h-screen bg-background">
+        <Sidebar />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <AppHeader title="Reportes y Análisis" subtitle="Visualiza métricas y genera reportes del sistema" />
+          <main className="flex-1 overflow-auto p-6">
+            <div className="max-w-7xl mx-auto">
+              <Card className="border-destructive">
+                <CardContent className="pt-6">
+                  <p className="text-destructive">Error al cargar los datos: {error}</p>
+                  <Button onClick={handleRefresh} className="mt-4">
+                    <RefreshCw className="w-4 h-4 mr-2" />
+                    Reintentar
+                  </Button>
+                </CardContent>
+              </Card>
+            </div>
+          </main>
         </div>
-      </RequirePermission>
+      </div>
     )
   }
 
   return (
-    <RequirePermission requiredPermissions={["view_reports"]}>
+    <RequirePermission requiredPermissions={["reports_access"]}>
       <div className="flex h-screen bg-background">
         <Sidebar />
 

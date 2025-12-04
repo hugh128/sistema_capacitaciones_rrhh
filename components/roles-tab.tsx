@@ -162,15 +162,15 @@ export function RolesTab() {
               <CardHeader className="pb-3">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2 flex-1 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                      <Icon className="w-4 h-4 text-primary" />
+                    <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 dark:border dark:border-blue-500/30">
+                      <Icon className="w-4 h-4 text-primary dark:text-blue-400" />
                     </div>
                     <CardTitle className="text-base sm:text-lg truncate">{role.NOMBRE}</CardTitle>
                   </div>
                   <Button
                     variant="ghost"
                     size="icon"
-                    className="h-8 w-8 flex-shrink-0"
+                    className="h-8 w-8 flex-shrink-0 cursor-pointer"
                     onClick={(e) => {
                       e.stopPropagation()
                       handleViewDetails(role)

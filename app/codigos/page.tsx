@@ -24,6 +24,7 @@ import { useCodigos } from "@/hooks/useCodigos"
 import { useAuth } from "@/contexts/auth-context"
 import { useDebounce } from "@/hooks/useDebounde"
 import type { Recapacitacion } from "@/lib/codigos/types"
+import { RequirePermission } from "@/components/RequirePermission"
 
 type ImportConfirmationState = {
   isOpen: boolean;
@@ -435,248 +436,250 @@ export default function CodigosAsociadosPage() {
   }
 
   return (
-    <div className="flex h-screen bg-background">
-      <Sidebar />
+    <RequirePermission requiredPermissions={["codes_access"]}>
+      <div className="flex h-screen bg-background">
+        <Sidebar />
 
-      <div className="flex-1 flex flex-col overflow-hidden">
-        <AppHeader title="Códigos Asociados" subtitle="Gestión jerárquica de códigos padre e hijos" />
+        <div className="flex-1 flex flex-col overflow-hidden">
+          <AppHeader title="Códigos Asociados" subtitle="Gestión jerárquica de códigos padre e hijos" />
 
-        <main className="flex-1 overflow-auto p-6">
+          <main className="flex-1 overflow-auto p-6">
 
-          <Toaster />
+            <Toaster />
 
-          <div className="max-w-7xl mx-auto space-y-6">
-            {codigos.length > 5000 && (
-              <Alert>
+            <div className="max-w-7xl mx-auto space-y-6">
+              {codigos.length > 5000 && (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertDescription>
+                    Los datos son extensos ({codigos.length} códigos). Se recomienda filtrar o paginar para mejorar el
+                    rendimiento.
+                  </AlertDescription>
+                </Alert>
+              )}
+
+              <div className="flex items-center justify-between gap-4">
+                <div className="flex gap-2">
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".xlsx,.xls,.csv"
+                    onChange={handleFileChange}
+                    className="hidden"
+                  />
+                  <Button onClick={() => fileInputRef.current?.click()} variant="outline">
+                    <Upload className="mr-2 h-4 w-4" />
+                    Importar Excel
+                  </Button>
+                  <Button onClick={handleExportExcel} variant="outline">
+                    <Download className="mr-2 h-4 w-4" />
+                    Exportar Excel
+                  </Button>
+                </div>
+                <Button onClick={() => setIsAddParentOpen(true)} className="cursor-pointer">
+                  <Plus className="mr-2 h-4 w-4" />
+                  Agregar Código Padre
+                </Button>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por código, tipo de documento o estatus..."
+                    value={searchQuery}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                    className="pl-9"
+                  />
+                </div>
+                <div className="flex items-center gap-2">
+                  <Label className="text-sm text-muted-foreground whitespace-nowrap">Mostrar:</Label>
+                  <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
+                    <SelectTrigger className="w-[100px]">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="20">20</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <Card>
+                <CardHeader>
+                  <CardTitle>Códigos</CardTitle>
+                  <CardDescription>
+                    {searchQuery ? (
+                      <>
+                        {filteredCodigos.length} de {codigos.length} códigos padre • Página {currentPage} de {totalPages}
+                      </>
+                    ) : (
+                      <>
+                        {codigos.length} códigos padre • {codigos.reduce((acc, c) => acc + c.DOCUMENTOS_ASOCIADOS.length, 0)} códigos
+                        hijo • Página {currentPage} de {totalPages}
+                      </>
+                    )}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  {!isTableReady && codigos.length > 0 ? (
+                    <div className="flex justify-center py-12">
+                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                    </div>
+                  ) : (
+                    <CodesTable
+                      codigos={paginatedCodigos}
+                      onView={handleView}
+                      onEdit={handleEdit}
+                      onDelete={handleDeleteParent}
+                    />
+                  )}
+
+                  {totalPages > 1 && isTableReady && (
+                    <div className="flex items-center justify-between mt-6 pt-6 border-t">
+                      <div className="text-sm text-muted-foreground">
+                        Mostrando {(currentPage - 1) * itemsPerPage + 1} -{" "}
+                        {Math.min(currentPage * itemsPerPage, filteredCodigos.length)} de {filteredCodigos.length} códigos
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(currentPage - 1)}
+                          disabled={currentPage === 1}
+                          className="dark:text-foreground dark:hover:border-white/40 cursor-pointer"
+
+                        >
+                          <ChevronLeft className="h-4 w-4 mr-1" />
+                          Anterior
+                        </Button>
+
+                        <div className="flex items-center gap-1">
+                          {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
+                            let pageNum: number
+                            if (totalPages <= 5) {
+                              pageNum = i + 1
+                            } else if (currentPage <= 3) {
+                              pageNum = i + 1
+                            } else if (currentPage >= totalPages - 2) {
+                              pageNum = totalPages - 4 + i
+                            } else {
+                              pageNum = currentPage - 2 + i
+                            }
+
+                            return (
+                              <Button
+                                key={pageNum}
+                                variant={currentPage === pageNum ? "default" : "outline"}
+                                size="sm"
+                                onClick={() => setCurrentPage(pageNum)}
+                                className="w-9 h-9 p-0 dark:text-foreground dark:hover:border-white/40 cursor-pointer"
+                              >
+                                {pageNum}
+                              </Button>
+                            )
+                          })}
+                        </div>
+
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          onClick={() => setCurrentPage(currentPage + 1)}
+                          disabled={currentPage === totalPages}
+                          className="dark:text-foreground dark:hover:border-white/40 cursor-pointer"
+                        >
+                          Siguiente
+                          <ChevronRight className="h-4 w-4 ml-1" />
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          </main>
+        </div>
+
+        {isAddParentOpen && (
+          <Dialog open={isAddParentOpen} onOpenChange={setIsAddParentOpen}>
+            <DialogContent className="max-w-2xl">
+              <DialogHeader>
+                <DialogTitle>Agregar Código Padre</DialogTitle>
+                <DialogDescription>Complete los campos para crear un nuevo código padre</DialogDescription>
+              </DialogHeader>
+              <ParentCodeForm
+                onSubmit={handleAddParent}
+                onCancel={() => setIsAddParentOpen(false)}
+              />
+            </DialogContent>
+          </Dialog>
+        )}
+
+        {viewParent && (
+          <ParentCodeView
+            parent={viewParent}
+            open={!!viewParent}
+            onClose={() => setViewParent(null)}
+          />
+        )}
+
+        {editParent && (
+          <ParentCodeEdit
+            parent={editParent}
+            open={!!editParent}
+            onClose={() => setEditParent(null)}
+            onUpdate={(id: number, data) => handleUpdateParent(id, data)}
+            onDelete={(id: number) => handleDeleteParent(id)}
+            onAddChild={(parentId: number, child) => handleAddChild(parentId, child)}
+            onEditChild={(parentId: number, childId: number, data) => handleEditChild(parentId, childId, data)}
+            onDeleteChild={(parentId: number, childId: number) => handleDeleteChild(parentId, childId)}
+            onRecapacitar={handleRecapacitar}
+            currentUser={user?.USERNAME || user?.CORREO || "Usuario"}
+          />
+        )}
+
+        <Dialog open={importConfirmation.isOpen} onOpenChange={handleCancelImport}>
+          <DialogContent className="sm:max-w-[425px]">
+            <DialogHeader>
+              <DialogTitle>Confirmar Importación de Excel</DialogTitle>
+              <DialogDescription>
+                Se ha procesado el archivo **{importConfirmation.file?.name}**.
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-2">
+              <p className="text-sm text-muted-foreground">
+                Se detectaron **{importConfirmation.codigosAImportar?.length} códigos padre únicos** para importar.
+                Los códigos hijo serán asociados a sus respectivos códigos padre.
+              </p>
+              <Alert variant="default">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>
-                  Los datos son extensos ({codigos.length} códigos). Se recomienda filtrar o paginar para mejorar el
-                  rendimiento.
+                  ⚠️ **Advertencia**: Esta acción creará nuevos códigos en el sistema.
                 </AlertDescription>
               </Alert>
-            )}
-
-            <div className="flex items-center justify-between gap-4">
-              <div className="flex gap-2">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".xlsx,.xls,.csv"
-                  onChange={handleFileChange}
-                  className="hidden"
-                />
-                <Button onClick={() => fileInputRef.current?.click()} variant="outline">
-                  <Upload className="mr-2 h-4 w-4" />
-                  Importar Excel
-                </Button>
-                <Button onClick={handleExportExcel} variant="outline">
-                  <Download className="mr-2 h-4 w-4" />
-                  Exportar Excel
-                </Button>
-              </div>
-              <Button onClick={() => setIsAddParentOpen(true)} className="cursor-pointer">
-                <Plus className="mr-2 h-4 w-4" />
-                Agregar Código Padre
+            </div>
+            <div className="flex justify-end gap-2">
+              <Button 
+                variant="outline" 
+                onClick={handleCancelImport} 
+                disabled={isImporting}
+              >
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleConfirmImport} 
+                disabled={isImporting || !importConfirmation.codigosAImportar}
+              >
+                {isImporting ? "Importando..." : "Confirmar Importación"}
               </Button>
             </div>
-
-            <div className="flex items-center gap-4">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Buscar por código, tipo de documento o estatus..."
-                  value={searchQuery}
-                  onChange={(e) => handleSearchChange(e.target.value)}
-                  className="pl-9"
-                />
-              </div>
-              <div className="flex items-center gap-2">
-                <Label className="text-sm text-muted-foreground whitespace-nowrap">Mostrar:</Label>
-                <Select value={itemsPerPage.toString()} onValueChange={handleItemsPerPageChange}>
-                  <SelectTrigger className="w-[100px]">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="10">10</SelectItem>
-                    <SelectItem value="20">20</SelectItem>
-                    <SelectItem value="50">50</SelectItem>
-                    <SelectItem value="100">100</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Códigos</CardTitle>
-                <CardDescription>
-                  {searchQuery ? (
-                    <>
-                      {filteredCodigos.length} de {codigos.length} códigos padre • Página {currentPage} de {totalPages}
-                    </>
-                  ) : (
-                    <>
-                      {codigos.length} códigos padre • {codigos.reduce((acc, c) => acc + c.DOCUMENTOS_ASOCIADOS.length, 0)} códigos
-                      hijo • Página {currentPage} de {totalPages}
-                    </>
-                  )}
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                {!isTableReady && codigos.length > 0 ? (
-                  <div className="flex justify-center py-12">
-                    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                  </div>
-                ) : (
-                  <CodesTable
-                    codigos={paginatedCodigos}
-                    onView={handleView}
-                    onEdit={handleEdit}
-                    onDelete={handleDeleteParent}
-                  />
-                )}
-
-                {totalPages > 1 && isTableReady && (
-                  <div className="flex items-center justify-between mt-6 pt-6 border-t">
-                    <div className="text-sm text-muted-foreground">
-                      Mostrando {(currentPage - 1) * itemsPerPage + 1} -{" "}
-                      {Math.min(currentPage * itemsPerPage, filteredCodigos.length)} de {filteredCodigos.length} códigos
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setCurrentPage(currentPage - 1)}
-                        disabled={currentPage === 1}
-                        className="dark:text-foreground dark:hover:border-white/40 cursor-pointer"
-
-                      >
-                        <ChevronLeft className="h-4 w-4 mr-1" />
-                        Anterior
-                      </Button>
-
-                      <div className="flex items-center gap-1">
-                        {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-                          let pageNum: number
-                          if (totalPages <= 5) {
-                            pageNum = i + 1
-                          } else if (currentPage <= 3) {
-                            pageNum = i + 1
-                          } else if (currentPage >= totalPages - 2) {
-                            pageNum = totalPages - 4 + i
-                          } else {
-                            pageNum = currentPage - 2 + i
-                          }
-
-                          return (
-                            <Button
-                              key={pageNum}
-                              variant={currentPage === pageNum ? "default" : "outline"}
-                              size="sm"
-                              onClick={() => setCurrentPage(pageNum)}
-                              className="w-9 h-9 p-0 dark:text-foreground dark:hover:border-white/40 cursor-pointer"
-                            >
-                              {pageNum}
-                            </Button>
-                          )
-                        })}
-                      </div>
-
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => setCurrentPage(currentPage + 1)}
-                        disabled={currentPage === totalPages}
-                        className="dark:text-foreground dark:hover:border-white/40 cursor-pointer"
-                      >
-                        Siguiente
-                        <ChevronRight className="h-4 w-4 ml-1" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </main>
-      </div>
-
-      {isAddParentOpen && (
-        <Dialog open={isAddParentOpen} onOpenChange={setIsAddParentOpen}>
-          <DialogContent className="max-w-2xl">
-            <DialogHeader>
-              <DialogTitle>Agregar Código Padre</DialogTitle>
-              <DialogDescription>Complete los campos para crear un nuevo código padre</DialogDescription>
-            </DialogHeader>
-            <ParentCodeForm
-              onSubmit={handleAddParent}
-              onCancel={() => setIsAddParentOpen(false)}
-            />
           </DialogContent>
         </Dialog>
-      )}
 
-      {viewParent && (
-        <ParentCodeView
-          parent={viewParent}
-          open={!!viewParent}
-          onClose={() => setViewParent(null)}
-        />
-      )}
-
-      {editParent && (
-        <ParentCodeEdit
-          parent={editParent}
-          open={!!editParent}
-          onClose={() => setEditParent(null)}
-          onUpdate={(id: number, data) => handleUpdateParent(id, data)}
-          onDelete={(id: number) => handleDeleteParent(id)}
-          onAddChild={(parentId: number, child) => handleAddChild(parentId, child)}
-          onEditChild={(parentId: number, childId: number, data) => handleEditChild(parentId, childId, data)}
-          onDeleteChild={(parentId: number, childId: number) => handleDeleteChild(parentId, childId)}
-          onRecapacitar={handleRecapacitar}
-          currentUser={user?.USERNAME || user?.CORREO || "Usuario"}
-        />
-      )}
-
-      <Dialog open={importConfirmation.isOpen} onOpenChange={handleCancelImport}>
-        <DialogContent className="sm:max-w-[425px]">
-          <DialogHeader>
-            <DialogTitle>Confirmar Importación de Excel</DialogTitle>
-            <DialogDescription>
-              Se ha procesado el archivo **{importConfirmation.file?.name}**.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <p className="text-sm text-muted-foreground">
-              Se detectaron **{importConfirmation.codigosAImportar?.length} códigos padre únicos** para importar.
-              Los códigos hijo serán asociados a sus respectivos códigos padre.
-            </p>
-            <Alert variant="default">
-              <AlertCircle className="h-4 w-4" />
-              <AlertDescription>
-                ⚠️ **Advertencia**: Esta acción creará nuevos códigos en el sistema.
-              </AlertDescription>
-            </Alert>
-          </div>
-          <div className="flex justify-end gap-2">
-            <Button 
-              variant="outline" 
-              onClick={handleCancelImport} 
-              disabled={isImporting}
-            >
-              Cancelar
-            </Button>
-            <Button 
-              onClick={handleConfirmImport} 
-              disabled={isImporting || !importConfirmation.codigosAImportar}
-            >
-              {isImporting ? "Importando..." : "Confirmar Importación"}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-
-    </div>
+      </div>
+    </RequirePermission>
   )
 }

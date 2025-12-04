@@ -8,6 +8,7 @@ export interface CategoriaPayload {
   CLAVE: string;
   NOMBRE: string;
   DESCRIPCION: string;
+  PERMISOS_IDS?: number[];
 }
 
 export interface PermisoPayload {
@@ -46,14 +47,22 @@ export function useCategorias(user: UsuarioLogin | null) {
   const saveCategoria = useCallback(async (data: CategoriaPayload, id?: number) => {
     if (!user) return false;
     const isEditing = id !== undefined;
-    const endpoint = isEditing ? `/categoria-permiso/${id}` : '/categoria-permiso';
 
     try {
+      const endpoint = isEditing ? `/categoria-permiso/${id}` : '/categoria-permiso';
       const method = isEditing ? 'patch' : 'post';
-      await apiClient[method](endpoint, data);
       
-      refreshCategorias();
+      const payload = {
+        CLAVE: data.CLAVE,
+        NOMBRE: data.NOMBRE,
+        DESCRIPCION: data.DESCRIPCION,
+        PERMISOS_IDS: data.PERMISOS_IDS
+      };
+
+      await apiClient[method](endpoint, payload);
+      
       toast.success(`Categoría ${isEditing ? 'actualizada' : 'creada'} con éxito.`);
+      refreshCategorias();
       return true;
     } catch (err) {
       handleApiError(err, `Error al ${isEditing ? 'actualizar' : 'crear'} la categoría.`);
@@ -76,8 +85,24 @@ export function useCategorias(user: UsuarioLogin | null) {
     }
   }, [user, refreshCategorias]);
 
-
   // --- Funciones de Gestión de Permisos ---
+  const obtenerPermisos = useCallback( async () =>{
+    if (!user) {
+      toast.error("Usuario no autenticado.");
+      return;
+    }
+    setError(null);
+
+    try {
+      const { data } = await apiClient.get(`/permiso`);
+      return data;
+    } catch (err) {
+      const baseMessage = "Error al obtener permisos.";
+      setError(baseMessage);
+      handleApiError(err, baseMessage);
+    }
+  }, [user])
+
   const savePermiso = useCallback(async (data: PermisoPayload, id?: number) => {
     if (!user) return false;
     const isEditing = id !== undefined;
@@ -123,9 +148,9 @@ export function useCategorias(user: UsuarioLogin | null) {
     loading,
     error,
     refreshCategorias,
-
     saveCategoria,
     deleteCategoria,
+    obtenerPermisos,
     savePermiso,
     deletePermiso,
   };

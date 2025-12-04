@@ -40,20 +40,86 @@ interface MenuItem {
   requiredPermissions: string[]; 
 }
 
-const MAIN_MENU_CONFIG: MenuItem[] = [
-  { icon: LayoutDashboard, label: "Dashboard", href: "/dashboard", requiredPermissions: [] },
-  { icon: Users, label: "Personas", href: "/personas", requiredPermissions: ["manage_users"] },
-  { icon: UserCheck, label: "Usuarios", href: "/usuarios", requiredPermissions: ["manage_users"] },
-  { icon: Shield, label: "Roles y Permisos", href: "/roles", requiredPermissions: ["manage_users"] },
-  { icon: Calendar, label: "Planes y Programas", href: "/planes_programas", requiredPermissions: ["view_trainings"] },
-  { icon: BookOpen, label: "Capacitaciones", href: "/capacitaciones", requiredPermissions: ["view_trainings"] },
-  { icon: ClipboardList, label: "Mis Capacitaciones", href: "/mis-capacitaciones", requiredPermissions: ["manage_trainings", "view_trainings"] },
-  { icon: UserStar, label: "Colaboradores", href: "/colaboradores", requiredPermissions: ["view_participants", "view_team"] },
-  { icon: Code2, label: "Codigos", href: "/codigos", requiredPermissions: ["codes"] },
-  { icon: FileText, label: "Documentos", href: "/documentos", requiredPermissions: ["view_documents"] },
-  { icon: BarChart3, label: "Reportes", href: "/reportes", requiredPermissions: ["view_reports"] },
-  //{ icon: Shield, label: "Auditoria", href: "/auditoria", requiredPermissions: ["view_audit"] },
-  { icon: Settings, label: "Configuración", href: "/configuracion", requiredPermissions: ["manage_config"] },
+const MAIN_MENU_CONFIG: MenuItem[] = [ 
+  { 
+    icon: LayoutDashboard, 
+    label: "Dashboard", 
+    href: "/dashboard", 
+    requiredPermissions: []
+  },
+  { 
+    icon: Users, 
+    label: "Personas", 
+    href: "/personas", 
+    requiredPermissions: ["people_access"]
+  },
+  { 
+    icon: UserCheck, 
+    label: "Usuarios", 
+    href: "/usuarios", 
+    requiredPermissions: ["users_access"]
+  },
+  { 
+    icon: Shield, 
+    label: "Roles y Permisos", 
+    href: "/roles", 
+    requiredPermissions: ["roles_access"]
+  },
+  { 
+    icon: Calendar, 
+    label: "Planes y Programas", 
+    href: "/planes_programas", 
+    requiredPermissions: ["plans_access"]
+  },
+  { 
+    icon: BookOpen, 
+    label: "Capacitaciones", 
+    href: "/capacitaciones", 
+    requiredPermissions: ["trainings_access"]
+  },
+  { 
+    icon: ClipboardList, 
+    label: "Mis Capacitaciones", 
+    href: "/mis-capacitaciones", 
+    requiredPermissions: ["my_trainings_access"]
+  },
+  { 
+    icon: UserStar, 
+    label: "Colaboradores", 
+    href: "/colaboradores", 
+    requiredPermissions: ["employees_access"]
+  },
+  { 
+    icon: Code2, 
+    label: "Códigos", 
+    href: "/codigos", 
+    requiredPermissions: ["codes_access"]
+  },
+  { 
+    icon: FileText, 
+    label: "Documentos", 
+    href: "/documentos", 
+    requiredPermissions: ["documents_access"]
+  },
+  { 
+    icon: BarChart3, 
+    label: "Reportes", 
+    href: "/reportes", 
+    requiredPermissions: ["reports_access"]
+  },
+/*   {
+    icon: Shield,
+    label: "Auditoria",
+    href: "/auditoria",
+    requiredPermissions:
+    ["view_audit"]
+  }, */
+  { 
+    icon: Settings, 
+    label: "Configuración", 
+    href: "/configuracion", 
+    requiredPermissions: ["settings_access"]
+  },
 ];
 
 export function Sidebar({ className }: SidebarProps) {

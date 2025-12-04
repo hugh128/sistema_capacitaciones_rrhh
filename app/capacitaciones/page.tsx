@@ -84,7 +84,7 @@ export default function GestionCapacitacionesPage() {
     )
   }
 
-  if (!user || !user.ROLES.some((role) => role.NOMBRE === "RRHH")) {
+  if (!user || !user.ROLES.some((role) => role.NOMBRE === "RRHH" || role.NOMBRE === 'Auditoria')) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-96">
@@ -98,7 +98,7 @@ export default function GestionCapacitacionesPage() {
   }
 
   return (
-    <RequirePermission requiredPermissions={["manage_trainings"]}>
+    <RequirePermission requiredPermissions={["trainings_access"]}>
       <div className="flex h-screen bg-background">
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">

@@ -13,7 +13,7 @@ export default function RolesPage() {
   const [activeTab, setActiveTab] = useState("roles")
 
   return (
-    <RequirePermission requiredPermissions={["manage_users"]}>
+    <RequirePermission requiredPermissions={["roles_access"]}>
       <div className="flex h-screen bg-background">
         <Sidebar />
 
@@ -24,11 +24,11 @@ export default function RolesPage() {
             <div className="max-w-7xl mx-auto">
               <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                 <TabsList className="grid w-full max-w-md grid-cols-2 mb-6">
-                  <TabsTrigger value="roles" className="flex items-center gap-2">
+                  <TabsTrigger value="roles" className="flex items-center gap-2 cursor-pointer">
                     <Shield className="w-4 h-4" />
                     Roles
                   </TabsTrigger>
-                  <TabsTrigger value="permissions" className="flex items-center gap-2">
+                  <TabsTrigger value="permissions" className="flex items-center gap-2 cursor-pointer">
                     <Key className="w-4 h-4" />
                     Permisos
                   </TabsTrigger>
