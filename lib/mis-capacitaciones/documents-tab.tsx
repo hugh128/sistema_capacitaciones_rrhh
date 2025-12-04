@@ -8,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useCapacitaciones } from "@/hooks/useCapacitaciones"
 import { UsuarioLogin } from "../auth"
 import { useState } from "react"
+import { useDocumentos } from "@/hooks/useDocumentos"
 
 interface DocumentsTabProps {
   sesion: SESION_DETALLE
@@ -43,9 +44,12 @@ export function DocumentsTab({
   const {
     descargarListaAsistencia,
     descargarPlantillaAsistencia,
-    descargarArchivoPorRuta,
     generarExamenPDF,
   } = useCapacitaciones(usuario);
+
+  const {
+    descargarPlantillaPredeterminada
+  } = useDocumentos(usuario)
 
   const attendanceInfo = displayedFileUrl
   
@@ -152,16 +156,12 @@ export function DocumentsTab({
 
   const handleDownloadExamen = async () => {
     try {
-      setLoadingDownload(true);
-
-      const folderPath = "capacitaciones/plantillas";
-      const fileName = "Examen-de-Word.doc";
-
-      await descargarArchivoPorRuta(
-        folderPath, 
-        fileName, 
-        "Descarga del examen iniciada"
-      );
+      setLoadingDownload(true)
+      
+      const signedUrl = await descargarPlantillaPredeterminada()
+      if (signedUrl) {
+        window.open(signedUrl, "_blank")
+      }
     } catch (error) {
       console.error("❌ Error al descargar el examen:", error);
     } finally {
@@ -361,7 +361,7 @@ export function DocumentsTab({
                   disabled={loadingDownload}
                 >
                   <Download className="h-4 w-4 mr-2 text-purple-500" />
-                  {loadingDownload ? "Generando enlace..." : "Plantilla de Examen (DOC)"}
+                  {loadingDownload ? "Generando enlace..." : "Plantilla de Examen"}
                 </Button>
                 
                 <Button

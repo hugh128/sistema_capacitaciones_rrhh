@@ -223,7 +223,7 @@ export default function PersonasPage() {
         ID_COLABORADOR: editingPersona.ID_PERSONA,
         NUEVO_DEPARTAMENTO_ID: verificacionPlan.NUEVO_DEPARTAMENTO_ID,
         NUEVO_PUESTO_ID: verificacionPlan.NUEVO_PUESTO_ID,
-        IDS_CAPACITACIONES_MIGRAR: capacitacionesSeleccionadas,
+        IDS_DOCUMENTOS_MIGRAR: capacitacionesSeleccionadas,
         USUARIO: user.USERNAME
       })
       
@@ -233,29 +233,43 @@ export default function PersonasPage() {
       }
       
       const hayOtrosCambios = Object.keys(pendingFormData).some(key => {
-        if (key === 'ID_PERSONA' || key === 'TIPO_PERSONA' || key === 'DEPARTAMENTO_ID' || key === 'PUESTO_ID') return false
-        return pendingFormData[key] !== (editingPersona as Persona)[key as keyof Persona]
+        if (
+          key === 'ID_PERSONA' || 
+          key === 'TIPO_PERSONA' || 
+          key === 'DEPARTAMENTO_ID' || 
+          key === 'PUESTO_ID' ||
+          key === 'DEPARTAMENTO' ||
+          key === 'PUESTO' ||
+          key === 'EMPRESA'
+        ) return false
+        
+        const valorFormulario = pendingFormData[key]
+        const valorOriginal = (editingPersona as Persona)[key as keyof Persona]
+        
+        const sonDiferentes = String(valorFormulario ?? '') !== String(valorOriginal ?? '')
+        
+        return sonDiferentes
       })
       
-      if (hayOtrosCambios) {
-        const datosActualizados = {
-          ...pendingFormData,
-          ID_PERSONA: editingPersona.ID_PERSONA,
-          DEPARTAMENTO_ID: verificacionPlan.NUEVO_DEPARTAMENTO_ID,
-          PUESTO_ID: verificacionPlan.NUEVO_PUESTO_ID,
-          TIPO_PERSONA: 'INTERNO'
-        }
-        
-        const saveSuccess = await savePersona(datosActualizados as FormValues, editingPersona)
-        
-        if (!saveSuccess) {
-          toast.error('Plan cambiado exitosamente, pero hubo un error al actualizar otros campos')
-        }
+      const datosActualizados = {
+        ...pendingFormData,
+        ID_PERSONA: editingPersona.ID_PERSONA,
+        DEPARTAMENTO_ID: verificacionPlan.NUEVO_DEPARTAMENTO_ID,
+        PUESTO_ID: verificacionPlan.NUEVO_PUESTO_ID,
+        TIPO_PERSONA: 'INTERNO'
       }
       
-      toast.success(
-        `Cambio de plan realizado exitosamente. ${resultado.CapacitacionesMigradas} capacitaciones migradas.`
-      )
+      const saveSuccess = await savePersona(datosActualizados as FormValues, editingPersona)
+      
+      if (!saveSuccess) {
+        toast.error('Plan cambiado, pero hubo un error al actualizar los datos de la persona')
+      } else {
+        if (hayOtrosCambios) {
+          toast.success('Cambio de plan y actualización de datos realizados exitosamente')
+        } else {
+          toast.success('Cambio de plan realizado exitosamente')
+        }
+      }
       
       await fetchPersonas()
       

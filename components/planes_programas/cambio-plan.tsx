@@ -20,7 +20,7 @@ interface CambioPlanModalProps {
   onCancel?: () => void
   onGuardarSinCambio?: () => void
   verificacionData: CambiarPlanResponse | null
-  onConfirm: (documentosSeleccionados: number[]) => Promise<boolean> // ✅ Cambiado a documentos
+  onConfirm: (documentosSeleccionados: number[]) => Promise<boolean>
   onAnalizar: () => Promise<AnalizarCambioPlanResponse | null>
   loading?: boolean
 }
@@ -36,7 +36,7 @@ export function CambioPlanModal({
 }: CambioPlanModalProps) {
   const [step, setStep] = useState<'verificacion' | 'analisis' | 'confirmacion'>('verificacion')
   const [analisisData, setAnalisisData] = useState<AnalizarCambioPlanResponse | null>(null)
-  const [documentosSeleccionados, setDocumentosSeleccionados] = useState<number[]>([]) // ✅ Cambiado de capacitaciones a documentos
+  const [documentosSeleccionados, setDocumentosSeleccionados] = useState<number[]>([])
   const [isAnalyzing, setIsAnalyzing] = useState(false)
   const [isConfirming, setIsConfirming] = useState(false)
 
@@ -55,13 +55,12 @@ export function CambioPlanModal({
       if (resultado) {
         setAnalisisData(resultado)
         
-        // ✅ Pre-seleccionar documentos migrables (versión válida)
         const migrables = resultado.CAPACITACIONES_MIGRAR
           .filter((cap: CapacitacionMigrar) => 
             cap.ESTADO_MIGRACION === 'MIGRABLE_MISMA_VERSION' || 
             cap.ESTADO_MIGRACION === 'VERSION_SUPERIOR'
           )
-          .map((cap: CapacitacionMigrar) => cap.ID_DOCUMENTO) // ✅ Usar ID_DOCUMENTO
+          .map((cap: CapacitacionMigrar) => cap.ID_DOCUMENTO)
         
         setDocumentosSeleccionados(migrables)
         setStep('analisis')

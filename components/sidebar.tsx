@@ -50,6 +50,7 @@ const MAIN_MENU_CONFIG: MenuItem[] = [
   { icon: ClipboardList, label: "Mis Capacitaciones", href: "/mis-capacitaciones", requiredPermissions: ["manage_trainings", "view_trainings"] },
   { icon: UserStar, label: "Colaboradores", href: "/colaboradores", requiredPermissions: ["view_participants", "view_team"] },
   { icon: Code2, label: "Codigos", href: "/codigos", requiredPermissions: ["codes"] },
+  { icon: FileText, label: "Documentos", href: "/documentos", requiredPermissions: ["view_documents"] },
   { icon: BarChart3, label: "Reportes", href: "/reportes", requiredPermissions: ["view_reports"] },
   //{ icon: Shield, label: "Auditoria", href: "/auditoria", requiredPermissions: ["view_audit"] },
   { icon: Settings, label: "Configuración", href: "/configuracion", requiredPermissions: ["manage_config"] },

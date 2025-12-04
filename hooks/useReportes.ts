@@ -28,7 +28,6 @@ export const useReportes = () => {
     setError(null);
     try {
       const response = await apiClient.get<DashboardEjecutivo>('/reports-module/dashboard');
-      console.log(response)
       setDashboard(response.data);
       return { success: true, data: response.data };
     } catch (err) {
