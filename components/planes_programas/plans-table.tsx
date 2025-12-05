@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Eye, MoreHorizontal, UserPlus, Calendar, FileText, BookOpenText } from "lucide-react"
+import { Eye, MoreHorizontal, UserPlus, Calendar, FileText, BookOpenText, CalendarSync } from "lucide-react"
 import type { PlanCapacitacion } from "@/lib/planes_programas/types"
 import { getEstatusBadgeVariant } from "./plans-list-view"
 import {
@@ -21,12 +21,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuLabel,
 } from "@/components/ui/dropdown-menu"
+import { UsuarioLogin } from "@/lib/auth"
 
 interface PlansTableProps {
   title: string
   filteredPlans: PlanCapacitacion[]
   onViewDetails: (plan: PlanCapacitacion) => void
   onAssignPlan: (plan: PlanCapacitacion) => void
+  onSynchronizePlan: (idPlan: number, usuario: string) => void
+  usuario: UsuarioLogin | null
 }
 
 export const getTypeBadgeColor = (type: string) => {
@@ -42,7 +45,7 @@ export const getTypeBadgeColor = (type: string) => {
   }
 };
 
-export function PlansTable({ title, filteredPlans, onViewDetails, onAssignPlan }: PlansTableProps) {
+export function PlansTable({ title, filteredPlans, onViewDetails, onAssignPlan, onSynchronizePlan, usuario }: PlansTableProps) {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border/40">
@@ -176,7 +179,7 @@ export function PlansTable({ title, filteredPlans, onViewDetails, onAssignPlan }
 
                           <DropdownMenuSeparator />
                           
-                          <DropdownMenuItem 
+                          <DropdownMenuItem
                             onClick={() => onAssignPlan(plan)}
                             className="cursor-pointer group/item py-3 focus:bg-emerald-500/10 focus:text-emerald-700 dark:focus:text-emerald-400"
                           >
@@ -188,6 +191,23 @@ export function PlansTable({ title, filteredPlans, onViewDetails, onAssignPlan }
                                 <span className="font-semibold text-sm">Asignar Plan</span>
                                 <span className="text-xs text-muted-foreground">
                                   Asignar a colaboradores
+                                </span>
+                              </div>
+                            </div>
+                          </DropdownMenuItem>
+
+                          <DropdownMenuItem
+                            onClick={() => onSynchronizePlan(plan.ID_PLAN, usuario?.USERNAME || 'sistema')}
+                            className="cursor-pointer group/item py-3 focus:bg-orange-500/10 focus:text-orange-700 dark:focus:text-orange-400"
+                          >
+                            <div className="flex items-center gap-3 w-full">
+                              <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center group-hover/item:bg-orange-500/20 transition-colors">
+                                <CalendarSync className="w-4 h-4 text-orange-600 dark:text-orange-400 group-hover/item:scale-110 transition-transform" />
+                              </div>
+                              <div className="flex flex-col flex-1">
+                                <span className="font-semibold text-sm">Sincronizar Capacitaciones</span>
+                                <span className="text-xs text-muted-foreground">
+                                  Sincroniza capacitaciones nuevas agregadas al plan
                                 </span>
                               </div>
                             </div>
@@ -228,7 +248,6 @@ export function PlansTable({ title, filteredPlans, onViewDetails, onAssignPlan }
           </Table>
         </div>
       </div>
-
     </div>
   )
 }

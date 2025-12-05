@@ -223,6 +223,29 @@ export function usePlanesCapacitacion(user: UsuarioLogin | null) {
     }
   }, [user, refreshPlanesCapacitacion]);
 
+  const sincronizarCapacitacionesPlan = useCallback(async (idPlan: number, usuario: string) => {
+    if (!user) {
+      toast.error("Usuario no autenticado.");
+      return;
+    }
+
+    setIsMutating(true);
+    setError(null);
+
+    const payload = { idPlan, usuario }
+
+    try {
+      const { data } = await apiClient.post(`plan-capacitacion/sincronizar/capacitaciones/plan`, payload);
+      toast.success("Capacitaciones sincronizadas correctamente.");
+      return data;
+    } catch (err) {
+      const baseMessage = "Error al sincronizar capacitaciones del plan.";
+      setError(baseMessage);
+      handleApiError(err, baseMessage);
+    } finally {
+      setIsMutating(false);
+    }
+  }, [user]);
 
   return {
     planesCapacitacion,
@@ -237,5 +260,6 @@ export function usePlanesCapacitacion(user: UsuarioLogin | null) {
     analizarCambioPlan,
     cambiarPlanColaborador,
     obtenerDetallePlanColaborador,
+    sincronizarCapacitacionesPlan,
   }
 }

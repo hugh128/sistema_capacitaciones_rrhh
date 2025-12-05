@@ -60,6 +60,7 @@ export default function PlansModule() {
     savePlanesCapacitacion,
     aplicarPlanCapacitacion,
     obtenerColaboradoresDisponiblesPlan,
+    sincronizarCapacitacionesPlan,
   } = usePlanesCapacitacion(user)
 
   useEffect(() => {
@@ -111,6 +112,10 @@ export default function PlansModule() {
     await aplicarPlanCapacitacion(aplicarPlan);
   }, [aplicarPlanCapacitacion])
 
+  const handleSynchronizePlan = useCallback(async (idPlan: number, usuario: string) => {
+    await sincronizarCapacitacionesPlan(idPlan, usuario);
+  }, [sincronizarCapacitacionesPlan])
+
   return (
     <div className="space-y-6">
       <Toaster />
@@ -123,6 +128,7 @@ export default function PlansModule() {
           onImport={handleImport}
           onAssign={handleAssingPlan}
           onObtenerColaboradores={obtenerColaboradoresDisponiblesPlan}
+          onSynchronize={handleSynchronizePlan}
           usuario={user}
         />
       )}

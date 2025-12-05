@@ -921,7 +921,7 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
               onClick={() => setActiveTab(tab)}
               className={`
                 relative px-4 py-2 text-sm sm:text-base font-semibold transition-colors
-                whitespace-nowrap
+                whitespace-nowrap cursor-pointer
                 ${activeTab === tab ? "text-foreground" : "text-muted-foreground hover:text-foreground"}
               `}
             >
