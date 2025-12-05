@@ -52,6 +52,7 @@ export default function RevisarCapacitacionPage() {
     descargarDiploma,
     aprobarAsistencia,
     aprobarSesion,
+    devolverSesion,
   } = useCapacitaciones(user);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -67,6 +68,7 @@ export default function RevisarCapacitacionPage() {
   const [editNota, setEditNota] = useState("")
   const [editObservaciones, setEditObservaciones] = useState("")
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [attemptedRefound, setAttemptedRefound] = useState(false)
 
   useEffect(() => {
     if (!user || !user.PERSONA_ID) {
@@ -130,9 +132,17 @@ export default function RevisarCapacitacionPage() {
     return { allAttendance, allExams, allDiplomas, hasAttendanceList }
   }, [sesion, colaboradoresAsignados])
 
+  const validationRefound = useMemo(() => {
+    return observacionesRRHH.trim().length > 0
+  }, [observacionesRRHH])
+
   const canApprove = useMemo(() => {
     return validations.allAttendance && validations.allExams && validations.allDiplomas
   }, [validations])
+
+  const canRefound = useMemo(() => {
+    return validationRefound
+  }, [validationRefound])
 
   const handleDownload = async () => {
     const attendanceInfo = sesion?.URL_LISTA_ASISTENCIA
@@ -298,15 +308,22 @@ export default function RevisarCapacitacionPage() {
       console.error("Error al finalizar la sesión:", error);
     }
   };
-/*   const handleDevolver = () => {
-    if (!observacionesRRHH.trim()) {
-      alert("Agrega observaciones para devolver al capacitador")
+
+  const handleDevolver = async () => {
+    setAttemptedRefound(true)
+
+    if (!canRefound) {
       return
     }
-    alert("Capacitación devuelta al capacitador con observaciones")
-    router.push("/capacitaciones")
-    // In real app, this would be an API call
-  } */
+
+    try {
+      await devolverSesion(sesionId, user?.USERNAME || 'sistemas', observacionesRRHH)
+
+      router.push("/capacitaciones");
+    } catch (error) {
+      console.error("Error al devolver la sesión:", error);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -739,7 +756,7 @@ export default function RevisarCapacitacionPage() {
                                         </div>
                                       )}
 
-{/*                                       <div>
+                                      {/* <div>
                                         <Label>Observaciones</Label>
                                         <Textarea
                                           value={editObservaciones}
@@ -783,8 +800,7 @@ export default function RevisarCapacitacionPage() {
             <Card>
               <CardHeader>
                 <CardTitle>Revisión de RRHH</CardTitle>
-                {/* <CardDescription>Agrega observaciones y aprueba o devuelve la capacitación</CardDescription> */}
-                <CardDescription>Agrega observaciones y aprueba la capacitación</CardDescription>
+                <CardDescription>Agrega observaciones y aprueba la capacitación o devuelve la capacitación</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div>
@@ -793,7 +809,7 @@ export default function RevisarCapacitacionPage() {
                     id="observacionesRRHH"
                     value={observacionesRRHH}
                     onChange={(e) => setObservacionesRRHH(e.target.value)}
-                    placeholder="Agrega observaciones sobre la revisión..."
+                    placeholder="Observaciones sobre la revisión..."
                     rows={4}
                     className="mt-2"
                   />
@@ -802,7 +818,7 @@ export default function RevisarCapacitacionPage() {
                 <div className="flex gap-3">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button size="lg" className="flex-1" disabled={!canApprove}>
+                      <Button size="lg" className="flex-1 cursor-pointer" disabled={!canApprove}>
                         <CheckCircle2 className="h-5 w-5 mr-2" />
                         Aprobar y Finalizar
                       </Button>
@@ -816,15 +832,15 @@ export default function RevisarCapacitacionPage() {
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleAprobar}>Aprobar</AlertDialogAction>
+                        <AlertDialogCancel className="dark:text-foreground cursor-pointer">Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleAprobar} className="cursor-pointer">Aprobar</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
 
-{/*                   <AlertDialog>
+                  <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button size="lg" variant="outline" className="flex-1 bg-transparent">
+                      <Button size="lg" variant="secondary" className="flex-1 bg-transparent border cursor-pointer">
                         <XCircle className="h-5 w-5 mr-2" />
                         Devolver al Capacitador
                       </Button>
@@ -838,11 +854,11 @@ export default function RevisarCapacitacionPage() {
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDevolver}>Devolver</AlertDialogAction>
+                        <AlertDialogCancel className="dark:text-foreground cursor-pointer">Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDevolver} className="cursor-pointer">Devolver</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
-                  </AlertDialog> */}
+                  </AlertDialog>
                 </div>
 
                 {!canApprove && (
@@ -853,6 +869,20 @@ export default function RevisarCapacitacionPage() {
                         <p className="font-medium text-yellow-900 dark:text-yellow-200">No se puede aprobar aún</p>
                         <p className="text-sm text-yellow-800 dark:text-yellow-300 mt-1">
                           Hay validaciones pendientes. Revisa el checklist o devuelve al capacitador para correcciones.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {attemptedRefound && !canRefound && (
+                  <div className="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                    <div className="flex gap-2">
+                      <AlertCircle className="h-5 w-5 text-yellow-600 flex-shrink-0 mt-0.5" />
+                      <div>
+                        <p className="font-medium text-yellow-900 dark:text-yellow-200">No se puede devolver aún</p>
+                        <p className="text-sm text-yellow-800 dark:text-yellow-300 mt-1">
+                          Agrega observaciones para devolver al capacitador.
                         </p>
                       </div>
                     </div>

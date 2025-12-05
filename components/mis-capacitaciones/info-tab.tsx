@@ -11,7 +11,6 @@ interface InfoTabProps {
 }
 
 export function InfoTab({ sesion }: InfoTabProps) {
-
   return (
   <Card className="shadow-sm">
     <CardHeader className="py-2 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
@@ -158,6 +157,12 @@ export function InfoTab({ sesion }: InfoTabProps) {
         <div className="space-y-2 pt-4 border-t">
           <Label className="text-xs text-muted-foreground uppercase tracking-wide">Observaciones</Label>
           <p className="font-medium leading-relaxed bg-muted p-4 rounded-lg">{sesion.OBSERVACIONES}</p>
+        </div>
+      )}
+      {sesion.OBSERVACIONES_RRHH && (
+        <div className="space-y-2 pt-4 border-t">
+          <Label className="text-xs text-muted-foreground uppercase tracking-wide">Observaciones de RRHH</Label>
+          <p className="font-medium leading-relaxed bg-muted p-4 rounded-lg">{sesion.OBSERVACIONES_RRHH}</p>
         </div>
       )}
     </CardContent>

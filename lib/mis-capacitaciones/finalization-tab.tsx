@@ -41,6 +41,9 @@ export function FinalizationTab({
   onObservacionesChange,
   onFinalizar,
 }: FinalizationTabProps) {
+
+  const isEditable = sesion.ESTADO === 'EN_PROCESO' || sesion.ESTADO === 'RECHAZADA'
+
   return (
     <Card className="shadow-sm">
       <CardHeader className="py-2 bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
@@ -133,7 +136,7 @@ export function FinalizationTab({
               )}
               {sesion.ESTADO && (
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                  {sesion.ESTADO === "EN_PROCESO" ? (
+                  {(sesion.ESTADO === "EN_PROCESO" || sesion.ESTADO === "RECHAZADA") ? (
                     <CheckCircle2 className="h-6 w-6 text-green-600 shrink-0" />
                   ) : (
                     <AlertCircle className="h-6 w-6 text-yellow-600 shrink-0" />
@@ -153,7 +156,7 @@ export function FinalizationTab({
             placeholder="Agrega observaciones finales sobre la capacitación, logros, desafíos, recomendaciones..."
             rows={5}
             className="mt-2"
-            disabled={sesion.ESTADO !== "EN_PROCESO"}
+            disabled={!isEditable}
           />
         </div>
 
@@ -162,7 +165,7 @@ export function FinalizationTab({
             <Button
               size="lg"
               className="w-full h-14 text-md sm:text-lg"
-              disabled={!canFinalize || sesion.ESTADO !== "EN_PROCESO"}
+              disabled={!canFinalize || !isEditable}
             >
               <CheckCheck className="h-6 w-6" />
               Finalizar y Enviar a RRHH
@@ -183,7 +186,7 @@ export function FinalizationTab({
           </AlertDialogContent>
         </AlertDialog>
 
-        {!canFinalize && sesion.ESTADO === "EN_PROCESO" && (
+        {!canFinalize && (sesion.ESTADO === "EN_PROCESO" || sesion.ESTADO === "RECHAZADA") && (
           <Card className="border-2 border-yellow-200 bg-yellow-50 dark:bg-yellow-900/20">
             <CardContent className="p-4">
               <div className="flex gap-3">

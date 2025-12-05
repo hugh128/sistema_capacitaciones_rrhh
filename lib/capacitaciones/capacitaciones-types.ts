@@ -10,7 +10,7 @@ export type EstadoCapacitacion =
   | "EN_REVISION"
   | "PARCIALMENTE_COMPLETADA"
   | "FINALIZADA"
-  | "CANCELADA"
+  | "RECHAZADA"
   | "FINALIZADA_CAPACITADOR"
   | "PROGRAMADA"
 
@@ -20,7 +20,7 @@ export type EstadoSesion =
   | "FINALIZADA_CAPACITADOR"
   | "EN_REVISION"
   | "FINALIZADA"
-  | "CANCELADA"
+  | "RECHAZADA"
 
 export type TipoCapacitacion = "TALLER" | "CURSO" | "CHARLA" | "OTRO"
 
@@ -287,7 +287,7 @@ export function getEstadoCapacitacionColor(estado: EstadoCapacitacion): string {
     EN_REVISION: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200",
     PARCIALMENTE_COMPLETADA: "bg-cyan-100 text-cyan-800 dark:bg-cyan-900 dark:text-cyan-200",
     FINALIZADA: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-    CANCELADA: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+    RECHAZADA: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
     PROGRAMADA: "bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200",
   }
   return colors[estado]
@@ -300,7 +300,7 @@ export function getEstadoSesionColor(estado: EstadoSesion): string {
     FINALIZADA_CAPACITADOR: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
     EN_REVISION: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200",
     FINALIZADA: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-    CANCELADA: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+    RECHAZADA: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
   }
   return colors[estado]
 }
@@ -326,7 +326,7 @@ export function getEstadoCapacitacionDescripcion(estado: EstadoCapacitacion): st
     FINALIZADA_CAPACITADOR: "Finalizado por capacitador",
     PARCIALMENTE_COMPLETADA: "Algunas sesiones completadas",
     FINALIZADA: "Proceso completado",
-    CANCELADA: "Cancelada",
+    RECHAZADA: "Rechazada",
   }
   return descripciones[estado]
 }
@@ -338,7 +338,7 @@ export function getEstadoSesionDescripcion(estado: EstadoSesion): string {
     FINALIZADA_CAPACITADOR: "Finalizada - En revisión por RRHH",
     EN_REVISION: "En revisión por RRHH",
     FINALIZADA: "Finalizada y aprobada",
-    CANCELADA: "Cancelada",
+    RECHAZADA: "Rechazada",
   }
   return descripciones[estado]
 }

@@ -45,7 +45,7 @@ export function ParticipantsTab({
 
   const fileInputRefs = useRef<Record<string, HTMLInputElement | null>>({})
 
-  const isEditable = sesion.ESTADO === "EN_PROCESO";
+  const isEditable = sesion.ESTADO === "EN_PROCESO" || sesion.ESTADO === "RECHAZADA";
 
   const handleOpenFileDialog = (tipo: "examen" | "diploma", colaboradorId: number) => {
     const key = `${tipo}-${colaboradorId}`
@@ -273,7 +273,7 @@ export function ParticipantsTab({
                       {sesion.APLICA_EXAMEN && (
                         <TableCell className="text-center">
                           {asistio === true ? (
-                            sesion.ESTADO === "EN_PROCESO" ? (
+                            isEditable ? (
                               editingGradeId === col.ID_COLABORADOR ? (
                                 <Input
                                   type="number"

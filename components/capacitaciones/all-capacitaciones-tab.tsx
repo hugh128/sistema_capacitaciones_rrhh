@@ -102,7 +102,7 @@ export function AllCapacitacionesTab({ capacitaciones }: AllCapacitacionesTabPro
                 <SelectItem value="FINALIZADA_CAPACITADOR">Finalizada Capacitador</SelectItem>
                 <SelectItem value="EN_REVISION">En Revisión</SelectItem>
                 <SelectItem value="FINALIZADA">Finalizada</SelectItem>
-                <SelectItem value="CANCELADA">Cancelada</SelectItem>
+                <SelectItem value="RECHAZADA">Rechazada</SelectItem>
               </SelectContent>
             </Select>
             <Select value={capacitadorFilter} onValueChange={setCapacitadorFilter}>

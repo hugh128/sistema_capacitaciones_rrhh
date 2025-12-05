@@ -8,7 +8,7 @@ export type EstadoCapacitacion =
   | "FINALIZADA_CAPACITADOR"
   | "EN_REVISION"
   | "FINALIZADA"
-  | "CANCELADA"
+  | "RECHAZADA"
   | "PROGRAMADA"
 
 export type TipoCapacitacion = "TALLER" | "CURSO" | "CHARLA" | "OTRO"
@@ -156,6 +156,7 @@ export interface SESION_DETALLE {
   ESTADO_DESCRIPTIVO: string;
   URL_LISTA_ASISTENCIA: string | null;
   OBSERVACIONES: string | null;
+  OBSERVACIONES_RRHH: string | null;
   TIPO_ORIGEN: string;
   NOMBRE_ORIGEN: string;
   DEPARTAMENTO: string | null;
@@ -215,6 +216,8 @@ export interface ColaboradorAsistenciaData {
   observaciones?: string;
   archivoExamen?: File;
   archivoDiploma?: File;
+  urlExamen?: string;
+  urlDiploma?: string;
 }
 
 export interface FileState {
@@ -327,7 +330,7 @@ export function getEstadoColor(estado: EstadoCapacitacion): string {
     FINALIZADA_CAPACITADOR: "bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200",
     EN_REVISION: "bg-indigo-100 text-indigo-800 dark:bg-indigo-900 dark:text-indigo-200",
     FINALIZADA: "bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200",
-    CANCELADA: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
+    RECHAZADA: "bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200",
   }
   return colors[estado]
 }

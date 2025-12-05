@@ -19,7 +19,7 @@ import { ExamTab } from "@/lib/mis-capacitaciones/exam-tab"
 import { RequirePermission } from "@/components/RequirePermission"
 import { useCapacitaciones } from "@/hooks/useCapacitaciones"
 import { AppHeader } from "@/components/app-header"
-import { Toaster } from "react-hot-toast"
+import toast, { Toaster } from "react-hot-toast"
 
 export default function TrainerCapacitacionDetailPage() {
   const { user } = useAuth()
@@ -150,67 +150,96 @@ export default function TrainerCapacitacionDetailPage() {
   }, [colaboradoresAsignados, asistenciaState, examenesParticipantsState, diplomasParticipantsState])
 
   const canFinalize = useMemo(() => {
-    if (!sesion) return false
-    if (sesion.ESTADO !== "EN_PROCESO") return false
+    if (!sesion) return false;
+    if (!["EN_PROCESO", "RECHAZADA"].includes(sesion.ESTADO)) {
+      return false;
+    }
 
-    const allAttendanceMarked = colaboradoresAsignados.every((c) => asistenciaState[c.ID_COLABORADOR] !== undefined);
+    const allAttendanceMarked = colaboradoresAsignados.every((c) => 
+      asistenciaState[c.ID_COLABORADOR] !== undefined
+    );
     if (!allAttendanceMarked) return false;
 
-    if (!listaAsistenciaFile) return false;
+    if (!listaAsistenciaFile && !sesion.URL_LISTA_ASISTENCIA) return false;
 
-    const attendees = colaboradoresAsignados.filter((c) => asistenciaState[c.ID_COLABORADOR] === true);
+    const attendees = colaboradoresAsignados.filter((c) => 
+      asistenciaState[c.ID_COLABORADOR] === true
+    );
 
     if (sesion.APLICA_EXAMEN) {
-      const allGradesEntered = attendees.every((c) => notasState[c.ID_COLABORADOR] !== null && notasState[c.ID_COLABORADOR] !== undefined);
+      const allGradesEntered = attendees.every((c) => 
+        notasState[c.ID_COLABORADOR] !== null && 
+        notasState[c.ID_COLABORADOR] !== undefined
+      );
       if (!allGradesEntered) return false;
 
-      const allExamsUploaded = attendees.every((c) => examenesParticipantsState[c.ID_COLABORADOR]);
+      const allExamsUploaded = attendees.every((c) => 
+        examenesParticipantsState[c.ID_COLABORADOR]
+      );
       if (!allExamsUploaded) return false;
     }
     
     if (sesion.APLICA_DIPLOMA) {
-      const allDiplomasUploaded = attendees.every((c) => diplomasParticipantsState[c.ID_COLABORADOR]);
+      const allDiplomasUploaded = attendees.every((c) => 
+        diplomasParticipantsState[c.ID_COLABORADOR]
+      );
       if (!allDiplomasUploaded) return false;
     }
 
-    return true
-  }, [sesion, colaboradoresAsignados, asistenciaState, notasState, examenesParticipantsState, diplomasParticipantsState, listaAsistenciaFile]);
+    return true;
+  }, [sesion, colaboradoresAsignados, asistenciaState, notasState, 
+      examenesParticipantsState, diplomasParticipantsState, listaAsistenciaFile]);
 
   const getFinalizationError = useCallback(() => {
-    if (!sesion || sesion.ESTADO !== "EN_PROCESO") return null;
+    if (!sesion) return null;
+    if (!["EN_PROCESO", "RECHAZADA"].includes(sesion.ESTADO)) {
+      return "La sesión no está en un estado que permita finalización.";
+    }
 
-    const allAttendanceMarked = colaboradoresAsignados.every((c) => asistenciaState[c.ID_COLABORADOR] !== undefined);
+    const allAttendanceMarked = colaboradoresAsignados.every((c) => 
+      asistenciaState[c.ID_COLABORADOR] !== undefined
+    );
     if (!allAttendanceMarked) {
       return "La asistencia no está marcada para todos los colaboradores.";
     }
 
-    if (!listaAsistenciaFile) {
+    if (!listaAsistenciaFile && !sesion.URL_LISTA_ASISTENCIA) {
       return "Falta subir el archivo de Lista de Asistencia de la Sesión.";
     }
 
-    const attendees = colaboradoresAsignados.filter((c) => asistenciaState[c.ID_COLABORADOR] === true);
+    const attendees = colaboradoresAsignados.filter((c) => 
+      asistenciaState[c.ID_COLABORADOR] === true
+    );
 
     if (sesion.APLICA_EXAMEN) {
-      const allGradesEntered = attendees.every((c) => notasState[c.ID_COLABORADOR] !== null && notasState[c.ID_COLABORADOR] !== undefined);
+      const allGradesEntered = attendees.every((c) => 
+        notasState[c.ID_COLABORADOR] !== null && 
+        notasState[c.ID_COLABORADOR] !== undefined
+      );
       if (!allGradesEntered) {
         return "Faltan notas por ingresar para algunos asistentes.";
       }
 
-      const allExamsUploaded = attendees.every((c) => examenesParticipantsState[c.ID_COLABORADOR]);
+      const allExamsUploaded = attendees.every((c) => 
+        examenesParticipantsState[c.ID_COLABORADOR]
+      );
       if (!allExamsUploaded) {
         return "Faltan archivos de Examen por subir.";
       }
     }
     
     if (sesion.APLICA_DIPLOMA) {
-      const allDiplomasUploaded = attendees.every((c) => diplomasParticipantsState[c.ID_COLABORADOR]);
+      const allDiplomasUploaded = attendees.every((c) => 
+        diplomasParticipantsState[c.ID_COLABORADOR]
+      );
       if (!allDiplomasUploaded) {
         return "Faltan archivos de Diploma por subir.";
       }
     }
 
     return null;
-  }, [sesion, colaboradoresAsignados, asistenciaState, notasState, examenesParticipantsState, diplomasParticipantsState, listaAsistenciaFile]);
+  }, [sesion, colaboradoresAsignados, asistenciaState, notasState, 
+      examenesParticipantsState, diplomasParticipantsState, listaAsistenciaFile]);
 
   const handleToggleAsistencia = useCallback((colaboradorId: number, currentValue: boolean | undefined) => {
     const newValue = currentValue === true ? false : true
@@ -260,13 +289,21 @@ export default function TrainerCapacitacionDetailPage() {
 
   const handleFinalizar = async () => {
     const error = getFinalizationError();
+
+    if (!sesion) return
+
     if (error) {
       console.error("No se puede finalizar la sesión:", error);
       return;
     }
 
-    if (!user?.PERSONA_ID || !sesionId || !listaAsistenciaFile) {
+    if (!user?.PERSONA_ID || !sesionId) {
       console.error("No se puede finalizar la sesión por datos incompletos.");
+      return;
+    }
+
+    if (!listaAsistenciaFile && !sesion.URL_LISTA_ASISTENCIA) {
+      console.error("No hay archivo de lista de asistencia.");
       return;
     }
 
@@ -274,7 +311,6 @@ export default function TrainerCapacitacionDetailPage() {
       .filter((col) => asistenciaState[col.ID_COLABORADOR] === true)
       .map((col) => {
         const idColaborador = col.ID_COLABORADOR;
-
         return {
           idColaborador: idColaborador,
           asistio: asistenciaState[idColaborador] === true, 
@@ -282,17 +318,26 @@ export default function TrainerCapacitacionDetailPage() {
           observaciones: observacionesFinales,
           archivoExamen: examenesFileState[idColaborador] || undefined,
           archivoDiploma: diplomasFileState[idColaborador] || undefined,
+          urlExamen: col.URL_EXAMEN || undefined,
+          urlDiploma: col.URL_DIPLOMA || undefined,
         } as ColaboradorAsistenciaData;
       });
 
     try {
       await registrarAsistenciaMasiva(sesionId, colaboradoresParaAPI);
-      await finalizarSesionCapacitador(sesionId, user.PERSONA_ID, observacionesFinales, listaAsistenciaFile)
-      router.push("/mis-capacitaciones")
+      
+      await finalizarSesionCapacitador(
+        sesionId, 
+        user.PERSONA_ID, 
+        observacionesFinales, 
+        listaAsistenciaFile
+      );
+      
+      router.push("/mis-capacitaciones");
     } catch (error) {
-      console.error("Error al finalizar la sesión:", error)
+      console.error("Error al finalizar la sesión:", error);
     }
-  }
+  };
 
   const handleChangeEstado = async (idSesion: number, idCapacitador: number, observaciones: null | string) => {
     try {

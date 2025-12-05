@@ -22,6 +22,10 @@ import {
   TrendingUp,
   AlertTriangle,
   RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+  ChevronsLeft,
+  ChevronsRight,
 } from "lucide-react"
 import Link from "next/link"
 import { CapacitacionSesion, getEstadoColor } from "@/lib/mis-capacitaciones/capacitaciones-types"
@@ -38,6 +42,9 @@ export default function MisCapacitacionesPage() {
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
+  
+  const [currentPage, setCurrentPage] = useState(1)
+  const [itemsPerPage, setItemsPerPage] = useState(10)
 
   const {
     obtenerCapacitacionesPorCapacitador,
@@ -103,6 +110,28 @@ export default function MisCapacitacionesPage() {
     })
   }, [misCapacitaciones, searchTerm, estadoFilter, tipoFilter])
 
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [searchTerm, estadoFilter, tipoFilter])
+
+  const paginationData = useMemo(() => {
+    const totalItems = capacitacionesFiltradas.length
+    const totalPages = Math.ceil(totalItems / itemsPerPage)
+    const startIndex = (currentPage - 1) * itemsPerPage
+    const endIndex = startIndex + itemsPerPage
+    const currentItems = capacitacionesFiltradas.slice(startIndex, endIndex)
+    
+    return {
+      totalItems,
+      totalPages,
+      startIndex,
+      endIndex,
+      currentItems,
+      showingFrom: totalItems === 0 ? 0 : startIndex + 1,
+      showingTo: Math.min(endIndex, totalItems)
+    }
+  }, [capacitacionesFiltradas, currentPage, itemsPerPage])
+
   const metrics = useMemo(() => {
     const defaultMetrics = { total: 0, pendientes: 0, enProceso: 0, finalizadasEsteMes: 0 }
     
@@ -159,6 +188,15 @@ export default function MisCapacitacionesPage() {
       return []
     }
   }, [misCapacitaciones])
+
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, paginationData.totalPages)))
+  }
+
+  const goToFirstPage = () => goToPage(1)
+  const goToLastPage = () => goToPage(paginationData.totalPages)
+  const goToPreviousPage = () => goToPage(currentPage - 1)
+  const goToNextPage = () => goToPage(currentPage + 1)
 
   if (isLoading) {
     return (
@@ -389,8 +427,9 @@ export default function MisCapacitacionesPage() {
                       <SelectItem value="TODOS">Todos los estados</SelectItem>
                       <SelectItem value="PROGRAMADA">Programada</SelectItem>
                       <SelectItem value="EN_PROCESO">En Proceso</SelectItem>
-                      <SelectItem value="FINALIZADA_CAPACITADOR">Finalizada</SelectItem>
-                      <SelectItem value="EN_REVISION">En Revisión</SelectItem>
+                      <SelectItem value="FINALIZADA">Finalizada</SelectItem>
+                      <SelectItem value="FINALIZADA_CAPACITADOR">En Revisión</SelectItem>
+                      <SelectItem value="RECHAZADA">Rechazada</SelectItem>
                     </SelectContent>
                   </Select>
                   <Select value={tipoFilter} onValueChange={setTipoFilter}>
@@ -407,8 +446,38 @@ export default function MisCapacitacionesPage() {
                   </Select>
                 </div>
 
+                {paginationData.totalItems > 0 && (
+                  <div className="flex flex-col sm:flex-row justify-between items-center gap-4 py-2 border-y">
+                    <div className="text-sm text-muted-foreground">
+                      Mostrando <span className="font-semibold text-foreground">{paginationData.showingFrom}</span> a{" "}
+                      <span className="font-semibold text-foreground">{paginationData.showingTo}</span> de{" "}
+                      <span className="font-semibold text-foreground">{paginationData.totalItems}</span> capacitaciones
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground whitespace-nowrap">Items por página:</span>
+                      <Select 
+                        value={itemsPerPage.toString()} 
+                        onValueChange={(value) => {
+                          setItemsPerPage(Number(value))
+                          setCurrentPage(1)
+                        }}
+                      >
+                        <SelectTrigger className="w-20 h-9">
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="5">5</SelectItem>
+                          <SelectItem value="10">10</SelectItem>
+                          <SelectItem value="20">20</SelectItem>
+                          <SelectItem value="50">50</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                )}
+
                 <div className="space-y-4">
-                  {capacitacionesFiltradas.length === 0 ? (
+                  {paginationData.totalItems === 0 ? (
                     <div className="text-center py-16 text-muted-foreground">
                       <div className="h-20 w-20 rounded-full bg-muted mx-auto mb-4 flex items-center justify-center">
                         <BookOpen className="h-10 w-10 opacity-50" />
@@ -421,7 +490,7 @@ export default function MisCapacitacionesPage() {
                       </p>
                     </div>
                   ) : (
-                    capacitacionesFiltradas.map((cap) => (
+                    paginationData.currentItems.map((cap) => (
                       <Card
                         key={cap.ID_SESION}
                         className="hover:shadow-lg transition-all border-2 hover:border-primary/50 dark:hover:border-primary group"
@@ -481,6 +550,83 @@ export default function MisCapacitacionesPage() {
                     ))
                   )}
                 </div>
+
+                {paginationData.totalItems > 0 && (
+                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t">
+                    <div className="text-sm text-muted-foreground">
+                      Página <span className="font-semibold text-foreground">{currentPage}</span> de{" "}
+                      <span className="font-semibold text-foreground">{paginationData.totalPages}</span>
+                    </div>
+                    
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={goToFirstPage}
+                        disabled={currentPage === 1}
+                        className="h-9 w-9"
+                      >
+                        <ChevronsLeft className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={goToPreviousPage}
+                        disabled={currentPage === 1}
+                        className="h-9 w-9"
+                      >
+                        <ChevronLeft className="h-4 w-4" />
+                      </Button>
+                      
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: Math.min(5, paginationData.totalPages) }, (_, i) => {
+                          let pageNumber: number
+                          
+                          if (paginationData.totalPages <= 5) {
+                            pageNumber = i + 1
+                          } else if (currentPage <= 3) {
+                            pageNumber = i + 1
+                          } else if (currentPage >= paginationData.totalPages - 2) {
+                            pageNumber = paginationData.totalPages - 4 + i
+                          } else {
+                            pageNumber = currentPage - 2 + i
+                          }
+                          
+                          return (
+                            <Button
+                              key={pageNumber}
+                              variant={currentPage === pageNumber ? "default" : "outline"}
+                              size="icon"
+                              onClick={() => goToPage(pageNumber)}
+                              className="h-9 w-9"
+                            >
+                              {pageNumber}
+                            </Button>
+                          )
+                        })}
+                      </div>
+                      
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={goToNextPage}
+                        disabled={currentPage === paginationData.totalPages}
+                        className="h-9 w-9"
+                      >
+                        <ChevronRight className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={goToLastPage}
+                        disabled={currentPage === paginationData.totalPages}
+                        className="h-9 w-9"
+                      >
+                        <ChevronsRight className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </main>

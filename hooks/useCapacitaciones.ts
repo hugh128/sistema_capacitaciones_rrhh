@@ -237,38 +237,37 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     idSesion: number,
     idCapacitador: number,
     observaciones: string | null,
-    file: File
+    file: File | null
   ) => {  
     if (!userId) {
       toast.error("Usuario no autenticado.");
       return;
     }
-
-    if (!file) {
-      toast.error("Debes seleccionar un archivo PDF antes de finalizar la sesión.");
-      return;
-    }
-
-    if (file.type !== "application/pdf") {
+    
+    if (file && file.type !== "application/pdf") {
       toast.error("El archivo debe ser un PDF válido.");
       return;
     }
-
+    
     setIsMutating(true);
     setError(null);
-    let successMessage = "";
-
+    
     const formData = new FormData();
     formData.append('idCapacitador', idCapacitador.toString());
     formData.append('observaciones', observaciones || '');
-    formData.append('listaAsistencia', file);
-
+    
+    if (file) {
+      formData.append('listaAsistencia', file);
+    }
+    
     try {
       await apiClient.put(`/capacitaciones/${idSesion}/sesion/finalizar`, formData);
-      successMessage = "Sesion finalizada exitosamente.";
+      const successMessage = file 
+        ? "Sesión finalizada exitosamente con nuevo archivo."
+        : "Sesión finalizada exitosamente con archivo existente.";
       toast.success(successMessage);
     } catch (err) {
-      const baseMessage = "Error al finalizar sesion.";
+      const baseMessage = "Error al finalizar sesión.";
       setError(baseMessage);
       handleApiError(err, baseMessage);
     } finally {
@@ -284,24 +283,25 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
       toast.error("Usuario no autenticado.");
       return;
     }
-
+    
     setIsMutating(true);
     setError(null);
-    let successMessage = "";
-
+    
     const formData = new FormData();
-
+    
     const colaboradoresDataJson = colaboradores.map(colab => {
       return {
         idColaborador: colab.idColaborador,
         asistio: colab.asistio,
         notaObtenida: colab.notaObtenida,
         observaciones: colab.observaciones,
+        urlExamen: colab.urlExamen || undefined,
+        urlDiploma: colab.urlDiploma || undefined,
       };
     });
-
+    
     formData.append('colaboradores', JSON.stringify(colaboradoresDataJson));
-
+    
     colaboradores.forEach(colab => {
       if (colab.archivoExamen instanceof File) {
         formData.append(`examen_${colab.idColaborador}`, colab.archivoExamen);
@@ -310,17 +310,16 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
         formData.append(`diploma_${colab.idColaborador}`, colab.archivoDiploma);
       }
     });
-
+    
     try {
       const response = await apiClient.post(`/capacitaciones/${idSesion}/asistencias/masivo`, formData, {
         headers: {},
       });
       
-      successMessage = "Asistencias y documentos registrados exitosamente.";
-      toast.success(successMessage);
+      toast.success("Asistencias y documentos registrados exitosamente.");
       return response.data;
     } catch (err) {
-      const baseMessage = "Error al finalizar sesion.";
+      const baseMessage = "Error al registrar asistencias.";
       setError(baseMessage);
       handleApiError(err, baseMessage);
     } finally {
@@ -690,6 +689,31 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     }
   }, [userId]);
 
+  const devolverSesion = useCallback(async (idSesion: number, usuario: string, observaciones: string) => {  
+    if (!userId) {
+      toast.error("Usuario no autenticado.");
+      return;
+    }
+
+    setIsMutating(true);
+    setError(null);
+    let successMessage = "";
+
+    const payload = { idSesion, usuario, observaciones }
+
+    try {
+      await apiClient.put(`/capacitaciones/${idSesion}/sesion/devolver`, payload);
+      successMessage = "Sesion devuelta exitosamente.";
+      toast.success(successMessage);
+    } catch (err) {
+      const baseMessage = "Error al devolver sesion.";
+      setError(baseMessage);
+      handleApiError(err, baseMessage);
+    } finally {
+      setIsMutating(false);
+    }
+  }, [userId]);
+
   useEffect(() => {
     if (userId) {
       obtenerCapacitaciones();
@@ -722,7 +746,8 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     obtenerPlantillaExamen,
     guardarPlantillaExamen,
     generarExamenPDF,
-    generarExamenIndividualPDF
+    generarExamenIndividualPDF,
+    devolverSesion,
   }), [
     capacitaciones,
     loading,
@@ -749,6 +774,7 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     obtenerPlantillaExamen,
     guardarPlantillaExamen,
     generarExamenPDF,
-    generarExamenIndividualPDF
+    generarExamenIndividualPDF,
+    devolverSesion
   ]);
 }
