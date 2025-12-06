@@ -39,6 +39,7 @@ export function AllCapacitacionesTab({ capacitaciones }: AllCapacitacionesTabPro
   const capacitacionesFiltradas = useMemo(() => {
     return capacitaciones.filter((cap) => {
       const matchesSearch =
+        cap.CAPACITADOR_NOMBRE?.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
         cap.CAPACITACION_NOMBRE.toLowerCase().includes(debouncedSearchTerm.toLowerCase()) ||
         cap.CODIGO_DOCUMENTO?.toLowerCase().includes(debouncedSearchTerm.toLowerCase())
       const matchesEstado = estadoFilter === "TODOS" || (cap.ESTADO_SESION ?? cap.ESTADO) === estadoFilter

@@ -157,6 +157,7 @@ export interface SESION_DETALLE {
   URL_LISTA_ASISTENCIA: string | null;
   OBSERVACIONES: string | null;
   OBSERVACIONES_RRHH: string | null;
+  OBSERVACIONES_SESION: string | null;
   TIPO_ORIGEN: string;
   NOMBRE_ORIGEN: string;
   DEPARTAMENTO: string | null;

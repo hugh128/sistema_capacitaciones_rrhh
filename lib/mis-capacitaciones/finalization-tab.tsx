@@ -23,9 +23,13 @@ interface FinalizationTabProps {
   stats: {
     total: number
     asistencias: number
+    asistenciasRegistradas: number
     examenes: number
     diplomas: number
     pendientes: number
+    notasIngresadas: number
+    diplomasRequeridos: number
+    listaAsistenciaSubida: boolean
   }
   canFinalize: boolean
   observacionesFinales: string
@@ -64,10 +68,17 @@ export function FinalizationTab({
             <Card className="border-2 border-green-200 bg-green-50 dark:bg-green-950/20">
               <CardContent className="p-6 text-center">
                 <CheckCircle2 className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                <div className="text-4xl font-bold text-green-600 mb-1">{stats.asistencias}</div>
+                <div className="text-4xl font-bold text-green-600 mb-1">
+                  {stats.asistenciasRegistradas}
+                </div>
                 <p className="text-sm font-medium text-muted-foreground">Asistencias Registradas</p>
-                {stats.asistencias < stats.total && (
-                  <p className="text-xs text-destructive mt-1">Faltan {stats.total - stats.asistencias}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  ({stats.asistencias} asistieron, {stats.asistenciasRegistradas - stats.asistencias} no asistieron)
+                </p>
+                {stats.asistenciasRegistradas < stats.total && (
+                  <p className="text-xs text-destructive mt-1">
+                    Faltan {stats.total - stats.asistenciasRegistradas} por marcar
+                  </p>
                 )}
               </CardContent>
             </Card>
@@ -111,13 +122,27 @@ export function FinalizationTab({
           <CardContent>
             <div className="space-y-3">
               <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                {stats.asistencias === stats.total ? (
+                {stats.asistenciasRegistradas === stats.total ? (
                   <CheckCircle2 className="h-6 w-6 text-green-600 shrink-0" />
                 ) : (
                   <AlertCircle className="h-6 w-6 text-yellow-600 shrink-0" />
                 )}
-                <span className="font-medium">Todas las asistencias registradas</span>
+                <span className="font-medium">
+                  Todas las asistencias registradas ({stats.asistenciasRegistradas}/{stats.total})
+                </span>
               </div>
+
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                {(sesion.URL_LISTA_ASISTENCIA || stats.listaAsistenciaSubida) ? (
+                  <CheckCircle2 className="h-6 w-6 text-green-600 shrink-0" />
+                ) : (
+                  <AlertCircle className="h-6 w-6 text-yellow-600 shrink-0" />
+                )}
+                <span className="font-medium">
+                  Lista de asistencia subida
+                </span>
+              </div>
+
               {sesion.APLICA_EXAMEN && (
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
                   {stats.examenes === stats.asistencias ? (
@@ -125,25 +150,46 @@ export function FinalizationTab({
                   ) : (
                     <AlertCircle className="h-6 w-6 text-yellow-600 shrink-0" />
                   )}
-                  <span className="font-medium">Todos los exámenes subidos</span>
+                  <span className="font-medium">
+                    Todos los exámenes subidos ({stats.examenes}/{stats.asistencias})
+                  </span>
                 </div>
               )}
-              {sesion.APLICA_DIPLOMA && (
+
+              {sesion.APLICA_EXAMEN && (
                 <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                  <CheckCircle2 className="h-6 w-6 text-green-600 shrink-0" />
-                  <span className="font-medium">Diplomas para aprobados</span>
-                </div>
-              )}
-              {sesion.ESTADO && (
-                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
-                  {(sesion.ESTADO === "EN_PROCESO" || sesion.ESTADO === "RECHAZADA") ? (
+                  {stats.notasIngresadas === stats.asistencias ? (
                     <CheckCircle2 className="h-6 w-6 text-green-600 shrink-0" />
                   ) : (
                     <AlertCircle className="h-6 w-6 text-yellow-600 shrink-0" />
                   )}
-                  <span className="font-medium">Sesion en proceso</span>
+                  <span className="font-medium">
+                    Todas las notas ingresadas ({stats.notasIngresadas}/{stats.asistencias})
+                  </span>
                 </div>
               )}
+
+              {sesion.APLICA_DIPLOMA && (
+                <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                  {stats.diplomas === stats.diplomasRequeridos ? (
+                    <CheckCircle2 className="h-6 w-6 text-green-600 shrink-0" />
+                  ) : (
+                    <AlertCircle className="h-6 w-6 text-yellow-600 shrink-0" />
+                  )}
+                  <span className="font-medium">
+                    Diplomas para aprobados ({stats.diplomas}/{stats.diplomasRequeridos})
+                  </span>
+                </div>
+              )}
+
+              <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50">
+                {(sesion.ESTADO === "EN_PROCESO" || sesion.ESTADO === "RECHAZADA") ? (
+                  <CheckCircle2 className="h-6 w-6 text-green-600 shrink-0" />
+                ) : (
+                  <AlertCircle className="h-6 w-6 text-yellow-600 shrink-0" />
+                )}
+                <span className="font-medium">Sesión en proceso</span>
+              </div>
             </div>
           </CardContent>
         </Card>

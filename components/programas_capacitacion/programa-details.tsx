@@ -19,6 +19,7 @@ import type {
 } from "@/lib/programas_capacitacion/types"
 import type { Departamento, Puesto } from "@/lib/types"
 import { apiClient } from "@/lib/api-client"
+import toast from "react-hot-toast"
 
 interface ProgramaDetailsProps {
   programa: ProgramaCapacitacion
@@ -58,7 +59,7 @@ export function ProgramaDetails({ programa, departamentos, puestos, onEdit, onBa
       const { data } = await apiClient.get<ProgramaDetalle[]>(`/programa-detalle/${programa.ID_PROGRAMA}`);
       setDetalles(data);
     } catch (err) {
-      console.log("Error al cargar el detalle del plan:", err);
+      toast.error(`Error al cargar el detalle del plan: ${err}`);
     }
   }, [programa.ID_PROGRAMA]);
 

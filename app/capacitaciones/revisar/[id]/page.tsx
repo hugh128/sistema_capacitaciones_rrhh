@@ -38,6 +38,7 @@ import { getEstadoCapacitacionColor, getEstadoColaboradorColor } from "@/lib/cap
 import { RequirePermission } from "@/components/RequirePermission"
 import { useCapacitaciones } from "@/hooks/useCapacitaciones"
 import { COLABORADORES_SESION, EstadoColaborador, SESION_DETALLE } from "@/lib/mis-capacitaciones/capacitaciones-types"
+import toast from "react-hot-toast"
 
 export default function RevisarCapacitacionPage() {
   const { user } = useAuth()
@@ -275,7 +276,7 @@ export default function RevisarCapacitacionPage() {
     if (!user) return;
 
     if (!canApprove) {
-      console.log("No se puede aprobar. Hay validaciones pendientes.");
+      toast.error("No se puede aprobar. Hay validaciones pendientes.");
       return;
     }
 
@@ -785,13 +786,13 @@ export default function RevisarCapacitacionPage() {
               </CardContent>
             </Card>
 
-            {sesion.OBSERVACIONES && (
-              <Card>
+            {sesion.OBSERVACIONES_SESION && (
+              <Card className="gap-2">
                 <CardHeader>
                   <CardTitle>Observaciones del Capacitador</CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <p className="text-muted-foreground">{sesion.OBSERVACIONES}</p>
+                  <p className="text-muted-foreground text-sm">{sesion.OBSERVACIONES_SESION}</p>
                 </CardContent>
               </Card>
             )}

@@ -338,13 +338,13 @@ export function DocumentsTab({
                   </div>
 
                   <div className="flex gap-3 justify-center flex-wrap">
-                    {isFileUploaded && (
+                    {displayedFileUrl && (
                       <Button
                         variant="outline"
                         size="sm"
                         onClick={handleDownload}
                         disabled={loadingDownload}
-                        className="dark:text-foreground dark:hover:border-amber-700"
+                        className="dark:text-foreground dark:hover:border-amber-700 cursor-pointer"
                       >
                         <Eye className="w-4 h-4 mr-2" />
                         {loadingDownload ? "Generando enlace..." : "Ver Documento"}
@@ -357,7 +357,7 @@ export function DocumentsTab({
                           <Button variant="secondary" size="sm" asChild>
                             <span>
                               <Upload className="w-4 h-4 mr-2" />
-                              {isFileUploaded ? 'Reemplazar' : 'Cambiar Archivo'}
+                              {listaAsistenciaFile ? 'Cambiar Archivo' : (isFileUploaded ? 'Reemplazar' : 'Subir')}
                             </span>
                           </Button>
                           <input
@@ -374,17 +374,25 @@ export function DocumentsTab({
                           />
                         </label>
 
-                        <Button 
-                          variant="destructive" 
-                          size="sm" 
-                          onClick={onDeleteAttendance}
-                          title={isFileUploaded ? "Borrar documento del servidor" : "Borrar selección local"}
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                        {(listaAsistenciaFile || (isFileUploaded && sesion?.URL_LISTA_ASISTENCIA)) && (
+                          <Button 
+                            variant="destructive" 
+                            size="sm" 
+                            onClick={onDeleteAttendance}
+                            className="cursor-pointer"
+                            title={
+                              listaAsistenciaFile 
+                                ? "Cancelar selección y volver al archivo del servidor" 
+                                : "Quitar archivo actual (deberás subir uno nuevo)"
+                            }
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
                       </>
                     )}
                   </div>
+
                 </div>
               ) : (
                 <div className="space-y-4">

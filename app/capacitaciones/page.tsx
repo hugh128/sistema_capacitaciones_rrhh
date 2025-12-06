@@ -122,9 +122,9 @@ export default function GestionCapacitacionesPage() {
 
             <Tabs defaultValue="pendientes" className="w-full">
               <TabsList className="flex flex-wrap w-full gap-1 p-1 h-auto">
-                <TabsTrigger value="pendientes" className="flex-1 text-sm whitespace-nowrap">Pendientes de Asignar ({pendientesAsignacion.length})</TabsTrigger>
-                <TabsTrigger value="revision" className="flex-1 text-sm whitespace-nowrap">Pendientes de Revisión ({pendientesRevision.length})</TabsTrigger>
-                <TabsTrigger value="todas" className="flex-1 text-sm whitespace-nowrap">Todas las Capacitaciones ({capacitaciones.length})</TabsTrigger>
+                <TabsTrigger value="pendientes" className="flex-1 text-sm whitespace-nowrap cursor-pointer">Pendientes de Asignar ({pendientesAsignacion.length})</TabsTrigger>
+                <TabsTrigger value="revision" className="flex-1 text-sm whitespace-nowrap cursor-pointer">Pendientes de Revisión ({pendientesRevision.length})</TabsTrigger>
+                <TabsTrigger value="todas" className="flex-1 text-sm whitespace-nowrap cursor-pointer">Todas las Capacitaciones ({capacitaciones.length})</TabsTrigger>
               </TabsList>
 
               <TabsContent value="pendientes">

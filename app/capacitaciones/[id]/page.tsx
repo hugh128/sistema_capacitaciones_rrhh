@@ -202,7 +202,7 @@ export default function CapacitacionDetailPage() {
                     value={sesion.TIPO_CAPACITACION} 
                   />
                   <InfoItem 
-                    label="Departamento" 
+                    label="Departamento"
                     value={sesion.DEPARTAMENTO ?? "N/A"} 
                   />
                   <InfoItem 
