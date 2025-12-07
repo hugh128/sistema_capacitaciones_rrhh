@@ -93,7 +93,7 @@ export const ResumenCapacitacion = memo(function ResumenCapacitacion({
           </div>
         )}
 
-        <Button onClick={onAsignar} className="w-full" size="lg">
+        <Button onClick={onAsignar} className="w-full cursor-pointer" size="lg">
           <UserPlus className="h-4 w-4 mr-2" />
           Asignar Capacitación
         </Button>

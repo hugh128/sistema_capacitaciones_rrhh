@@ -1,6 +1,6 @@
 import { apiClient } from "@/lib/api-client";
 import { UsuarioLogin } from "@/lib/auth";
-import type { ApiCapacitacionSesion, CrearSesionAsignarColaboradores } from "@/lib/capacitaciones/capacitaciones-types";
+import type { ApiCapacitacionSesion, CrearSesionAsignarColaboradores, EditarSesion } from "@/lib/capacitaciones/capacitaciones-types";
 import type { ColaboradorAsistenciaData, ExamenCompleto, ListadoAsistencia, Serie } from "@/lib/mis-capacitaciones/capacitaciones-types";
 import { handleApiError } from "@/utils/error-handler";
 import { useCallback, useEffect, useState, useRef, useMemo } from "react";
@@ -714,6 +714,29 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     }
   }, [userId]);
 
+  const editarSesion = useCallback(async (payload: EditarSesion) => {
+    if (!userId) {
+      toast.error("Usuario no autenticado.");
+      return { success: false };
+    }
+
+    setIsMutating(true);
+    setError(null);
+
+    try {
+      const response = await apiClient.put('/capacitaciones/editar/sesion', payload);
+      toast.success("Sesión editada exitosamente.");
+      return { success: true, data: response.data };
+    } catch (err) {
+      const baseMessage = "Error al editar sesión.";
+      setError(baseMessage);
+      handleApiError(err, baseMessage);
+      return { success: false };
+    } finally {
+      setIsMutating(false);
+    }
+  }, [userId]);
+
   useEffect(() => {
     if (userId) {
       obtenerCapacitaciones();
@@ -748,6 +771,7 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     generarExamenPDF,
     generarExamenIndividualPDF,
     devolverSesion,
+    editarSesion,
   }), [
     capacitaciones,
     loading,
@@ -775,6 +799,7 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     guardarPlantillaExamen,
     generarExamenPDF,
     generarExamenIndividualPDF,
-    devolverSesion
+    devolverSesion,
+    editarSesion
   ]);
 }

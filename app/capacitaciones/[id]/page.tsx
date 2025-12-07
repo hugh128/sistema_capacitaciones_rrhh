@@ -141,6 +141,12 @@ export default function CapacitacionDetailPage() {
           <Button className="w-full sm:w-auto">Ir a Revisión</Button>
         </Link>
       )
+    } else if (sesion.ESTADO === "PROGRAMADA") {
+      return (
+        <Link href={`/capacitaciones/editar/${sesionId}`}>
+          <Button className="w-full sm:w-auto cursor-pointer">Ir a Edición</Button>
+        </Link>
+      )
     }
     return null
   }
@@ -178,6 +184,7 @@ export default function CapacitacionDetailPage() {
                 </div>
               </div>
               <div className="w-full sm:w-auto">{getNavigationButtons()}</div>
+
             </div>
 
             <Card>

@@ -97,7 +97,7 @@ export function AllCapacitacionesTab({ capacitaciones }: AllCapacitacionesTabPro
               <SelectContent>
                 <SelectItem value="TODOS">Todos los estados</SelectItem>
                 <SelectItem value="PENDIENTE_ASIGNACION">Pendiente Asignación</SelectItem>
-                <SelectItem value="ASIGNADA">Asignada</SelectItem>
+                {/* <SelectItem value="ASIGNADA">Asignada</SelectItem> */}
                 <SelectItem value="PROGRAMADA">Programada</SelectItem>
                 <SelectItem value="EN_PROCESO">En Proceso</SelectItem>
                 <SelectItem value="FINALIZADA_CAPACITADOR">Finalizada Capacitador</SelectItem>

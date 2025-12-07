@@ -19,7 +19,7 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import type { Colaborador } from "@/lib/colaboradores/type"
-import { useEffect, useMemo, useRef, useState } from "react"
+import { useEffect, useMemo, useRef, useState, useCallback } from "react"
 import { useDebounce } from "@/hooks/useDebounde"
 import { getProgressColor, getStatusColor } from "@/lib/colaboradores/type"
 
@@ -38,28 +38,28 @@ export default function CollaboratorsList({
 }: CollaboratorsListProps) {
   const [currentPage, setCurrentPage] = useState(1)
   const [rowsPerPage, setRowsPerPage] = useState(10)
-
   const [localSearchQuery, setLocalSearchQuery] = useState("") 
   
   const debouncedSearchQuery = useDebounce(localSearchQuery, 300)
+  const isFirstRender = useRef(true)
+
+  const searchLower = useMemo(() => debouncedSearchQuery.toLowerCase(), [debouncedSearchQuery])
 
   const filteredCollaborators = useMemo(() => {
+    if (!colaboradores || colaboradores.length === 0) return []
+
     return colaboradores.filter((collab) => {
-      const currentSearch = debouncedSearchQuery.toLowerCase()
+      const matchesSearch = !searchLower || 
+        collab.NOMBRE_COMPLETO.toLowerCase().includes(searchLower) ||
+        collab.EMAIL.toLowerCase().includes(searchLower) ||
+        (collab.PUESTO && collab.PUESTO.toLowerCase().includes(searchLower))
 
-      const matchesSearch =
-        collab.NOMBRE_COMPLETO.toLowerCase().includes(currentSearch) ||
-        collab.EMAIL.toLowerCase().includes(currentSearch) ||
-        (collab.PUESTO && collab.PUESTO.toLowerCase().includes(currentSearch)) 
-
-      const matchesStatus =
-        filterStatus === "all"
-          ? true
-          : collab.ESTADO.toLowerCase() === filterStatus
+      const matchesStatus = filterStatus === "all" || 
+        collab.ESTADO.toLowerCase() === filterStatus
 
       return matchesSearch && matchesStatus
     })
-  }, [colaboradores, debouncedSearchQuery, filterStatus])
+  }, [colaboradores, searchLower, filterStatus])
 
   const totalPages = Math.max(1, Math.ceil(filteredCollaborators.length / rowsPerPage))
 
@@ -69,20 +69,18 @@ export default function CollaboratorsList({
     return filteredCollaborators.slice(start, end)
   }, [filteredCollaborators, currentPage, rowsPerPage])
 
-  const handleNextPage = () => {
+  const handleNextPage = useCallback(() => {
     if (currentPage < totalPages) setCurrentPage(currentPage + 1)
-  }
+  }, [currentPage, totalPages])
 
-  const handlePrevPage = () => {
+  const handlePrevPage = useCallback(() => {
     if (currentPage > 1) setCurrentPage(currentPage - 1)
-  }
+  }, [currentPage])
 
-  const handleRowsPerPageChange = (value: string) => {
+  const handleRowsPerPageChange = useCallback((value: string) => {
     setRowsPerPage(Number(value))
     setCurrentPage(1)
-  }
-
-  const isFirstRender = useRef(true)
+  }, [])
 
   useEffect(() => {
     if (isFirstRender.current) {
@@ -94,7 +92,6 @@ export default function CollaboratorsList({
 
   return (
     <div className="flex-1 bg-card rounded-lg shadow-sm">
-      {/* Header */}
       <div className="border-b border-border p-6">
         <div className="flex items-center justify-between mb-4">
           <div>
@@ -103,18 +100,8 @@ export default function CollaboratorsList({
               {filteredCollaborators.length} colaboradores encontrados
             </p>
           </div>
-{/*           <div className="flex gap-2">
-            <Button
-              onClick={() => alert("Descargando lista de colaboradores...")}
-              variant="outline"
-            >
-              <Download className="w-4 h-4 mr-2" />
-              Exportar
-            </Button>
-          </div> */}
         </div>
 
-        {/* Search and Filters */}
         <div className="flex gap-3">
           <div className="flex-1 relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -152,7 +139,6 @@ export default function CollaboratorsList({
         </div>
       </div>
 
-      {/* Table */}
       <div className="overflow-x-auto bg-card">
         <Table>
           <TableHeader>
@@ -234,14 +220,12 @@ export default function CollaboratorsList({
         </Table>
       </div>
 
-      {/* Empty state */}
       {filteredCollaborators.length === 0 && (
         <div className="text-center py-12">
           <p className="text-muted-foreground">No se encontraron colaboradores</p>
         </div>
       )}
 
-      {/* Pagination */}
       {filteredCollaborators.length > 0 && (
         <div className="flex items-center justify-between border-t border-border p-4">
           <div className="flex items-center gap-2">

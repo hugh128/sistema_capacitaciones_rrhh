@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useEffect, useCallback } from "react"
+import { useState, useMemo, useEffect, useCallback, useRef } from "react"
 import { useAuth } from "@/contexts/auth-context"
 import { Sidebar } from "@/components/sidebar"
 import { AppHeader } from "@/components/app-header"
@@ -46,16 +46,18 @@ export default function MisCapacitacionesPage() {
   const [currentPage, setCurrentPage] = useState(1)
   const [itemsPerPage, setItemsPerPage] = useState(10)
 
-  const {
-    obtenerCapacitacionesPorCapacitador,
-  } = useCapacitaciones(user)
+  const isFetchingRef = useRef(false)
+  const hasFetchedRef = useRef(false)
+
+  const { obtenerCapacitacionesPorCapacitador } = useCapacitaciones(user)
 
   const fetchCapacitaciones = useCallback(async () => {
-    if (!user || !user.PERSONA_ID) {
+    if (!user?.PERSONA_ID || isFetchingRef.current) {
       setIsLoading(false)
       return
     }
 
+    isFetchingRef.current = true
     setIsLoading(true)
     setHasError(false)
     setErrorMessage("")
@@ -65,6 +67,7 @@ export default function MisCapacitacionesPage() {
       
       if (Array.isArray(capacitaciones)) {
         setMisCapacitaciones(capacitaciones)
+        hasFetchedRef.current = true
       } else {
         setMisCapacitaciones([])
         setHasError(true)
@@ -88,12 +91,17 @@ export default function MisCapacitacionesPage() {
       }
     } finally {
       setIsLoading(false)
+      isFetchingRef.current = false
     }
-  }, [user, obtenerCapacitacionesPorCapacitador])
+  }, [user?.PERSONA_ID, obtenerCapacitacionesPorCapacitador])
 
   useEffect(() => {
-    fetchCapacitaciones()
+    if (!hasFetchedRef.current) {
+      fetchCapacitaciones()
+    }
   }, [fetchCapacitaciones])
+
+  const searchTermLower = useMemo(() => searchTerm.toLowerCase(), [searchTerm])
 
   const capacitacionesFiltradas = useMemo(() => {
     if (!Array.isArray(misCapacitaciones) || misCapacitaciones.length === 0) {
@@ -101,14 +109,16 @@ export default function MisCapacitacionesPage() {
     }
 
     return misCapacitaciones.filter((cap) => {
-      const matchesSearch =
-        cap.NOMBRE?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        cap.CODIGO_DOCUMENTO?.toLowerCase().includes(searchTerm.toLowerCase() || '')
+      const matchesSearch = !searchTerm || 
+        cap.NOMBRE?.toLowerCase().includes(searchTermLower) ||
+        cap.CODIGO_DOCUMENTO?.toLowerCase().includes(searchTermLower)
+      
       const matchesEstado = estadoFilter === "TODOS" || cap.ESTADO === estadoFilter
       const matchesTipo = tipoFilter === "TODOS" || cap.TIPO_CAPACITACION === tipoFilter
+      
       return matchesSearch && matchesEstado && matchesTipo
     })
-  }, [misCapacitaciones, searchTerm, estadoFilter, tipoFilter])
+  }, [misCapacitaciones, searchTerm, searchTermLower, estadoFilter, tipoFilter])
 
   useEffect(() => {
     setCurrentPage(1)
@@ -116,7 +126,7 @@ export default function MisCapacitacionesPage() {
 
   const paginationData = useMemo(() => {
     const totalItems = capacitacionesFiltradas.length
-    const totalPages = Math.ceil(totalItems / itemsPerPage)
+    const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage))
     const startIndex = (currentPage - 1) * itemsPerPage
     const endIndex = startIndex + itemsPerPage
     const currentItems = capacitacionesFiltradas.slice(startIndex, endIndex)
@@ -133,28 +143,40 @@ export default function MisCapacitacionesPage() {
   }, [capacitacionesFiltradas, currentPage, itemsPerPage])
 
   const metrics = useMemo(() => {
-    const defaultMetrics = { total: 0, pendientes: 0, enProceso: 0, finalizadasEsteMes: 0 }
-    
     if (!Array.isArray(misCapacitaciones) || misCapacitaciones.length === 0) {
-      return defaultMetrics
+      return { total: 0, pendientes: 0, enProceso: 0, finalizadasEsteMes: 0 }
     }
 
     try {
-      const total = misCapacitaciones.length
-      const pendientes = misCapacitaciones.filter((c) => c.ESTADO === "PROGRAMADA").length
-      const enProceso = misCapacitaciones.filter((c) => c.ESTADO === "EN_PROCESO").length
-      const finalizadasEsteMes = misCapacitaciones.filter((c) => {
-        if (c.ESTADO !== "FINALIZADA" && c.ESTADO !== "FINALIZADA_CAPACITADOR") return false
-        if (!c.FECHA_INICIO) return false
-        const fecha = new Date(c.FECHA_INICIO)
-        const hoy = new Date()
-        return fecha.getMonth() === hoy.getMonth() && fecha.getFullYear() === hoy.getFullYear()
-      }).length
+      const hoy = new Date()
+      const mesActual = hoy.getMonth()
+      const añoActual = hoy.getFullYear()
+      
+      let pendientes = 0
+      let enProceso = 0
+      let finalizadasEsteMes = 0
 
-      return { total, pendientes, enProceso, finalizadasEsteMes }
+      for (const c of misCapacitaciones) {
+        if (c.ESTADO === "PROGRAMADA") pendientes++
+        if (c.ESTADO === "EN_PROCESO") enProceso++
+        
+        if ((c.ESTADO === "FINALIZADA" || c.ESTADO === "FINALIZADA_CAPACITADOR") && c.FECHA_INICIO) {
+          const fecha = new Date(c.FECHA_INICIO)
+          if (fecha.getMonth() === mesActual && fecha.getFullYear() === añoActual) {
+            finalizadasEsteMes++
+          }
+        }
+      }
+
+      return {
+        total: misCapacitaciones.length,
+        pendientes,
+        enProceso,
+        finalizadasEsteMes
+      }
     } catch (error) {
       console.error('Error al calcular métricas:', error)
-      return defaultMetrics
+      return { total: 0, pendientes: 0, enProceso: 0, finalizadasEsteMes: 0 }
     }
   }, [misCapacitaciones])
 
@@ -166,7 +188,7 @@ export default function MisCapacitacionesPage() {
     try {
       const hoy = new Date()
       hoy.setHours(0, 0, 0, 0)
-      const enSieteDias = new Date()
+      const enSieteDias = new Date(hoy)
       enSieteDias.setDate(hoy.getDate() + 7)
 
       return misCapacitaciones
@@ -175,12 +197,14 @@ export default function MisCapacitacionesPage() {
           const fecha = new Date(cap.FECHA_PROGRAMADA)
           fecha.setHours(0, 0, 0, 0)
 
-          return fecha >= hoy && fecha <= enSieteDias && (cap.ESTADO === "ASIGNADA" || cap.ESTADO === "EN_PROCESO")
+          return fecha >= hoy && 
+                 fecha <= enSieteDias && 
+                 (cap.ESTADO === "ASIGNADA" || cap.ESTADO === "EN_PROCESO")
         })
         .sort((a, b) => {
-          const fechaA = new Date(a.FECHA_PROGRAMADA!)
-          const fechaB = new Date(b.FECHA_PROGRAMADA!)
-          return fechaA.getTime() - fechaB.getTime()
+          const fechaA = new Date(a.FECHA_PROGRAMADA!).getTime()
+          const fechaB = new Date(b.FECHA_PROGRAMADA!).getTime()
+          return fechaA - fechaB
         })
         .slice(0, 5)
     } catch (error) {
@@ -189,14 +213,18 @@ export default function MisCapacitacionesPage() {
     }
   }, [misCapacitaciones])
 
-  const goToPage = (page: number) => {
+  const goToPage = useCallback((page: number) => {
     setCurrentPage(Math.max(1, Math.min(page, paginationData.totalPages)))
-  }
+  }, [paginationData.totalPages])
 
-  const goToFirstPage = () => goToPage(1)
-  const goToLastPage = () => goToPage(paginationData.totalPages)
-  const goToPreviousPage = () => goToPage(currentPage - 1)
-  const goToNextPage = () => goToPage(currentPage + 1)
+  const goToFirstPage = useCallback(() => goToPage(1), [goToPage])
+  const goToLastPage = useCallback(() => goToPage(paginationData.totalPages), [goToPage, paginationData.totalPages])
+  const goToPreviousPage = useCallback(() => goToPage(currentPage - 1), [goToPage, currentPage])
+  const goToNextPage = useCallback(() => goToPage(currentPage + 1), [goToPage, currentPage])
+
+  const hasAccess = user?.ROLES.some(
+    (role) => role.NOMBRE === "Capacitador" || role.NOMBRE === "RRHH"
+  )
 
   if (isLoading) {
     return (
@@ -214,12 +242,7 @@ export default function MisCapacitacionesPage() {
     )
   }
 
-  if (
-    !user ||
-    !user.ROLES.some(
-      (role) => role.NOMBRE === "Capacitador" || role.NOMBRE === "RRHH"
-    )
-  ) {
+  if (!user || !hasAccess) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-96">
@@ -252,7 +275,10 @@ export default function MisCapacitacionesPage() {
               </CardHeader>
               <CardContent className="flex flex-col gap-4">
                 <Button 
-                  onClick={fetchCapacitaciones}
+                  onClick={() => {
+                    hasFetchedRef.current = false
+                    fetchCapacitaciones()
+                  }}
                   className="w-full"
                   size="lg"
                 >
@@ -589,9 +615,9 @@ export default function MisCapacitacionesPage() {
                           } else if (currentPage >= paginationData.totalPages - 2) {
                             pageNumber = paginationData.totalPages - 4 + i
                           } else {
-                            pageNumber = currentPage - 2 + i
+                          pageNumber = currentPage - 2 + i
                           }
-                          
+
                           return (
                             <Button
                               key={pageNumber}

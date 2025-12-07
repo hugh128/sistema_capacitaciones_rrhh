@@ -193,7 +193,7 @@ export default function ReportesPage() {
                     </CardHeader>
                     <CardContent>
                       <div className="text-3xl font-bold">
-                        {dashboard?.RESUMEN_GENERAL?.Horas_Totales_Capacitacion || 0}
+                        {dashboard?.RESUMEN_GENERAL?.Horas_Totales_Capacitacion.toFixed(2) || 0}
                       </div>
                       <p className="text-sm text-muted-foreground mt-1">horas de capacitación</p>
                     </CardContent>
