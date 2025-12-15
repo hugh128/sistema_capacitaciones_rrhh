@@ -64,7 +64,7 @@ export function PendingReviewsTab({ capacitaciones }: PendingReviewsTabProps) {
                       <div className="flex items-center gap-2 text-muted-foreground">
                         <Calendar className="h-4 w-4 text-blue-600" />
                         <span>
-                          {cap.FECHA_INICIO ? new Date(cap.FECHA_INICIO).toLocaleDateString("es-GT") : "Sin fecha"}
+                          {cap.FECHA_PROGRAMADA ? new Date(cap.FECHA_PROGRAMADA).toLocaleDateString("es-GT") : "Sin fecha"}
                         </span>
                       </div>
                       <div className="flex items-center gap-2 text-muted-foreground">

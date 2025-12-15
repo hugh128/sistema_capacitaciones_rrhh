@@ -7,7 +7,7 @@ import type { COLABORADORES_SESION, ExamenCompleto, Serie, SESION_DETALLE } from
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useCapacitaciones } from "@/hooks/useCapacitaciones"
 import { UsuarioLogin } from "../auth"
-import { useState, memo } from "react"
+import { useState, memo, useEffect } from "react"
 import { useDocumentos } from "@/hooks/useDocumentos"
 import {
   Dialog,
@@ -31,15 +31,17 @@ interface ObservacionesModalProps {
 const ObservacionesModal = memo(function ObservacionesModal({ 
   open, 
   onOpenChange, 
-  observacionesIniciales, 
+  observacionesIniciales,
   onConfirmar,
   loading 
 }: ObservacionesModalProps) {
   const [observaciones, setObservaciones] = useState(observacionesIniciales)
 
-  if (open && observaciones !== observacionesIniciales && !observaciones) {
-    setObservaciones(observacionesIniciales)
-  }
+  useEffect(() => {
+    if (open) {
+      setObservaciones(observacionesIniciales)
+    }
+  }, [open, observacionesIniciales])
 
   const handleConfirmar = () => {
     onConfirmar(observaciones)
@@ -63,7 +65,7 @@ const ObservacionesModal = memo(function ObservacionesModal({
             </Label>
             <Textarea
               id="observaciones"
-              placeholder="Escribe las observaciones aquí..."
+              placeholder="Escribe las observaciones aquí o déjalo vacío..."
               value={observaciones}
               onChange={(e) => setObservaciones(e.target.value)}
               className="min-h-[100px]"
@@ -207,9 +209,7 @@ export function DocumentsTab({
       const curso = tipo === 'CURSO';
       const otro = !taller && !curso;
 
-      const observacionesFinales = observacionesPersonalizadas?.trim() 
-        ? observacionesPersonalizadas 
-        : (sesion.OBSERVACIONES || "Sin observaciones");
+    const observacionesFinales = observacionesPersonalizadas?.trim() || "";
 
       const datos = {
         sistemaDocumental: sesion.ES_SISTEMA_DOCUMENTAL,

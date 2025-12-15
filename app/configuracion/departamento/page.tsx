@@ -16,9 +16,9 @@ import { Button } from "@/components/ui/button"
 import { ArrowLeft } from "lucide-react"
 import { AppHeader } from "@/components/app-header"
 
-const getPersonasList = async () => {
+const getColaboradoresList = async () => {
   try {
-    const { data } = await apiClient.get<Persona[]>('/persona');
+    const { data } = await apiClient.get<Persona[]>('/persona/colaboradores');
     return data;
   } catch (error) {
     console.error("Error al cargar lista personas ", error);
@@ -30,7 +30,7 @@ export default function DepartamentosPage() {
   const { user } = useAuth()
   const [modalOpen, setModalOpen] = useState(false)
   const [editingDepartamento, setEditingDepartamento] = useState<Departamento | null>(null)
-  const [personasList, setPersonasList] = useState<Persona[]>([])
+  const [colaboradoresList, setColaboradoresList] = useState<Persona[]>([])
 
   const { 
     departamentos,
@@ -41,11 +41,11 @@ export default function DepartamentosPage() {
 
   useEffect(() => {
     if (user) {
-      getPersonasList().then(setPersonasList);
+      getColaboradoresList().then(setColaboradoresList);
     }
   }, [user]);
 
-  const personaOptions = personasList.map((persona) => ({
+  const personaOptions = colaboradoresList.map((persona) => ({
     value: persona.ID_PERSONA.toString(),
     label: `${persona.NOMBRE} ${persona.APELLIDO}`,
   }));

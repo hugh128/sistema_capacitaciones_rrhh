@@ -52,7 +52,7 @@ export const PERSONA_COLUMNS = [
 export const PERSONA_FORM_FIELDS = [
   { key: "NOMBRE", label: "Nombres", type: "text" as const, required: true },
   { key: "APELLIDO", label: "Apellidos", type: "text" as const, required: true },
-  { key: "CORREO", label: "Correo", type: "email" as const, required: true },
+  { key: "CORREO", label: "Correo", type: "email" as const },
   { key: "TELEFONO", label: "Teléfono", type: "tel" as const },
   { key: "DPI", label: "DPI", type: "text" as const },
   {

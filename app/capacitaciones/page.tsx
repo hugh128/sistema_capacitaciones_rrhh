@@ -46,8 +46,8 @@ export default function GestionCapacitacionesPage() {
     const enProceso = capacitaciones.filter(c => c.ESTADO === "EN_PROCESO").length
     const finalizadasEsteMes = capacitaciones.filter(c => {
       if (c.ESTADO !== "FINALIZADA") return false
-      if (!c.FECHA_INICIO) return false
-      const fecha = new Date(c.FECHA_INICIO)
+      if (!c.FECHA_PROGRAMADA) return false
+      const fecha = new Date(c.FECHA_PROGRAMADA)
       const hoy = new Date()
       return fecha.getMonth() === hoy.getMonth() && fecha.getFullYear() === hoy.getFullYear()
     }).length

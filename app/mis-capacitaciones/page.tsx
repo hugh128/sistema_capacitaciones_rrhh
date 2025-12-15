@@ -160,8 +160,8 @@ export default function MisCapacitacionesPage() {
         if (c.ESTADO === "PROGRAMADA") pendientes++
         if (c.ESTADO === "EN_PROCESO") enProceso++
         
-        if ((c.ESTADO === "FINALIZADA" || c.ESTADO === "FINALIZADA_CAPACITADOR") && c.FECHA_INICIO) {
-          const fecha = new Date(c.FECHA_INICIO)
+        if ((c.ESTADO === "FINALIZADA" || c.ESTADO === "FINALIZADA_CAPACITADOR") && c.FECHA_PROGRAMADA) {
+          const fecha = new Date(c.FECHA_PROGRAMADA)
           if (fecha.getMonth() === mesActual && fecha.getFullYear() === añoActual) {
             finalizadasEsteMes++
           }
@@ -199,7 +199,7 @@ export default function MisCapacitacionesPage() {
 
           return fecha >= hoy && 
                  fecha <= enSieteDias && 
-                 (cap.ESTADO === "ASIGNADA" || cap.ESTADO === "EN_PROCESO")
+                 (cap.ESTADO === "ASIGNADA" || cap.ESTADO === "PROGRAMADA")
         })
         .sort((a, b) => {
           const fechaA = new Date(a.FECHA_PROGRAMADA!).getTime()
