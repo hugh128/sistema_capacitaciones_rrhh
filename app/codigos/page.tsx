@@ -467,11 +467,11 @@ export default function CodigosAsociadosPage() {
                     onChange={handleFileChange}
                     className="hidden"
                   />
-                  <Button onClick={() => fileInputRef.current?.click()} variant="outline">
+                  <Button onClick={() => fileInputRef.current?.click()} variant="outline" className="dark:text-foreground dark:hover:border-foreground/40 cursor-pointer">
                     <Upload className="mr-2 h-4 w-4" />
                     Importar Excel
                   </Button>
-                  <Button onClick={handleExportExcel} variant="outline">
+                  <Button onClick={handleExportExcel} variant="outline" className="dark:text-foreground dark:hover:border-foreground/40 cursor-pointer">
                     <Download className="mr-2 h-4 w-4" />
                     Exportar Excel
                   </Button>

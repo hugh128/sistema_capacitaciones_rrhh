@@ -52,7 +52,9 @@ export default function CollaboratorsList({
       const matchesSearch = !searchLower || 
         collab.NOMBRE_COMPLETO.toLowerCase().includes(searchLower) ||
         collab.EMAIL.toLowerCase().includes(searchLower) ||
-        (collab.PUESTO && collab.PUESTO.toLowerCase().includes(searchLower))
+        (collab.PUESTO && collab.PUESTO.toLowerCase().includes(searchLower)) ||
+        (collab.DEPARTAMENTO && collab.DEPARTAMENTO.toLowerCase().includes(searchLower))
+
 
       const matchesStatus = filterStatus === "all" || 
         collab.ESTADO.toLowerCase() === filterStatus

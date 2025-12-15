@@ -139,7 +139,7 @@ export function DataTable({
                         <TableCell key={column.key} className="whitespace-nowrap">
                           {column.render
                             ? column.render(value, item) 
-                            : (value !== undefined && value !== null ? value : 'N/A')
+                            : (value !== undefined && value !== null ? value : <span className="text-muted-foreground/70 italic text-sm">Sin información</span>)
                           }
                         </TableCell>
                       )

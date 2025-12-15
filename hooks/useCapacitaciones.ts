@@ -737,6 +737,88 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     }
   }, [userId]);
 
+  const finalizarSesionConAsistencias = useCallback(async (
+    idSesion: number,
+    idCapacitador: number,
+    colaboradores: ColaboradorAsistenciaData[],
+    listaAsistenciaFile: File | null,
+    observaciones?: string,
+    soloGuardar: boolean = false
+  ) => {
+    if (!userId) {
+      toast.error("Usuario no autenticado.");
+      return;
+    }
+    
+    // Validar que la lista de asistencia sea PDF si se está subiendo un nuevo archivo
+    if (listaAsistenciaFile && listaAsistenciaFile.type !== "application/pdf") {
+      toast.error("La lista de asistencia debe ser un PDF válido.");
+      return;
+    }
+    
+    setIsMutating(true);
+    setError(null);
+    
+    const formData = new FormData();
+    
+    // 1. Agregar parámetros básicos
+    formData.append('idCapacitador', idCapacitador.toString());
+    formData.append('soloGuardar', soloGuardar.toString());
+    
+    if (observaciones) {
+      formData.append('observaciones', observaciones);
+    }
+    
+    // 2. Agregar lista de asistencia general (si existe)
+    if (listaAsistenciaFile) {
+      formData.append('listaAsistencia', listaAsistenciaFile);
+    }
+    
+    // 3. Preparar datos de colaboradores (sin archivos)
+    const colaboradoresDataJson = colaboradores.map(colab => ({
+      idColaborador: colab.idColaborador,
+      asistio: colab.asistio,
+      notaObtenida: colab.notaObtenida ?? null,
+      observaciones: colab.observaciones,
+    }));
+    
+    formData.append('colaboradores', JSON.stringify(colaboradoresDataJson));
+    
+    // 4. Agregar archivos individuales (exámenes y diplomas)
+    colaboradores.forEach(colab => {
+      if (colab.archivoExamen instanceof File) {
+        formData.append(`examen_${colab.idColaborador}`, colab.archivoExamen);
+      }
+      if (colab.archivoDiploma instanceof File) {
+        formData.append(`diploma_${colab.idColaborador}`, colab.archivoDiploma);
+      }
+    });
+    
+    try {
+      const response = await apiClient.put(`/capacitaciones/${idSesion}/finalizar-con-asistencias`, formData, {
+        headers: {
+        },
+      });
+      
+      const successMessage = soloGuardar 
+        ? "Cambios guardados exitosamente. Puedes continuar editando."
+        : "Sesión finalizada exitosamente. Será revisada por RRHH.";
+      
+      toast.success(successMessage);
+      return response.data;
+      
+    } catch (err) {
+      const baseMessage = soloGuardar 
+        ? "Error al guardar los cambios."
+        : "Error al finalizar la sesión.";
+      setError(baseMessage);
+      handleApiError(err, baseMessage);
+      throw err;
+    } finally {
+      setIsMutating(false);
+    }
+  }, [userId]);
+
   useEffect(() => {
     if (userId) {
       obtenerCapacitaciones();
@@ -772,6 +854,7 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     generarExamenIndividualPDF,
     devolverSesion,
     editarSesion,
+    finalizarSesionConAsistencias,
   }), [
     capacitaciones,
     loading,
@@ -800,6 +883,7 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     generarExamenPDF,
     generarExamenIndividualPDF,
     devolverSesion,
-    editarSesion
+    editarSesion,
+    finalizarSesionConAsistencias,
   ]);
 }

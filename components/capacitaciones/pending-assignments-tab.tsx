@@ -163,7 +163,7 @@ export function PendingAssignmentsTab({ capacitaciones }: PendingAssignmentsTabP
                         </div>
                         <div className="flex items-center gap-2 text-muted-foreground">
                           <Users className="h-4 w-4 text-green-600" />
-                          <span>{cap.PENDIENTES_REGISTRAR} participantes</span>
+                          <span>{cap.COLABORADORES_SIN_SESION} participantes</span>
                         </div>
                         <div className="text-muted-foreground">
                           <span className="font-medium text-foreground">Origen:</span> {cap.TIPO_ORIGEN}

@@ -30,8 +30,7 @@ export default function TrainerCapacitacionDetailPage() {
   const {
     obtenerDetalleSesionCapacitador,
     iniciarSesionCapacitador,
-    finalizarSesionCapacitador,
-    registrarAsistenciaMasiva,
+    finalizarSesionConAsistencias,
     guardarPlantillaExamen,
     obtenerPlantillaExamen,
   } = useCapacitaciones(user);
@@ -333,7 +332,7 @@ export default function TrainerCapacitacionDetailPage() {
   const handleFinalizar = async () => {
     const error = getFinalizationError();
 
-    if (!sesion) return
+    if (!sesion) return;
 
     if (error) {
       toast.error(`No se puede finalizar la sesión: ${error}`);
@@ -350,35 +349,33 @@ export default function TrainerCapacitacionDetailPage() {
       return;
     }
 
-    const colaboradoresParaAPI = colaboradoresAsignados
-      .filter((col) => asistenciaState[col.ID_COLABORADOR] === true)
-      .map((col) => {
-        const idColaborador = col.ID_COLABORADOR;
-        return {
-          idColaborador: idColaborador,
-          asistio: asistenciaState[idColaborador] === true, 
-          notaObtenida: notasState[idColaborador] ?? null,
-          observaciones: observacionesFinales,
-          archivoExamen: examenesFileState[idColaborador] || undefined,
-          archivoDiploma: diplomasFileState[idColaborador] || undefined,
-          urlExamen: col.URL_EXAMEN || undefined,
-          urlDiploma: col.URL_DIPLOMA || undefined,
-        } as ColaboradorAsistenciaData;
-      });
+    const colaboradoresParaAPI = colaboradoresAsignados.map((col) => {
+      const idColaborador = col.ID_COLABORADOR;
+      const asistio = asistenciaState[idColaborador];
+      
+      return {
+        idColaborador: idColaborador,
+        asistio: asistio === true,
+        notaObtenida: asistio === true ? (notasState[idColaborador] ?? null) : null,
+        observaciones: observacionesFinales,
+        archivoExamen: asistio === true ? examenesFileState[idColaborador] : undefined,
+        archivoDiploma: asistio === true ? diplomasFileState[idColaborador] : undefined,
+      } as ColaboradorAsistenciaData;
+    });
 
     try {
-      toast.loading("Registrando asistencia de colaboradores...", { id: 'finalizacion' });
-      await registrarAsistenciaMasiva(sesionId, colaboradoresParaAPI);
+      toast.loading("Finalizando sesión y registrando asistencias...", { id: 'finalizacion' });
       
-      toast.loading("Finalizando sesión...", { id: 'finalizacion' });
-      await finalizarSesionCapacitador(
-        sesionId, 
-        user.PERSONA_ID, 
-        observacionesFinales, 
-        listaAsistenciaFile
+      await finalizarSesionConAsistencias(
+        sesionId,
+        user.PERSONA_ID,
+        colaboradoresParaAPI,
+        listaAsistenciaFile,
+        observacionesFinales,
+        false
       );
       
-      toast.success("Sesión finalizada exitosamente", { id: 'finalizacion' });
+      toast.success("Sesión finalizada exitosamente. Será revisada por RRHH.", { id: 'finalizacion' });
       router.push("/mis-capacitaciones");
       
     } catch (error) {

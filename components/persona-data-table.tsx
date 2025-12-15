@@ -205,7 +205,7 @@ export function PersonaDataTable<T extends Persona>({
                           {column.render ? (
                             (column.render as CallSiteRenderer<T>)(value, item)
                           ) : isEmpty ? (
-                            <span className="text-muted-foreground/50 italic text-sm">Sin información</span>
+                            <span className="text-muted-foreground/70 italic text-sm">Sin información</span>
                           ) : (
                             <span className="text-foreground">{String(value)}</span>
                           )}

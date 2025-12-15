@@ -28,7 +28,7 @@ export function MetricsCards({
     {
       title: "Total",
       value: total,
-      description: "Sesiones en el sistema",
+      description: "Capacitaciones en el sistema",
       icon: BookOpen,
       color: "text-blue-600 dark:text-blue-400",
       bgColor: "bg-blue-50 dark:bg-blue-900/20",

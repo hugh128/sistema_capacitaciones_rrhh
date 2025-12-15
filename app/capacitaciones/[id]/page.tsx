@@ -198,7 +198,7 @@ export default function CapacitacionDetailPage() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6">
                   <InfoItem 
                     label="Código" 
-                    value={sesion.CODIGO_DOCUMENTO || "N/A"} 
+                    value={sesion.CODIGO_DOCUMENTO || "N/A"}
                   />
                   <InfoItem 
                     label="Capacitador" 
@@ -209,8 +209,8 @@ export default function CapacitacionDetailPage() {
                     value={sesion.TIPO_CAPACITACION} 
                   />
                   <InfoItem 
-                    label="Departamento"
-                    value={sesion.DEPARTAMENTO ?? "N/A"} 
+                    label="Origen"
+                    value={sesion.TIPO_ORIGEN ?? ""} 
                   />
                   <InfoItem 
                     label="Fecha de Inicio" 
@@ -230,7 +230,7 @@ export default function CapacitacionDetailPage() {
                   />
                   <InfoItem 
                     label="Nota Mínima" 
-                    value={sesion.NOTA_MINIMA !== null && sesion.NOTA_MINIMA !== undefined ? String(sesion.NOTA_MINIMA) : "N/A"} 
+                    value={sesion.NOTA_MINIMA !== null && sesion.NOTA_MINIMA !== undefined ? String(sesion.NOTA_MINIMA) : "No aplica examen"} 
                   />
                 </div>
               </CardContent>
@@ -444,7 +444,7 @@ export default function CapacitacionDetailPage() {
               </CardContent>
             </Card>
 
-            <Card>
+            <Card className="gap-4">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Download className="h-5 w-5" />
@@ -464,18 +464,32 @@ export default function CapacitacionDetailPage() {
               </CardContent>
             </Card>
 
-            {sesion.OBSERVACIONES && (
-              <Card>
+            {sesion.OBSERVACIONES_SESION && (
+              <Card className="gap-4">
                 <CardHeader>
-                  <CardTitle>Observaciones</CardTitle>
+                  <CardTitle>Observaciones Sesión</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                    {sesion.OBSERVACIONES}
+                    {sesion.OBSERVACIONES_SESION}
                   </p>
                 </CardContent>
               </Card>
             )}
+
+            {sesion.OBSERVACIONES_RRHH && (
+              <Card className="gap-4">
+                <CardHeader>
+                  <CardTitle>Observaciones RRHH</CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                    {sesion.OBSERVACIONES_RRHH}
+                  </p>
+                </CardContent>
+              </Card>
+            )}
+
           </main>
         </div>
       </div>

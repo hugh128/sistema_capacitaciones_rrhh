@@ -159,7 +159,7 @@ const GeneralInfoSection = memo(({
           </Select>
         </div>
 
-        <div>
+{/*         <div>
           <Label htmlFor="planCode" className="mb-2 block">
             Código (Opcional)
           </Label>
@@ -170,7 +170,7 @@ const GeneralInfoSection = memo(({
             placeholder="Ej: IND-001"
             className="placeholder:text-sm"
           />
-        </div>
+        </div> */}
       </div>
 
       {/* Descripción */}
