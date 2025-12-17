@@ -1,12 +1,10 @@
 "use client"
 
-import type React from "react"
 import { useEffect, useState, useCallback } from "react"
 import PlansListView from "./plans-list-view"
 import CreatePlan from "./create-plan"
 import PlanDetails from "./plan-details"
 import EditPlan from "./edit-plan"
-import PlansImport from "./plans-import"
 import type { AplicarPlan, PlanCapacitacion } from "@/lib/planes_programas/types"
 import { useAuth } from "@/contexts/auth-context"
 import { apiClient } from "@/lib/api-client"
@@ -158,9 +156,6 @@ export default function PlansModule() {
           puestosDisponibles={puestosList}
         />
       )}
-      {currentView === "import" &&
-        <PlansImport onBack={handleBackToList} onImport={handleImportPlans} />
-      }
     </div>
   )
 }
