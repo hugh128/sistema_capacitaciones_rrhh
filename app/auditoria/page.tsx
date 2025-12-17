@@ -51,9 +51,9 @@ export default function AuditoriaPage() {
     {
       key: "usuarioId",
       label: "Usuario",
-      render: (value: string) => {
-        const persona = mockPersonas.find((p) => p.id === value)
-        return persona ? `${persona.nombre} ${persona.apellido}` : `Usuario ${value}`
+      render: (value: number) => {
+        const persona = mockPersonas.find((p) => p.ID_PERSONA === value)
+        return persona ? `${persona.NOMBRE} ${persona.APELLIDO}` : `Usuario ${value}`
       },
     },
     {
@@ -210,14 +210,14 @@ export default function AuditoriaPage() {
                 <CardContent>
                   <div className="space-y-4">
                     {auditLogs.slice(0, 5).map((log) => {
-                      const persona = mockPersonas.find((p) => p.id === log.usuarioId)
+                      const persona = mockPersonas.find((p) => p.ID_PERSONA === Number(log.usuarioId))
                       return (
                         <div key={log.id} className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
                           <div className="flex items-center gap-3">
                             {getActionIcon(log.accion)}
                             <div>
                               <p className="font-medium">
-                                {persona ? `${persona.nombre} ${persona.apellido}` : `Usuario ${log.usuarioId}`}{" "}
+                                {persona ? `${persona.NOMBRE} ${persona.APELLIDO}` : `Usuario ${log.usuarioId}`}{" "}
                                 <span className="text-muted-foreground">
                                   {log.accion === "crear" && "creó"}
                                   {log.accion === "editar" && "editó"}
@@ -283,7 +283,7 @@ export default function AuditoriaPage() {
                       <div>
                         <label className="text-sm font-medium">Usuario</label>
                         <p className="text-sm text-muted-foreground">
-                          {mockPersonas.find((p) => p.id === selectedLog.usuarioId)?.nombre || selectedLog.usuarioId}
+                          {mockPersonas.find((p) => p.ID_PERSONA === Number(selectedLog.usuarioId))?.NOMBRE || selectedLog.usuarioId}
                         </p>
                       </div>
                       <div>
