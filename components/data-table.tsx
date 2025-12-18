@@ -1,12 +1,11 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Search, Plus, Edit, Trash2, MoreHorizontal } from "lucide-react"
+import { Search, Plus, Edit, Trash2, MoreHorizontal, Loader2 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
   AlertDialog,
@@ -33,6 +32,7 @@ interface DataTableProps {
   onEdit?: (item: any) => void
   onDelete?: (item: any) => void
   searchPlaceholder?: string
+  loading?: boolean
 }
 
 function getNestedValue(obj: any, path: string): any {
@@ -60,11 +60,11 @@ export function DataTable({
   onEdit,
   onDelete,
   searchPlaceholder = "Buscar...",
+  loading = false,
 }: DataTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [showDialog, setShowDialog] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<any>(null)
-
 
   const filteredData = data.filter((item) =>
     Object.values(item).some((value) => String(value).toLowerCase().includes(searchTerm.toLowerCase())),
@@ -83,10 +83,11 @@ export function DataTable({
     setItemToDelete(null)
   }
 
+  const hasActions = onEdit || onDelete
+
   return (
     <div className="space-y-4">
       {/* Header */}
-
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <h2 className="text-xl sm:text-2xl font-bold">{title}</h2>
         {onAdd && (
@@ -105,33 +106,60 @@ export function DataTable({
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10"
+          disabled={loading}
         />
       </div>
 
       {/* Table */}
-      <div className="border rounded-lg overflow-hidden custom-scrollbar">
+      <div className="border rounded-xl overflow-hidden shadow-sm bg-card">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
-              <TableRow>
+              <TableRow className="bg-muted/50 hover:bg-muted/50">
                 {columns.map((column) => (
-                  <TableHead key={column.key} className="whitespace-nowrap">
+                  <TableHead key={column.key} className="whitespace-nowrap font-semibold">
                     {column.label}
                   </TableHead>
                 ))}
-                {(onEdit || onDelete) && <TableHead className="w-[100px] whitespace-nowrap">Acciones</TableHead>}
+                {hasActions && (
+                  <TableHead className="w-[120px] whitespace-nowrap font-semibold">Acciones</TableHead>
+                )}
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredData.length === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={columns.length + 1} className="text-center py-8 text-muted-foreground">
-                    No se encontraron registros
+              {loading ? (
+                // ESTADO DE CARGA
+                <TableRow className="hover:bg-transparent">
+                  <TableCell colSpan={columns.length + (hasActions ? 1 : 0)} className="text-center py-12">
+                    <div className="flex flex-col items-center gap-3">
+                      <Loader2 className="h-8 w-8 text-primary animate-spin" />
+                      <p className="text-muted-foreground font-medium">
+                        Cargando datos...
+                      </p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : filteredData.length === 0 ? (
+                // NO HAY DATOS
+                <TableRow className="hover:bg-transparent">
+                  <TableCell colSpan={columns.length + (hasActions ? 1 : 0)} className="text-center py-12">
+                    <div className="flex flex-col items-center gap-2">
+                      <Search className="h-8 w-8 text-muted-foreground/50" />
+                      <p className="text-muted-foreground font-medium">
+                        {searchTerm ? 'No se encontraron resultados' : 'No hay registros disponibles'}
+                      </p>
+                      {searchTerm && (
+                        <p className="text-sm text-muted-foreground/70">
+                          Intenta con otros términos de búsqueda
+                        </p>
+                      )}
+                    </div>
                   </TableCell>
                 </TableRow>
               ) : (
+                // DATOS CARGADOS
                 filteredData.map((item, index) => (
-                  <TableRow key={item.id || index}>
+                  <TableRow key={item.id || index} className="hover:bg-muted/30 transition-colors">
                     {columns.map((column) => {
                       const value = getNestedValue(item, column.key);
 
@@ -144,23 +172,26 @@ export function DataTable({
                         </TableCell>
                       )
                     })}
-                    {(onEdit || onDelete) && (
+                    {hasActions && (
                       <TableCell>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="cursor-pointer">
+                            <Button variant="ghost" size="sm" className="hover:bg-muted cursor-pointer">
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end">
+                          <DropdownMenuContent align="end" className="w-40">
                             {onEdit && (
-                              <DropdownMenuItem onClick={() => onEdit(item)}>
+                              <DropdownMenuItem onClick={() => onEdit(item)} className="cursor-pointer">
                                 <Edit className="h-4 w-4 mr-2" />
                                 Editar
                               </DropdownMenuItem>
                             )}
                             {onDelete && (
-                              <DropdownMenuItem onClick={() => handleDeleteClick(item)} className="text-destructive">
+                              <DropdownMenuItem 
+                                onClick={() => handleDeleteClick(item)} 
+                                className="text-destructive cursor-pointer focus:text-destructive focus:bg-destructive/10"
+                              >
                                 <Trash2 className="h-4 w-4 mr-2" />
                                 Inactivar
                               </DropdownMenuItem>
@@ -177,24 +208,28 @@ export function DataTable({
         </div>
       </div>
 
-      {/* AlertDialog  */}
+      {/* AlertDialog */}
       <AlertDialog open={showDialog} onOpenChange={setShowDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar inactivacion</AlertDialogTitle>
+            <AlertDialogTitle>Confirmar inactivación</AlertDialogTitle>
             <AlertDialogDescription>
               ¿Estás seguro de que deseas inactivar este registro? Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel className="cursor-pointer">Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleConfirmDelete} className="bg-destructive hover:bg-destructive cursor-pointer">
+            <AlertDialogCancel className="dark:text-foreground dark:hover:border-foreground/30 cursor-pointer">
+              Cancelar
+            </AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleConfirmDelete} 
+              className="bg-destructive hover:bg-destructive cursor-pointer"
+            >
               Inactivar
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-
     </div>
   )
 }

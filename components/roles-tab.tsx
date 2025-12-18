@@ -46,7 +46,8 @@ export function RolesTab() {
   const {
     roles,
     saveRole,
-    deleteRole
+    deleteRole,
+    loading,
   } = useRoles(user);
 
   useEffect(() => {
@@ -209,6 +210,7 @@ export function RolesTab() {
         onEdit={handleEdit}
         onDelete={handleDelete}
         searchPlaceholder="Buscar roles..."
+        loading={loading}
       />
 
       <RoleFormModal

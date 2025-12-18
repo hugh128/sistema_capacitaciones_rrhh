@@ -36,7 +36,8 @@ export default function PuestosPage() {
     puestos,
     isMutating,
     deletePuesto,
-    savePuesto
+    savePuesto,
+    loading,
   } = usePuestos(user);
 
   useEffect(() => {
@@ -111,6 +112,7 @@ export default function PuestosPage() {
                 onEdit={handleEdit}
                 onDelete={handleDelete}
                 searchPlaceholder="Buscar puestos..."
+                loading={loading}
               />
             </div>
           </main>

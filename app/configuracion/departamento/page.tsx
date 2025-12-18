@@ -36,7 +36,8 @@ export default function DepartamentosPage() {
     departamentos,
     isMutating,
     deleteDepartamento,
-    saveDepartamento
+    saveDepartamento,
+    loading,
   } = useDepartamentos(user);
 
   useEffect(() => {
@@ -117,6 +118,7 @@ export default function DepartamentosPage() {
               onEdit={handleEdit}
               onDelete={handleDelete}
               searchPlaceholder="Buscar departamentos..."
+              loading={loading}
             />
           </div>
         </main>
