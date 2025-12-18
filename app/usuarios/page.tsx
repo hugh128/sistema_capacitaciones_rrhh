@@ -80,6 +80,7 @@ export default function UsuariosPage() {
     saveUsuario,
     deleteUsuario,
     updatePassword,
+    loading,
   } = useUsuarios(user);
 
   useEffect(() => {
@@ -189,6 +190,7 @@ export default function UsuariosPage() {
                 onDelete={handleDelete}
                 onPasswordChange={handleChangePasswordClick}
                 searchPlaceholder="Buscar usuarios..."
+                loading={loading}
               />
             </div>
           </main>
