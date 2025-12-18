@@ -6,8 +6,12 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, Eye, Pencil, Trash2, Calendar, BookOpen, MoreHorizontal, UserPlus } from "lucide-react"
-import type { AsignarProgramaCapacitacion, ProgramaCapacitacion } from "@/lib/programas_capacitacion/types"
+import { Plus, Search, Eye, Pencil, MoreHorizontal, UserPlus } from "lucide-react"
+import type { 
+  AsignarProgramaCapacitacionSelectivo, 
+  ProgramaCapacitacion,
+  ColaboradorDisponiblePrograma 
+} from "@/lib/programas_capacitacion/types"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,26 +19,18 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu"
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog"
 import { UsuarioLogin } from "@/lib/auth"
+import { AssignProgramModal } from "./assign-program"
 
 interface ProgramasCapacitacionListProps {
   programas: ProgramaCapacitacion[]
   onCreateNew: () => void
   onEdit: (programa: ProgramaCapacitacion) => void
   onViewDetails: (programa: ProgramaCapacitacion) => void
-  onAssign: (asignarPrograma: AsignarProgramaCapacitacion) => void
+  onAssign: (asignarPrograma: AsignarProgramaCapacitacionSelectivo) => Promise<void>
   onDelete: (id: number) => void
   usuario: UsuarioLogin | null
+  obtenerColaboradores: (idPrograma: number) => Promise<ColaboradorDisponiblePrograma[]>
 }
 
 export function ProgramasCapacitacionList({
@@ -45,9 +41,11 @@ export function ProgramasCapacitacionList({
   onViewDetails,
   onDelete,
   usuario,
+  obtenerColaboradores,
 }: ProgramasCapacitacionListProps) {
   const [searchTerm, setSearchTerm] = useState("")
-  const [programaParaAsignar, setProgramaParaAsignar] = useState<AsignarProgramaCapacitacion | null>(null);
+  const [assignModalOpen, setAssignModalOpen] = useState(false)
+  const [selectedPrograma, setSelectedPrograma] = useState<ProgramaCapacitacion | null>(null)
 
   const filteredProgramas = useMemo(() => {
     return programas.filter(
@@ -66,31 +64,16 @@ export function ProgramasCapacitacionList({
 
   const handleAssignClick = (programa: ProgramaCapacitacion) => {
     if (!usuario) {
-      console.error("Error: Usuario no logueado para asignar programa.");
-      return;
+      console.error("Error: Usuario no logueado para asignar programa.")
+      return
     }
+    setSelectedPrograma(programa)
+    setAssignModalOpen(true)
+  }
 
-    const usuarioActual = usuario.USERNAME
-
-    const payload: AsignarProgramaCapacitacion = {
-      idPrograma: programa.ID_PROGRAMA,
-      usuario: usuarioActual,
-      NOMBRE: programa.NOMBRE,
-    };
-
-    setProgramaParaAsignar(payload);
-  };
-
-  const handleConfirmAssign = () => {
-    if (programaParaAsignar) {
-      onAssign(programaParaAsignar); 
-    }
-    setProgramaParaAsignar(null); 
-  };
-
-  const handleCancelAssign = () => {
-    setProgramaParaAsignar(null);
-  };
+  const handleConfirmAssign = async (payload: AsignarProgramaCapacitacionSelectivo) => {
+    await onAssign(payload)
+  }
 
   return (
     <div className="space-y-6">
@@ -112,13 +95,13 @@ export function ProgramasCapacitacionList({
             {recentProgramas.map((programa) => (
               <Card
                 key={programa.ID_PROGRAMA}
-                className="border-border hover:shadow-lg transition-shadow cursor-pointer group   flex flex-col h-full"
+                className="border-border hover:shadow-lg transition-shadow cursor-pointer group flex flex-col h-full"
                 onClick={() => onViewDetails(programa)}
               >
                 <CardHeader className="pb-3 flex-grow">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors    break-words leading-snug line-clamp-2">
+                      <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors break-words leading-snug line-clamp-2">
                         {programa.NOMBRE}
                       </h3>
                       <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{programa.DESCRIPCION}</p>
@@ -138,11 +121,11 @@ export function ProgramasCapacitacionList({
                 <CardContent className="space-y-3">
                   <div className="flex items-center gap-4 text-sm">
                     <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <Calendar className="w-4 h-4" />
+                      <span>📅</span>
                       <span>{programa.PERIODO}</span>
                     </div>
                     <div className="flex items-center gap-1.5 text-muted-foreground">
-                      <BookOpen className="w-4 h-4" />
+                      <span>📚</span>
                       <span>{programa.PROGRAMA_DETALLES.length} capacitaciones</span>
                     </div>
                   </div>
@@ -234,18 +217,13 @@ export function ProgramasCapacitacionList({
                       <TableCell className="text-center">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              className="h-8 w-8 p-0"
-                            >
+                            <Button variant="ghost" className="h-8 w-8 p-0">
                               <span className="sr-only">Abrir menú</span>
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           
                           <DropdownMenuContent align="end">
-                            
-                            {/* 1. Ver Detalles */}
                             <DropdownMenuItem 
                               onClick={() => onViewDetails(programa)}
                               className="cursor-pointer"
@@ -254,7 +232,6 @@ export function ProgramasCapacitacionList({
                               Ver Detalles
                             </DropdownMenuItem>
                             
-                            {/* 2. Editar */}
                             <DropdownMenuItem 
                               onClick={() => onEdit(programa)}
                               className="cursor-pointer text-blue-600 dark:text-blue-400"
@@ -263,7 +240,8 @@ export function ProgramasCapacitacionList({
                               Editar
                             </DropdownMenuItem>
 
-                            {/* 3. Asignar programa */}
+                            <DropdownMenuSeparator />
+
                             <DropdownMenuItem 
                               onClick={() => handleAssignClick(programa)} 
                               className="cursor-pointer text-emerald-600 dark:text-emerald-400"
@@ -271,17 +249,7 @@ export function ProgramasCapacitacionList({
                               <UserPlus className="w-4 h-4 mr-2" /> 
                               Asignar Programa
                             </DropdownMenuItem>
-                            
-                            <DropdownMenuSeparator />
-
-                            {/* 4. Eliminar */}
-{/*                             <DropdownMenuItem 
-                              onClick={() => onDelete(programa.ID_PROGRAMA)}
-                              className="cursor-pointer text-destructive focus:text-destructive focus:bg-destructive/10"
-                            >
-                              <Trash2 className="w-4 h-4 mr-2" />
-                              Inactivar
-                            </DropdownMenuItem> */}
+                          
                           </DropdownMenuContent>
                         </DropdownMenu>
                       </TableCell>
@@ -294,32 +262,17 @@ export function ProgramasCapacitacionList({
         </CardContent>
       </Card>
 
-      {programaParaAsignar && (
-        <AlertDialog open={!!programaParaAsignar} onOpenChange={(open) => !open && setProgramaParaAsignar(null)}>
-            <AlertDialogContent>
-                <AlertDialogHeader>
-                    <AlertDialogTitle>
-                      ¿Está seguro de asignar este programa?
-                    </AlertDialogTitle>
-                    <AlertDialogDescription>
-                      Al confirmar, todas las capacitaciones dentro del programa **{programaParaAsignar.NOMBRE}** serán asignadas a los colaboradores, departamentos y puestos especificados.
-                    </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                    <AlertDialogCancel
-                      onClick={handleCancelAssign}
-                      className="dark:hover:bg-accent cursor-pointer"
-                    >
-                      Cancelar</AlertDialogCancel>
-                    <AlertDialogAction 
-                        onClick={handleConfirmAssign}
-                        className="cursor-pointer"
-                    >
-                      Confirmar Asignación
-                    </AlertDialogAction>
-                </AlertDialogFooter>
-            </AlertDialogContent>
-        </AlertDialog>
+      {/* Modal de asignación */}
+      {selectedPrograma && usuario && (
+        <AssignProgramModal
+          open={assignModalOpen}
+          onOpenChange={setAssignModalOpen}
+          programaId={selectedPrograma.ID_PROGRAMA}
+          programaNombre={selectedPrograma.NOMBRE}
+          usuario={usuario.USERNAME}
+          onConfirm={handleConfirmAssign}
+          obtenerColaboradores={obtenerColaboradores}
+        />
       )}
     </div>
   )

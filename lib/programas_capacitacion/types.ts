@@ -58,3 +58,72 @@ export interface AsignarProgramaCapacitacion {
   usuario: string
   NOMBRE: string
 }
+
+export interface AsignacionDetalle {
+  idColaborador: number;
+  detalles: number[];
+}
+
+export interface AsignarProgramaCapacitacionSelectivo {
+  idPrograma: number;
+  asignaciones: AsignacionDetalle[];
+  usuario: string;
+}
+
+export interface AplicarPlan {
+  idPlan: number;
+  idsColaboradores: number[];
+  usuario: string;
+  NOMBRE: string
+}
+
+export interface CapacitacionPrograma {
+  idDetalle: number
+  nombre: string
+  categoria: string
+  tipo: string
+  mes: number
+  yaTieneCapacitacion: boolean
+  puedeAsignarse: boolean
+}
+
+export interface ColaboradorDisponiblePrograma {
+  idColaborador: number
+  nombre: string
+  departamento: string
+  puesto: string
+  fechaIngreso: string
+  yaTieneProgramaActivo: boolean
+  capacitaciones: CapacitacionPrograma[]
+}
+
+export interface CapacitacionDisponible {
+  idDetalle: number;
+  nombre: string;
+  categoria: string;
+  tipo: string;
+  mes: number;
+  yaTieneCapacitacion: boolean;
+  puedeAsignarse: boolean;
+}
+
+export interface ColaboradorDisponiblePrograma {
+  idColaborador: number;
+  nombre: string;
+  departamento: string;
+  puesto: string;
+  fechaIngreso: string;
+  yaTieneProgramaActivo: boolean;
+  capacitaciones: CapacitacionDisponible[];
+}
+
+export interface AsignacionDetalle {
+  idColaborador: number;
+  detalles: number[];
+}
+
+export interface AsignarProgramaCapacitacionSelectivo {
+  idPrograma: number;
+  asignaciones: AsignacionDetalle[];
+  usuario: string;
+}

@@ -157,7 +157,7 @@ export function ProgramaDetails({ programa, departamentos, puestos, onEdit, onBa
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div className="flex flex-col items-start gap-2">
-          <Button variant="ghost" onClick={onBack} className="hover:bg-muted">
+          <Button variant="ghost" onClick={onBack} className="hover:bg-muted cursor-pointer">
             <ArrowLeft className="w-4 h-4 mr-2" />
             Volver
           </Button>

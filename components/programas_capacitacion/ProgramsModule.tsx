@@ -5,7 +5,12 @@ import { ProgramasCapacitacionList } from "./programas-list"
 import { CreatePrograma } from "./create-programa"
 import { EditPrograma } from "./edit-programa"
 import { ProgramaDetails } from "./programa-details"
-import type { ProgramaCapacitacion, ProgramaCapacitacionForm, CreateProgramaDetalleDto, AsignarProgramaCapacitacion } from "@/lib/programas_capacitacion/types"
+import type { 
+  ProgramaCapacitacion, 
+  ProgramaCapacitacionForm, 
+  CreateProgramaDetalleDto, 
+  AsignarProgramaCapacitacionSelectivo 
+} from "@/lib/programas_capacitacion/types"
 import type { Departamento, Puesto } from "@/lib/types"
 import { Toaster } from "react-hot-toast"
 import { apiClient } from "@/lib/api-client"
@@ -45,7 +50,8 @@ export default function ProgramsModule() {
     programasCapacitacion,
     saveProgramaCapacitacion,
     saveProgramaDetalle,
-    asignarProgramaCapacitacion,
+    asignarProgramaCapacitacionSelectivo,
+    obtenerColaboradoresDisponiblesPrograma
   } = useProgramasCapacitacion(user)
 
   useEffect(() => {
@@ -93,8 +99,8 @@ export default function ProgramsModule() {
     await saveProgramaDetalle(programaDetalle)
   }
 
-  const handleAssingProgram = async (asignarPrograma: AsignarProgramaCapacitacion) => {
-    await asignarProgramaCapacitacion(asignarPrograma)
+  const handleAssignProgram = async (asignarPrograma: AsignarProgramaCapacitacionSelectivo) => {
+    await asignarProgramaCapacitacionSelectivo(asignarPrograma)
   }
 
   return (
@@ -106,10 +112,11 @@ export default function ProgramsModule() {
           programas={programasCapacitacion}
           onCreateNew={handleCreate}
           onEdit={handleEdit}
-          onAssign={handleAssingProgram}
+          onAssign={handleAssignProgram}
           onViewDetails={handleViewDetails}
           onDelete={handleDelete}
           usuario={user}
+          obtenerColaboradores={obtenerColaboradoresDisponiblesPrograma}
         />
       )}
 
