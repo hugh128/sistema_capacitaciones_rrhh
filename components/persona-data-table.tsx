@@ -5,7 +5,7 @@ import { useState, useMemo, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Search, Plus, Edit, Trash2, MoreHorizontal, Eye } from "lucide-react"
+import { Search, Plus, Edit, Trash2, MoreHorizontal, Eye, Loader2 } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
   AlertDialog,
@@ -38,6 +38,7 @@ interface DataTableProps<T> {
   onDelete?: (item: T) => void
   onViewDetail?: (item: T) => void 
   searchPlaceholder?: string
+  loading?: boolean
 }
 
 function getNestedValue<T>(obj: T, path: string): unknown {
@@ -94,6 +95,7 @@ export function PersonaDataTable<T extends Persona>({
   onDelete,
   onViewDetail,
   searchPlaceholder = "Buscar...",
+  loading = false,
 }: DataTableProps<T>) {
   const [searchTerm, setSearchTerm] = useState("")
   const [showDialog, setShowDialog] = useState(false)
@@ -160,6 +162,7 @@ export function PersonaDataTable<T extends Persona>({
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10"
+          disabled={loading}
         />
       </div>
 
@@ -177,9 +180,21 @@ export function PersonaDataTable<T extends Persona>({
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredData.length === 0 ? (
+              {loading ? (
+                // ESTADO DE CARGA
                 <TableRow className="hover:bg-transparent">
-                  <TableCell colSpan={columns.length + 1} className="text-center py-12">
+                  <TableCell colSpan={columns.length + (hasActions ? 1 : 0)} className="text-center py-12">
+                    <div className="flex flex-col items-center gap-3">
+                      <Loader2 className="h-8 w-8 text-primary animate-spin" />
+                      <p className="text-muted-foreground font-medium">
+                        Cargando personas...
+                      </p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : filteredData.length === 0 ? (
+                <TableRow className="hover:bg-transparent">
+                  <TableCell colSpan={columns.length + (hasActions ? 1 : 0)} className="text-center py-12">
                     <div className="flex flex-col items-center gap-2">
                       <Search className="h-8 w-8 text-muted-foreground/50" />
                       <p className="text-muted-foreground font-medium">
@@ -194,6 +209,7 @@ export function PersonaDataTable<T extends Persona>({
                   </TableCell>
                 </TableRow>
               ) : (
+                // DATOS CARGADOS
                 filteredData.map((item, index) => (
                   <TableRow key={item.ID_PERSONA || index} className="hover:bg-muted/30 transition-colors">
                     {columns.map((column) => {

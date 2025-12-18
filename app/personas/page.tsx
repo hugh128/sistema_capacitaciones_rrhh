@@ -81,7 +81,8 @@ export default function PersonasPage() {
     isMutating,
     deletePersona,
     savePersona,
-    fetchPersonas
+    fetchPersonas,
+    loading,
   } = usePersonas(user)
 
   const {
@@ -328,6 +329,7 @@ export default function PersonasPage() {
                 onDelete={handleDelete}
                 onViewDetail={handleViewDetail}
                 searchPlaceholder="Buscar personas..."
+                loading={loading}
               />
             </div>
           </main>
