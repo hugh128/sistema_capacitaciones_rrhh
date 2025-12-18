@@ -283,7 +283,7 @@ export function DocumentsTab({
       
       const listaExamenesData: ExamenCompleto[] = colaboradoresAProcesar.map(colaborador => ({
         collaboratorName: colaborador.NOMBRE_COMPLETO,
-        documentCode: sesion.CODIGO_DOCUMENTO || 'N/A',
+        documentCode: sesion.CODIGO_DOCUMENTO || ' ',
         department: colaborador.DEPARTAMENTO, 
         trainingName: sesion.CAPACITACION_NOMBRE,
         internal: sesion.MODALIDAD === 'INTERNA' ? 'X' : '', 

@@ -160,6 +160,7 @@ export function ParticipantsTab({
                   setSelectedColaboradores([])
                 }}
                 className="bg-green-600 hover:bg-green-700"
+                disabled={!isEditable}
               >
                 <CheckCircle2 className="h-4 w-4 mr-2" />
                 Asistieron ({selectedColaboradores.length})
@@ -171,6 +172,7 @@ export function ParticipantsTab({
                   onMarcarAsistenciaMasiva(false, selectedColaboradores)
                   setSelectedColaboradores([])
                 }}
+                disabled={!isEditable}
               >
                 <XCircle className="h-4 w-4 mr-2" />
                 No Asistieron ({selectedColaboradores.length})
