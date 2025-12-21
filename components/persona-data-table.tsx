@@ -166,7 +166,7 @@ export function PersonaDataTable<T extends Persona>({
         />
       </div>
 
-      <div className="border rounded-xl overflow-hidden shadow-sm bg-card">
+      <div className="border rounded-xl overflow-hidden shadow-md bg-card">
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
@@ -223,13 +223,13 @@ export function PersonaDataTable<T extends Persona>({
                           ) : isEmpty ? (
                             <span className="text-muted-foreground/70 italic text-sm">Sin información</span>
                           ) : (
-                            <span className="text-foreground block truncate max-w-[225px]" title={String(value)}>{String(value)}</span>
+                            <span className="text-foreground block truncate max-w-[250px]" title={String(value)}>{String(value)}</span>
                           )}
                         </TableCell>
                       )
                     })}
                     {hasActions && (
-                      <TableCell>
+                      <TableCell className="">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="sm" className="hover:bg-muted">

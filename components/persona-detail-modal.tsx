@@ -145,17 +145,17 @@ export function PersonaDetailModal({ open, onOpenChange, persona }: PersonaDetai
               <DetailRow
                 icon={<Fingerprint className="h-5 w-5" />}
                 label="DPI"
-                value={persona.DPI}
+                value={formatValue('DPI', persona.DPI)}
               />
               <DetailRow
                 icon={<Mail className="h-5 w-5" />}
                 label="Correo Electrónico"
-                value={persona.CORREO}
+                value={formatValue('CORREO', persona.CORREO)}
               />
               <DetailRow
                 icon={<Phone className="h-5 w-5" />}
                 label="Teléfono de Contacto"
-                value={persona.TELEFONO}
+                value={formatValue('TELEFONO',persona.TELEFONO)}
               />
               <DetailRow
                 icon={<Calendar className="h-5 w-5" />}
