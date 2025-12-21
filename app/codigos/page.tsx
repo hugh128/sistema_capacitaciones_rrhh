@@ -47,6 +47,7 @@ export default function CodigosAsociadosPage() {
     deleteChild,
     refreshCodigos,
     recapacitarPorCambioVersion,
+    loading,
   } = useCodigos(user)
 
   const [importConfirmation, setImportConfirmation] = useState<ImportConfirmationState>({
@@ -123,13 +124,27 @@ export default function CodigosAsociadosPage() {
       return;
     }
     
+    const childrenChanged = updatedParent.DOCUMENTOS_ASOCIADOS.length !== editParent.DOCUMENTOS_ASOCIADOS.length ||
+      updatedParent.DOCUMENTOS_ASOCIADOS.some((child, idx) => {
+        const oldChild = editParent.DOCUMENTOS_ASOCIADOS[idx];
+        if (!oldChild) return true;
+        return (
+          child.ID_DOC_ASOCIADO !== oldChild.ID_DOC_ASOCIADO ||
+          child.CODIGO !== oldChild.CODIGO ||
+          child.NOMBRE_DOCUMENTO !== oldChild.NOMBRE_DOCUMENTO ||
+          child.ESTATUS !== oldChild.ESTATUS ||
+          child.VERSION !== oldChild.VERSION ||
+          child.FECHA_APROBACION !== oldChild.FECHA_APROBACION
+        );
+      });
+    
     const hasChanged = (
       updatedParent.CODIGO !== editParent.CODIGO ||
       updatedParent.TIPO_DOCUMENTO !== editParent.TIPO_DOCUMENTO ||
       updatedParent.NOMBRE_DOCUMENTO !== editParent.NOMBRE_DOCUMENTO ||
       updatedParent.ESTATUS !== editParent.ESTATUS ||
       updatedParent.VERSION !== editParent.VERSION ||
-      updatedParent.DOCUMENTOS_ASOCIADOS.length !== editParent.DOCUMENTOS_ASOCIADOS.length
+      childrenChanged
     );
     
     if (hasChanged) {
@@ -535,6 +550,7 @@ export default function CodigosAsociadosPage() {
                       onView={handleView}
                       onEdit={handleEdit}
                       onDelete={handleDeleteParent}
+                      loading={loading}
                     />
                   )}
 

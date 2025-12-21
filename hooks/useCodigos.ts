@@ -74,10 +74,10 @@ export function useCodigos(user: UsuarioLogin | null) {
       setIsMutating(true);
       try {
         await apiClient.delete(`/documento/${id}`); 
-        toast.success("Código padre y sus asociados eliminados.");
+        toast.success("Código padre inactivado correctamente.");
         refreshCodigos();
       } catch (err) {
-        const baseMessage = "Error al eliminar el código padre.";
+        const baseMessage = "Error al inactivar el código padre.";
         handleApiError(err, baseMessage);
         throw err;
       } finally {
@@ -131,10 +131,10 @@ export function useCodigos(user: UsuarioLogin | null) {
       setIsMutating(true);
       try {
         await apiClient.delete(`/documento-asociado/${childId}`); 
-        toast.error("Código hijo eliminado correctamente.");
+        toast.error("Código hijo inactivado correctamente.");
         refreshCodigos();
       } catch (err) {
-        const baseMessage = "Error al eliminar código hijo.";
+        const baseMessage = "Error al inactivar código hijo.";
         handleApiError(err, baseMessage);
         throw err;
       } finally {

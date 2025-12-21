@@ -11,7 +11,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Eye, Pencil, Trash2, MoreVertical } from "lucide-react"
+import { Eye, Pencil, Trash2, MoreVertical, Loader2 } from "lucide-react"
 import { DeleteConfirmationDialog } from "./delete-confirmation-dialog"
 import type { CodigoPadre } from "@/lib/codigos/types"
 
@@ -20,6 +20,7 @@ interface CodesTableProps {
   onView: (parent: CodigoPadre) => void
   onEdit: (parent: CodigoPadre) => void
   onDelete: (id: number) => void
+  loading?: boolean
 }
 
 type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
@@ -39,7 +40,6 @@ export const getEstatusBadgeVariant = (estatus: string): BadgeVariant => {
   }
 };
 
-// ✅ OPTIMIZACIÓN 1: Memoizar cada fila individualmente
 const TableRowMemoized = memo(({ 
   parent, 
   onView, 
@@ -51,13 +51,12 @@ const TableRowMemoized = memo(({
   onEdit: (parent: CodigoPadre) => void
   onDeleteClick: (parent: CodigoPadre) => void
 }) => {
-  // ✅ Handlers internos para evitar crear funciones en cada render del padre
   const handleView = useCallback(() => onView(parent), [onView, parent])
   const handleEdit = useCallback(() => onEdit(parent), [onEdit, parent])
   const handleDelete = useCallback(() => onDeleteClick(parent), [onDeleteClick, parent])
 
   return (
-    <TableRow className="hover:bg-muted/50">
+    <TableRow className="hover:bg-muted/50 transition-colors">
       <TableCell className="font-mono font-medium">{parent.CODIGO}</TableCell>
       <TableCell className="text-sm">{parent.TIPO_DOCUMENTO}</TableCell>
       <TableCell className="max-w-xs truncate text-sm" title={parent.NOMBRE_DOCUMENTO}>
@@ -78,27 +77,27 @@ const TableRowMemoized = memo(({
       <TableCell>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
+            <Button variant="ghost" size="icon" className="h-8 w-8 hover:bg-muted">
               <MoreVertical className="h-4 w-4" />
               <span className="sr-only">Abrir menú</span>
             </Button>
           </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={handleView}>
+          <DropdownMenuContent align="end" className="w-44">
+            <DropdownMenuItem onClick={handleView} className="cursor-pointer">
               <Eye className="h-4 w-4 mr-2" />
               Ver detalles
             </DropdownMenuItem>
-            <DropdownMenuItem onClick={handleEdit}>
+            <DropdownMenuItem onClick={handleEdit} className="cursor-pointer">
               <Pencil className="h-4 w-4 mr-2" />
               Editar
             </DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem
               onClick={handleDelete}
-              className="text-destructive focus:text-destructive"
+              className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
             >
               <Trash2 className="h-4 w-4 mr-2" />
-              Eliminar
+              Inactivar
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -106,7 +105,6 @@ const TableRowMemoized = memo(({
     </TableRow>
   )
 }, (prevProps, nextProps) => {
-  // ✅ OPTIMIZACIÓN 2: Comparación profunda solo de datos relevantes
   const prev = prevProps.parent
   const next = nextProps.parent
   
@@ -124,12 +122,16 @@ const TableRowMemoized = memo(({
 
 TableRowMemoized.displayName = "TableRowMemoized";
 
-// ✅ OPTIMIZACIÓN 3: Componente principal sin memo innecesario
-export const CodesTable = ({ codigos, onView, onEdit, onDelete }: CodesTableProps) => {
+export const CodesTable = ({ 
+  codigos, 
+  onView, 
+  onEdit, 
+  onDelete,
+  loading = false 
+}: CodesTableProps) => {
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false)
   const [parentToDelete, setParentToDelete] = useState<CodigoPadre | null>(null)
 
-  // ✅ OPTIMIZACIÓN 4: Callbacks estables
   const handleDeleteClick = useCallback((parent: CodigoPadre) => {
     setParentToDelete(parent)
     setDeleteDialogOpen(true)
@@ -150,27 +152,42 @@ export const CodesTable = ({ codigos, onView, onEdit, onDelete }: CodesTableProp
 
   return (
     <>
-      <div className="border rounded-lg overflow-hidden bg-card custom-scrollbar">
+      <div className="border rounded-xl overflow-hidden shadow-sm bg-card custom-scrollbar">
         <Table>
           <TableHeader>
-            <TableRow className="bg-muted/50">
+            <TableRow className="bg-muted/50 hover:bg-muted/50">
               <TableHead className="font-semibold">Código</TableHead>
               <TableHead className="font-semibold">Tipo</TableHead>
               <TableHead className="font-semibold">Documento</TableHead>
               <TableHead className="font-semibold">Fecha Aprobación</TableHead>
               <TableHead className="font-semibold">Estatus</TableHead>
-              <TableHead className="text-center font-semibold">Version</TableHead>
+              <TableHead className="text-center font-semibold">Versión</TableHead>
               <TableHead className="text-center font-semibold">Códigos Hijo</TableHead>
-              <TableHead className="w-[70px]">Acciones</TableHead>
+              <TableHead className="w-[70px] font-semibold">Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
-            {codigos.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={8} className="text-center py-12 text-muted-foreground">
+            {loading ? (
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={8} className="text-center py-12">
+                  <div className="flex flex-col items-center gap-3">
+                    <Loader2 className="h-8 w-8 text-primary animate-spin" />
+                    <p className="text-muted-foreground font-medium">
+                      Cargando códigos...
+                    </p>
+                  </div>
+                </TableCell>
+              </TableRow>
+            ) : codigos.length === 0 ? (
+              <TableRow className="hover:bg-transparent">
+                <TableCell colSpan={8} className="text-center py-12">
                   <div className="flex flex-col items-center gap-2">
-                    <p className="text-base">No hay códigos disponibles</p>
-                    <p className="text-sm">Agregue un código padre o importe desde Excel</p>
+                    <p className="text-base text-muted-foreground font-medium">
+                      No hay códigos disponibles
+                    </p>
+                    <p className="text-sm text-muted-foreground/70">
+                      Agregue un código padre o importe desde Excel
+                    </p>
                   </div>
                 </TableCell>
               </TableRow>
@@ -194,8 +211,8 @@ export const CodesTable = ({ codigos, onView, onEdit, onDelete }: CodesTableProp
           open={deleteDialogOpen}
           onOpenChange={handleCancelDelete}
           onConfirm={handleConfirmDelete}
-          title="¿Eliminar código padre?"
-          description={`¿Está seguro de eliminar el código ${parentToDelete.CODIGO} y todos sus ${parentToDelete.DOCUMENTOS_ASOCIADOS.length} códigos hijo? Esta acción no se puede deshacer.`}
+          title="¿Inactivar código padre?"
+          description={`¿Está seguro de inactivar el código ${parentToDelete.CODIGO}? Esta acción no se puede deshacer.`}
         />
       )}
     </>

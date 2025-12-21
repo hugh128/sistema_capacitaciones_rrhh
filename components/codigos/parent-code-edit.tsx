@@ -228,7 +228,7 @@ export const ParentCodeEdit = memo(function ParentCodeEdit({
                       className="text-destructive hover:bg-destructive/10"
                     >
                       <Trash2 className="h-4 w-4 mr-2" />
-                      Eliminar
+                      Inactivar
                     </Button>
                   )}
                 </CardHeader>
@@ -315,8 +315,8 @@ export const ParentCodeEdit = memo(function ParentCodeEdit({
         open={deleteDialog}
         onOpenChange={setDeleteDialog}
         onConfirm={handleDelete}
-        title="¿Eliminar código padre?"
-        description={`¿Está seguro de eliminar el código ${parent.CODIGO} y todos sus ${childrenCount} códigos hijo? Esta acción no se puede deshacer.`}
+        title="¿Inactivar código padre?"
+        description={`¿Está seguro de inactivar el código ${parent.CODIGO}? Esta acción no se puede deshacer.`}
       />
 
       {parent && (pendingUpdate || dialogStateRef.current.pendingData) && (

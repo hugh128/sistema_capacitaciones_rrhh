@@ -223,7 +223,7 @@ export function PersonaDataTable<T extends Persona>({
                           ) : isEmpty ? (
                             <span className="text-muted-foreground/70 italic text-sm">Sin información</span>
                           ) : (
-                            <span className="text-foreground">{String(value)}</span>
+                            <span className="text-foreground block truncate max-w-[225px]" title={String(value)}>{String(value)}</span>
                           )}
                         </TableCell>
                       )

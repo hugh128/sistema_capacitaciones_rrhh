@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo, useCallback, memo } from "react"
+import { useState, useMemo, useCallback, memo, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Plus, Pencil, Trash2, ChevronLeft, ChevronRight, Search } from "lucide-react"
@@ -18,7 +18,6 @@ interface ChildCodesListProps {
   onDelete: (childId: number) => void
 }
 
-// ✅ Memoizar cada hijo individualmente
 const ChildItem = memo(({ 
   child, 
   onEdit, 
@@ -63,14 +62,6 @@ const ChildItem = memo(({
       </div>
     </div>
   );
-}, (prev, next) => {
-  return (
-    prev.child.ID_DOC_ASOCIADO === next.child.ID_DOC_ASOCIADO &&
-    prev.child.CODIGO === next.child.CODIGO &&
-    prev.child.NOMBRE_DOCUMENTO === next.child.NOMBRE_DOCUMENTO &&
-    prev.child.ESTATUS === next.child.ESTATUS &&
-    prev.child.VERSION === next.child.VERSION
-  );
 });
 
 ChildItem.displayName = "ChildItem";
@@ -87,7 +78,10 @@ export const ChildCodesList = memo(function ChildCodesList({
   const [searchQuery, setSearchQuery] = useState("")
   const itemsPerPage = 10
 
-  // ✅ Memoizar cálculos
+  useEffect(() => {
+    setCurrentPage(1)
+  }, [children.length])
+
   const { filteredChildren, totalPages, visibleChildren } = useMemo(() => {
     const filtered = children.filter((child) => {
       const query = searchQuery.toLowerCase()
@@ -104,7 +98,6 @@ export const ChildCodesList = memo(function ChildCodesList({
     return { filteredChildren: filtered, totalPages: total, visibleChildren: visible }
   }, [children, searchQuery, currentPage])
 
-  // ✅ Handlers optimizados
   const handleSearchChange = useCallback((value: string) => {
     setSearchQuery(value)
     setCurrentPage(1)
@@ -118,11 +111,11 @@ export const ChildCodesList = memo(function ChildCodesList({
     setIsAddOpen(false)
   }, [])
 
-  const handleAdd = useCallback((data: NuevoCodigoHijo) => {
+  const handleAdd = useCallback(async (data: NuevoCodigoHijo) => {
     if (!data.CODIGO || !data.NOMBRE_DOCUMENTO || !data.VERSION || !data.ESTATUS) {
       return;
     }
-    onAdd(data);
+    await onAdd(data);
     setIsAddOpen(false);
   }, [onAdd])
 
@@ -134,9 +127,9 @@ export const ChildCodesList = memo(function ChildCodesList({
     setEditingChild(null)
   }, [])
 
-  const handleEdit = useCallback((data: NuevoCodigoHijo) => {
+  const handleEdit = useCallback(async (data: NuevoCodigoHijo) => {
     if (!editingChild || !data.CODIGO || !data.NOMBRE_DOCUMENTO) return;
-    onEdit(editingChild.ID_DOC_ASOCIADO, data);
+    await onEdit(editingChild.ID_DOC_ASOCIADO, data);
     setEditingChild(null);
   }, [editingChild, onEdit])
 
@@ -148,7 +141,6 @@ export const ChildCodesList = memo(function ChildCodesList({
     setCurrentPage(prev => prev + 1)
   }, [])
 
-  // ✅ Preparar datos iniciales para edición
   const editInitialData = useMemo<NuevoCodigoHijo | undefined>(() => {
     if (!editingChild) return undefined;
     return {
@@ -195,7 +187,7 @@ export const ChildCodesList = memo(function ChildCodesList({
           <div className="space-y-2">
             {visibleChildren.map((child) => (
               <ChildItem
-                key={child.ID_DOC_ASOCIADO}
+                key={`${child.ID_DOC_ASOCIADO}-${child.VERSION}-${child.ESTATUS}`}
                 child={child}
                 onEdit={openEditDialog}
                 onDelete={onDelete}
@@ -237,8 +229,7 @@ export const ChildCodesList = memo(function ChildCodesList({
         </>
       )}
 
-      {/* ✅ Dialog para AGREGAR - sin datos iniciales */}
-      <Dialog open={isAddOpen} onOpenChange={handleCloseAdd}>
+      <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Agregar Código Hijo</DialogTitle>
@@ -251,14 +242,14 @@ export const ChildCodesList = memo(function ChildCodesList({
         </DialogContent>
       </Dialog>
 
-      {/* ✅ Dialog para EDITAR - con datos iniciales */}
-      <Dialog open={!!editingChild} onOpenChange={handleCloseEdit}>
+      <Dialog open={!!editingChild} onOpenChange={(open) => !open && setEditingChild(null)}>
         <DialogContent>
           <DialogHeader>
             <DialogTitle>Editar Código Hijo</DialogTitle>
             <DialogDescription>Modifique los campos del código hijo</DialogDescription>
           </DialogHeader>
           <ChildCodeForm
+            key={editingChild?.ID_DOC_ASOCIADO}
             initialData={editInitialData}
             onSubmit={handleEdit}
             onCancel={handleCloseEdit}
@@ -268,4 +259,20 @@ export const ChildCodesList = memo(function ChildCodesList({
       </Dialog>
     </div>
   )
+}, (prevProps, nextProps) => {
+  return (
+    prevProps.parentID === nextProps.parentID &&
+    prevProps.children.length === nextProps.children.length &&
+    prevProps.children.every((child, idx) => {
+      const nextChild = nextProps.children[idx];
+      return (
+        child.ID_DOC_ASOCIADO === nextChild.ID_DOC_ASOCIADO &&
+        child.CODIGO === nextChild.CODIGO &&
+        child.NOMBRE_DOCUMENTO === nextChild.NOMBRE_DOCUMENTO &&
+        child.ESTATUS === nextChild.ESTATUS &&
+        child.VERSION === nextChild.VERSION &&
+        child.FECHA_APROBACION === nextChild.FECHA_APROBACION
+      );
+    })
+  );
 });

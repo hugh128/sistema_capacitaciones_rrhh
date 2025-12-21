@@ -136,7 +136,7 @@ export default function PersonasPage() {
   }
 
   const handleDelete = async (persona: Persona) => {
-    await deletePersona(persona)
+    await deletePersona(persona, user?.ID_USUARIO || 0);
   }
 
   const handleSubmit = async (formData: FormValues) => {

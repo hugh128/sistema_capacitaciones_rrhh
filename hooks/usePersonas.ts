@@ -34,11 +34,13 @@ export function usePersonas(user: UsuarioLogin | null) {
     }
   }, [user]);
 
-  const deletePersona = async (persona: Persona) => {
+  const deletePersona = async (persona: Persona, usuarioAccionId: number) => {
     setError(null);
     const loadingToastId = toast.loading("Inactivando persona...");
     try {
-      await apiClient.delete(`/persona/${persona.ID_PERSONA}`);
+      await apiClient.delete(`/persona/${persona.ID_PERSONA}`, {
+        data: { USUARIO_ACCION_ID: usuarioAccionId }
+      });
       toast.success("Persona inactivada con éxito.", { id: loadingToastId });
       setPersonas((prev) =>
         prev.map((e) =>
@@ -64,7 +66,10 @@ export function usePersonas(user: UsuarioLogin | null) {
     const isEditing = !!editingPersona;
     const action = isEditing ? "Editar" : "Guardar";
 
-    const payload = { ...formData } as Partial<Persona>;
+    const payload = {
+      ...formData,
+      USUARIO_ACCION_ID: user.ID_USUARIO
+    } as Partial<Persona>;
 
     const empresaIdString = payload.EMPRESA_ID;
     if (empresaIdString && typeof empresaIdString === 'string') {

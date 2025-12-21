@@ -351,7 +351,7 @@ const PlantillaActions = memo(({
           className="text-destructive focus:text-destructive cursor-pointer"
         >
           <Trash2 className="w-4 h-4 mr-2" />
-          Eliminar
+          Inactivar
         </DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
@@ -826,7 +826,7 @@ export default function PlantillasExamenPage() {
                 onClick={handleDeleteConfirm}
                 className="bg-destructive text-destructive-foreground hover:bg-destructive/90 cursor-pointer"
               >
-                Eliminar
+                Inactivar
               </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>

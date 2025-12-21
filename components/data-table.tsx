@@ -164,10 +164,21 @@ export function DataTable({
                       const value = getNestedValue(item, column.key);
 
                       return (
-                        <TableCell key={column.key} className="whitespace-nowrap">
+                        <TableCell key={column.key} className="whitespace-nowrap max-w-[300px]">
                           {column.render
-                            ? column.render(value, item) 
-                            : (value !== undefined && value !== null ? value : <span className="text-muted-foreground/70 italic text-sm">Sin información</span>)
+                            ? column.render(value, item)
+                            : (value !== undefined && value !== null && value !== '' ? (
+                                <span 
+                                  className="block truncate text-foreground max-w-[350px]"
+                                  title={String(value)}
+                                >
+                                  {String(value)}
+                                </span>
+                              ) : (
+                                <span className="text-muted-foreground/70 italic text-sm">
+                                  Sin información
+                                </span>
+                              ))
                           }
                         </TableCell>
                       )

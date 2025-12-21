@@ -39,7 +39,7 @@ export function DeleteConfirmationDialog({
             onClick={onConfirm}
             className="bg-destructive hover:bg-destructive/90 cursor-pointer"
           >
-            Eliminar
+            Inactivar
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
