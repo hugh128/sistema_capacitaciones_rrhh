@@ -50,6 +50,22 @@ export interface Persona {
   PUESTO: Puesto
 }
 
+export interface PersonaSinUsuario {
+  ID_PERSONA: number
+  NOMBRE: string
+  APELLIDO: string
+  CORREO: string
+  TELEFONO: string
+  DPI: string
+  FECHA_NACIMIENTO: string
+  TIPO_PERSONA: string
+  FECHA_INGRESO: string
+  EMPRESA_ID: number
+  DEPARTAMENTO_ID: number
+  PUESTO_ID: number
+  ESTADO: boolean
+}
+
 export interface Usuario {
   ID_USUARIO: number
   PERSONA_ID: number
@@ -68,11 +84,13 @@ export interface usuarioPayload {
   ESTADO: boolean
   ID_ROLES: number[]
   PERSONA_ID?: number
+  USUARIO_ACCION_ID: number
 }
 
 export interface usuarioCreatePayload extends usuarioPayload {
   PERSONA_ID: number;
   PASSWORD: string;
+  USUARIO_ACCION_ID: number;
 }
 
 export interface AuditLog {

@@ -49,12 +49,14 @@ export function useUsuarios(user: UsuarioLogin | null) {
       USERNAME: payload.USERNAME,
       ESTADO: payload.ESTADO,
       ID_ROLES: payload.ID_ROLES,
+      USUARIO_ACCION_ID: payload.USUARIO_ACCION_ID
     };
     
     const createPayload: usuarioPayload = {
       ...payload,
       PERSONA_ID: payload.PERSONA_ID!,
-      PASSWORD: payload.PASSWORD!, 
+      PASSWORD: payload.PASSWORD!,
+      USUARIO_ACCION_ID: payload.USUARIO_ACCION_ID
     };
 
     try {
@@ -82,7 +84,7 @@ export function useUsuarios(user: UsuarioLogin | null) {
     }
   }, [user, refreshUsuarios]); 
 
-  const deleteUsuario = useCallback(async (idUsuario: number) => {
+  const deleteUsuario = useCallback(async (idUsuario: number, usuarioAccionId: number) => {
     if (!user) {
       toast.error("Usuario no autenticado.");
       return;
@@ -92,7 +94,9 @@ export function useUsuarios(user: UsuarioLogin | null) {
     setError(null);
 
     try {
-      await apiClient.delete(`/usuario/${idUsuario}`);
+      await apiClient.delete(`/usuario/${idUsuario}`, { 
+        data: { USUARIO_ACCION_ID: usuarioAccionId } 
+      });
       toast.success("Usuario inactivado exitosamente.");
       await refreshUsuarios();
 
@@ -105,7 +109,7 @@ export function useUsuarios(user: UsuarioLogin | null) {
     }
   }, [user, refreshUsuarios]);
 
-  const updatePassword = useCallback(async (idUsuario: number, newPassword: string) => {
+  const updatePassword = useCallback(async (idUsuario: number, newPassword: string, usuarioAccionId: number) => {
     if (!user) {
       toast.error("Usuario no autenticado.");
       throw new Error("Usuario no autenticado.");
@@ -116,7 +120,8 @@ export function useUsuarios(user: UsuarioLogin | null) {
 
     try {
       await apiClient.patch(`/usuario/${idUsuario}/password`, { 
-        PASSWORD: newPassword 
+        PASSWORD: newPassword, 
+        USUARIO_ACCION_ID: usuarioAccionId
       });
       
       toast.success("Contraseña actualizada exitosamente.");

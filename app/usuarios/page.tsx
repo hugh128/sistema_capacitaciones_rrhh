@@ -8,13 +8,12 @@ import { AppHeader } from "@/components/app-header"
 import type { Rol } from "@/lib/auth"
 import { useUsuarios } from "@/hooks/useUsuarios"
 import { Toaster } from "react-hot-toast"
-import type { Persona, Usuario, usuarioPayload, usuarioCreatePayload } from "@/lib/types"
+import type { Usuario, usuarioPayload, usuarioCreatePayload, PersonaSinUsuario } from "@/lib/types"
 import { UsuarioDataTable } from "@/components/usuario-data-table"
 import { ChangePasswordModal } from "@/components/change-password-modal"
 import { getUsuarioColumns, getUsuarioFormFields, type UsuarioFormFields } from "@/data/usuario-config"
 import { FormModal, type FormData as FormValues } from "@/components/form-modal" 
 import { RequirePermission } from "@/components/RequirePermission"
-
 
 const getRolesList = async () => {
   try {
@@ -28,7 +27,7 @@ const getRolesList = async () => {
 
 const getPersonasList = async () => {
   try {
-    const { data } = await apiClient.get<Persona[]>('/persona');
+    const { data } = await apiClient.get<PersonaSinUsuario[]>('/persona/sin-usuario');
     return data;
   } catch (error) {
     console.error("Error al cargar lista personas ", error);
@@ -36,39 +35,11 @@ const getPersonasList = async () => {
   }
 }
 
-const transformFrontendToApi = (data: UsuarioFormFields, isEditing: boolean): usuarioPayload | usuarioCreatePayload => {
-  const frontendRoles = data.ID_ROLES;
-  
-  const rolIdsNumbers = Array.isArray(frontendRoles) 
-    ? frontendRoles.map(id => parseInt(id, 10)).filter(id => !isNaN(id))
-    : [];
-
-  const estadoBoolean = data.ESTADO === "true";
-  
-  const updatePayload: usuarioPayload = {
-    USERNAME: data.USERNAME,
-    ESTADO: estadoBoolean,
-    ID_ROLES: rolIdsNumbers, 
-  };
-  
-  if (isEditing) {
-    return updatePayload;
-  }
-  
-  const createPayload: usuarioCreatePayload = {
-    ...updatePayload,
-    PERSONA_ID: parseInt(data.PERSONA_ID, 10),
-    PASSWORD: data.PASSWORD!,
-  };
-  
-  return createPayload;
-};
-
 export default function UsuariosPage() {
   const { user } = useAuth()
   const [modalOpen, setModalOpen] = useState(false)
   const [editingUsuario, setEditingUsuario] = useState<Usuario | null>(null)
-  const [personasList, setPersonasList] = useState<Persona[]>([])
+  const [personasList, setPersonasList] = useState<PersonaSinUsuario[]>([])
   const [rolesList, setRolesList] = useState<Rol[]>([])
 
   const [passwordModalOpen, setPasswordModalOpen] = useState(false);
@@ -127,7 +98,7 @@ export default function UsuariosPage() {
 
   const handleDelete = async (usuario: Usuario) => {
     try {
-      await deleteUsuario(usuario.ID_USUARIO);
+      await deleteUsuario(usuario.ID_USUARIO, user!.ID_USUARIO);
     } catch (err) {
       console.error("Delete Error:", err);
     }
@@ -142,12 +113,41 @@ export default function UsuariosPage() {
     if (!userToChangePassword) return;
 
     try {
-        await updatePassword(userToChangePassword.ID_USUARIO, newPassword);
+        await updatePassword(userToChangePassword.ID_USUARIO, newPassword, user!.ID_USUARIO);
         setPasswordModalOpen(false);
         setUserToChangePassword(null);
     } catch (error) {
       console.log(error);
     }
+  };
+
+  const transformFrontendToApi = (data: UsuarioFormFields, isEditing: boolean): usuarioPayload | usuarioCreatePayload => {
+    const frontendRoles = data.ID_ROLES;
+    
+    const rolIdsNumbers = Array.isArray(frontendRoles) 
+      ? frontendRoles.map(id => parseInt(id, 10)).filter(id => !isNaN(id))
+      : [];
+
+    const estadoBoolean = data.ESTADO === "true";
+    
+    const updatePayload: usuarioPayload = {
+      USERNAME: data.USERNAME,
+      ESTADO: estadoBoolean,
+      ID_ROLES: rolIdsNumbers,
+      USUARIO_ACCION_ID: user!.ID_USUARIO
+    };
+    
+    if (isEditing) {
+      return updatePayload;
+    }
+    
+    const createPayload: usuarioCreatePayload = {
+      ...updatePayload,
+      PERSONA_ID: parseInt(data.PERSONA_ID, 10),
+      PASSWORD: data.PASSWORD!,
+    };
+    
+    return createPayload;
   };
 
   const handleSubmit = async (data: FormValues) => {
