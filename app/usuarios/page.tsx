@@ -204,6 +204,7 @@ export default function UsuariosPage() {
                 onPasswordChange={handleChangePasswordClick}
                 searchPlaceholder="Buscar usuarios..."
                 loading={loading}
+                currentUser={user!}
               />
             </div>
           </main>

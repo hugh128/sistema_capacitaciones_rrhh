@@ -200,7 +200,7 @@ export function PersonaDetailModal({ open, onOpenChange, persona }: PersonaDetai
         </div>
 
         <div className="sticky bottom-0 z-10 bg-background p-4 flex justify-end">
-          <Button onClick={() => onOpenChange(false)}>Cerrar Detalle</Button>
+          <Button onClick={() => onOpenChange(false)} className="cursor-pointer">Cerrar Detalle</Button>
         </div>
 
       </DialogContent>

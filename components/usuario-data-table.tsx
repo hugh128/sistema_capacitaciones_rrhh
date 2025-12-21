@@ -1,11 +1,12 @@
 "use client"
 
 import type React from "react"
-import { useState } from "react"
+// 1. Importamos useEffect para el listener del teclado
+import { useState, useEffect } from "react" 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Search, Plus, Edit, Trash2, MoreHorizontal, Key as KeyIcon, Loader2 } from "lucide-react"
+import { Search, Plus, Edit, Trash2, MoreHorizontal, Key as KeyIcon, Loader2, Unlock } from "lucide-react"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import {
   AlertDialog,
@@ -17,6 +18,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
+import { UsuarioLogin } from "@/lib/auth"
 
 interface Column {
   key: string
@@ -34,6 +36,7 @@ interface DataTableProps {
   onPasswordChange?: (item: any) => void
   searchPlaceholder?: string
   loading?: boolean
+  currentUser: UsuarioLogin;
 }
 
 function getNestedValue(obj: any, path: string): any {
@@ -57,28 +60,38 @@ export function UsuarioDataTable({
   onPasswordChange,
   searchPlaceholder = "Buscar...",
   loading = false,
+  currentUser,
 }: DataTableProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [showDialog, setShowDialog] = useState(false)
   const [itemToDelete, setItemToDelete] = useState<any>(null)
+  
+  const [adminUnlocked, setAdminUnlocked] = useState(false)
+
+  useEffect(() => {
+    if (currentUser?.USERNAME !== 'admin') return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.altKey && e.shiftKey && e.key.toLowerCase() === 'u') {
+        setAdminUnlocked((prev) => !prev);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [adminUnlocked, currentUser?.USERNAME]);
 
   const filteredData = data.filter((item) => {
     return columns.some((column) => {
       const value = getNestedValue(item, column.key)
       if (value == null) return false
-
       const term = searchTerm.toLowerCase()
-
       if (Array.isArray(value)) {
-        return value
-          .map((v) => JSON.stringify(v).toLowerCase())
-          .some((v) => v.includes(term))
+        return value.map((v) => JSON.stringify(v).toLowerCase()).some((v) => v.includes(term))
       }
-
       if (typeof value === "object") {
         return JSON.stringify(value).toLowerCase().includes(term)
       }
-
       return String(value).toLowerCase().includes(term)
     })
   })
@@ -99,7 +112,14 @@ export function UsuarioDataTable({
   return (
     <div className="space-y-4">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <h2 className="text-xl sm:text-2xl font-bold">{title}</h2>
+        <div className="flex items-center gap-3">
+            <h2 className="text-xl sm:text-2xl font-bold">{title}</h2>
+            {adminUnlocked && (
+              <span className="flex items-center text-xs bg-amber-100 text-amber-700 px-2 py-1 rounded-full animate-pulse border border-amber-200 dark:bg-amber-900 dark:text-amber-300 dark:border-amber-700">
+                <Unlock className="h-3 w-3 mr-1" /> Modo Admin Habilitado
+              </span>
+            )}
+        </div>
         {onAdd && (
           <Button onClick={onAdd} className="w-full sm:w-auto cursor-pointer">
             <Plus className="h-4 w-4 mr-2" />
@@ -136,19 +156,15 @@ export function UsuarioDataTable({
             </TableHeader>
             <TableBody>
               {loading ? (
-                // ESTADO DE CARGA
                 <TableRow className="hover:bg-transparent">
                   <TableCell colSpan={columns.length + (hasActions ? 1 : 0)} className="text-center py-12">
                     <div className="flex flex-col items-center gap-3">
                       <Loader2 className="h-8 w-8 text-primary animate-spin" />
-                      <p className="text-muted-foreground font-medium">
-                        Cargando usuarios...
-                      </p>
+                      <p className="text-muted-foreground font-medium">Cargando usuarios...</p>
                     </div>
                   </TableCell>
                 </TableRow>
               ) : filteredData.length === 0 ? (
-                // NO HAY DATOS
                 <TableRow className="hover:bg-transparent">
                   <TableCell colSpan={columns.length + (hasActions ? 1 : 0)} className="text-center py-12">
                     <div className="flex flex-col items-center gap-2">
@@ -156,18 +172,13 @@ export function UsuarioDataTable({
                       <p className="text-muted-foreground font-medium">
                         {searchTerm ? 'No se encontraron resultados' : 'No hay registros disponibles'}
                       </p>
-                      {searchTerm && (
-                        <p className="text-sm text-muted-foreground/70">
-                          Intenta con otros términos de búsqueda
-                        </p>
-                      )}
                     </div>
                   </TableCell>
                 </TableRow>
               ) : (
-                // DATOS CARGADOS
                 filteredData.map((item, index) => {
                   const isAdmin = item.USERNAME === 'admin';
+                  const isRestricted = isAdmin && !adminUnlocked;
 
                   return (
                     <TableRow 
@@ -178,12 +189,8 @@ export function UsuarioDataTable({
                         const value = getNestedValue(item, column.key);
                         return (
                           <TableCell key={column.key} className="whitespace-nowrap">
-                            {column.render ? (
-                              column.render(value, item)
-                            ) : (
-                              <span className={isAdmin ? "font-medium" : ""}>
-                                {value ?? "N/A"}
-                              </span>
+                            {column.render ? column.render(value, item) : (
+                              <span className={isAdmin ? "font-medium" : ""}>{value ?? "N/A"}</span>
                             )}
                           </TableCell>
                         );
@@ -201,34 +208,38 @@ export function UsuarioDataTable({
                               
                               {onEdit && (
                                 <DropdownMenuItem 
-                                  onClick={() => !isAdmin && onEdit(item)} 
-                                  disabled={isAdmin}
-                                  className={`cursor-pointer ${isAdmin ? "opacity-50" : ""}`}
+                                  onClick={() => !isRestricted && onEdit(item)} 
+                                  disabled={isRestricted}
+                                  className={`cursor-pointer ${isRestricted ? "opacity-50" : ""}`}
                                 >
                                   <Edit className="h-4 w-4 mr-2" />
                                   <div className="flex flex-col">
                                     <span>Editar</span>
-                                    {isAdmin && <span className="text-[10px] text-muted-foreground">Sistema Protegido</span>}
+                                    {isRestricted && <span className="text-[10px] text-muted-foreground">Sistema Protegido</span>}
                                   </div>
                                 </DropdownMenuItem>
                               )}
 
                               {onPasswordChange && (
                                 <DropdownMenuItem 
-                                  onClick={() => onPasswordChange(item)} 
-                                  className="cursor-pointer"
+                                  onClick={() => !isRestricted && onPasswordChange(item)} 
+                                  disabled={isRestricted}
+                                  className={`cursor-pointer ${isRestricted ? "opacity-50" : ""}`}
                                 >
                                   <KeyIcon className="h-4 w-4 mr-2" />
-                                  Cambiar Contraseña
+                                  <div className="flex flex-col">
+                                    <span>Cambiar Contraseña</span>
+                                    {isRestricted && <span className="text-[10px] text-muted-foreground">Usa Alt+Shift+U</span>}
+                                  </div>
                                 </DropdownMenuItem>
                               )}
 
                               {onDelete && (
                                 <DropdownMenuItem
-                                  onClick={() => !isAdmin && handleDeleteClick(item)}
-                                  disabled={isAdmin}
+                                  onClick={() => !isRestricted && handleDeleteClick(item)}
+                                  disabled={isRestricted}
                                   className={`cursor-pointer ${
-                                    isAdmin 
+                                    isRestricted 
                                       ? "opacity-50" 
                                       : "text-destructive focus:text-destructive focus:bg-destructive/10"
                                   }`}
@@ -236,7 +247,7 @@ export function UsuarioDataTable({
                                   <Trash2 className="h-4 w-4 mr-2" />
                                   <div className="flex flex-col">
                                     <span>Inactivar</span>
-                                    {isAdmin && <span className="text-[10px] text-muted-foreground">No se puede eliminar</span>}
+                                    {isRestricted && <span className="text-[10px] text-muted-foreground">No se puede eliminar</span>}
                                   </div>
                                 </DropdownMenuItem>
                               )}

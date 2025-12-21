@@ -99,7 +99,7 @@ export function ChangePasswordModal({
                   type="button"
                   variant="ghost"
                   size="sm"
-                  className="absolute right-0 top-0 h-full px-3 py-1 hover:bg-transparent"
+                  className="absolute right-0 top-0 h-full px-3 py-1 hover:bg-transparent cursor-pointer"
                   onClick={togglePasswordVisibility}
                   disabled={loading}
                 >
@@ -114,10 +114,11 @@ export function ChangePasswordModal({
               variant="outline"
               onClick={() => onOpenChange(false)}
               disabled={loading}
+              className="cursor-pointer dark:border-gray-600 dark:text-gray-300"
             >
               Cancelar
             </Button>
-            <Button type="submit" disabled={!password.trim() || loading}>
+            <Button type="submit" disabled={!password.trim() || loading} className="cursor-pointer">
               {loading ? "Guardando..." : "Guardar Contraseña"}
             </Button>
           </DialogFooter>
