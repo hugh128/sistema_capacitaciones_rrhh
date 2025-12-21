@@ -63,10 +63,23 @@ export default function UsuariosPage() {
 
   const columns = useMemo(() => getUsuarioColumns(), []);
 
-  const formFields = useMemo(() => 
-    getUsuarioFormFields(personasList, rolesList, !!editingUsuario), 
-    [personasList, rolesList, editingUsuario]
-  );
+  const formFields = useMemo(() => {
+    const optionsForSelect = [...personasList];
+
+    if (editingUsuario && editingUsuario.PERSONA) {
+      const existe = optionsForSelect.some(p => p.ID_PERSONA === editingUsuario.PERSONA_ID);
+      
+      if (!existe) {
+        optionsForSelect.push({
+          ID_PERSONA: editingUsuario.PERSONA_ID,
+          NOMBRE: editingUsuario.PERSONA.NOMBRE,
+          APELLIDO: editingUsuario.PERSONA.APELLIDO,
+        } as PersonaSinUsuario);
+      }
+    }
+
+    return getUsuarioFormFields(optionsForSelect, rolesList, !!editingUsuario);
+  }, [personasList, rolesList, editingUsuario]);
   
   const initialData = useMemo(() => {
     if (!editingUsuario) {

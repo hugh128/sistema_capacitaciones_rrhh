@@ -33,6 +33,7 @@ interface FormField {
   options?: { value: string | boolean; label: string }[]
   placeholder?: string
   autocomplete?: string
+  disabled?: boolean;
 }
 
 interface FormModalProps {
@@ -276,7 +277,7 @@ export function FormModal({
                   field={field}
                   value={formData[field.key]}
                   updateField={updateField}
-                  disabled={loading}
+                  disabled={loading || field.disabled}
                 />
               ))}
             </div>
