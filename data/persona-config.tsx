@@ -38,10 +38,10 @@ export const PERSONA_COLUMNS = [
     key: "FECHA_NACIMIENTO",
     label: "Fecha Nacimiento"
   }, */
-  {
+/*   {
     key: "FECHA_INGRESO",
     label: "Fecha Ingreso"
-  },
+  }, */
   {
     key: "ESTADO",
     label: "Estado",
