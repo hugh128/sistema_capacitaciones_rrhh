@@ -166,52 +166,88 @@ export function UsuarioDataTable({
                 </TableRow>
               ) : (
                 // DATOS CARGADOS
-                filteredData.map((item, index) => (
-                  <TableRow key={item.id || index} className="hover:bg-muted/30 transition-colors">
-                    {columns.map((column) => {
-                      const value = getNestedValue(item, column.key)
-                      return (
-                        <TableCell key={column.key} className="whitespace-nowrap">
-                          {column.render ? column.render(value, item) : (value ?? "N/A")}
+                filteredData.map((item, index) => {
+                  const isAdmin = item.USERNAME === 'admin';
+
+                  return (
+                    <TableRow 
+                      key={item.id || index} 
+                      className={`transition-colors ${isAdmin ? "bg-muted/10" : "hover:bg-muted/30"}`}
+                    >
+                      {columns.map((column) => {
+                        const value = getNestedValue(item, column.key);
+                        return (
+                          <TableCell key={column.key} className="whitespace-nowrap">
+                            {column.render ? (
+                              column.render(value, item)
+                            ) : (
+                              <span className={isAdmin ? "font-medium" : ""}>
+                                {value ?? "N/A"}
+                              </span>
+                            )}
+                          </TableCell>
+                        );
+                      })}
+
+                      {hasActions && (
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="hover:bg-muted cursor-pointer">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-52">
+                              
+                              {onEdit && (
+                                <DropdownMenuItem 
+                                  onClick={() => !isAdmin && onEdit(item)} 
+                                  disabled={isAdmin}
+                                  className={`cursor-pointer ${isAdmin ? "opacity-50" : ""}`}
+                                >
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  <div className="flex flex-col">
+                                    <span>Editar</span>
+                                    {isAdmin && <span className="text-[10px] text-muted-foreground">Sistema Protegido</span>}
+                                  </div>
+                                </DropdownMenuItem>
+                              )}
+
+                              {onPasswordChange && (
+                                <DropdownMenuItem 
+                                  onClick={() => onPasswordChange(item)} 
+                                  className="cursor-pointer"
+                                >
+                                  <KeyIcon className="h-4 w-4 mr-2" />
+                                  Cambiar Contraseña
+                                </DropdownMenuItem>
+                              )}
+
+                              {onDelete && (
+                                <DropdownMenuItem
+                                  onClick={() => !isAdmin && handleDeleteClick(item)}
+                                  disabled={isAdmin}
+                                  className={`cursor-pointer ${
+                                    isAdmin 
+                                      ? "opacity-50" 
+                                      : "text-destructive focus:text-destructive focus:bg-destructive/10"
+                                  }`}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  <div className="flex flex-col">
+                                    <span>Inactivar</span>
+                                    {isAdmin && <span className="text-[10px] text-muted-foreground">No se puede eliminar</span>}
+                                  </div>
+                                </DropdownMenuItem>
+                              )}
+
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </TableCell>
-                      )
-                    })}
-                    {hasActions && (
-                      <TableCell>
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="hover:bg-muted">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-48">
-                            {onEdit && (
-                              <DropdownMenuItem onClick={() => onEdit(item)} className="cursor-pointer">
-                                <Edit className="h-4 w-4 mr-2" />
-                                Editar
-                              </DropdownMenuItem>
-                            )}
-                            {onPasswordChange && (
-                              <DropdownMenuItem onClick={() => onPasswordChange(item)} className="cursor-pointer">
-                                <KeyIcon className="h-4 w-4 mr-2" />
-                                Cambiar Contraseña
-                              </DropdownMenuItem>
-                            )}
-                            {onDelete && (
-                              <DropdownMenuItem
-                                onClick={() => handleDeleteClick(item)}
-                                className="text-destructive cursor-pointer focus:text-destructive focus:bg-destructive/10"
-                              >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Inactivar
-                              </DropdownMenuItem>
-                            )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))
+                      )}
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>

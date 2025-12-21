@@ -210,60 +210,94 @@ export function PersonaDataTable<T extends Persona>({
                 </TableRow>
               ) : (
                 // DATOS CARGADOS
-                filteredData.map((item, index) => (
-                  <TableRow key={item.ID_PERSONA || index} className="hover:bg-muted/30 transition-colors">
-                    {columns.map((column) => {
-                      const value = getNestedValue(item, column.key as string);
-                      const isEmpty = value === undefined || value === null || value === '';
+                filteredData.map((item, index) => {
+                  const isProtectedPersona = 
+                    item.NOMBRE === 'Administrador' && 
+                    item.APELLIDO === 'Admin';
 
-                      return (
-                        <TableCell key={column.key as string} className="whitespace-nowrap">
-                          {column.render ? (
-                            (column.render as CallSiteRenderer<T>)(value, item)
-                          ) : isEmpty ? (
-                            <span className="text-muted-foreground/70 italic text-sm">Sin información</span>
-                          ) : (
-                            <span className="text-foreground block truncate max-w-[250px]" title={String(value)}>{String(value)}</span>
-                          )}
-                        </TableCell>
-                      )
-                    })}
-                    {hasActions && (
-                      <TableCell className="">
-                        <DropdownMenu>
-                          <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="sm" className="hover:bg-muted">
-                              <MoreHorizontal className="h-4 w-4" />
-                            </Button>
-                          </DropdownMenuTrigger>
-                          <DropdownMenuContent align="end" className="w-40">
-                            {onViewDetail && (
-                              <DropdownMenuItem onClick={() => onViewDetail(item)} className="cursor-pointer">
-                                <Eye className="h-4 w-4 mr-2" />
-                                Ver Detalle
-                              </DropdownMenuItem>
-                            )}
-                            {onEdit && (
-                              <DropdownMenuItem onClick={() => onEdit(item)} className="cursor-pointer">
-                                <Edit className="h-4 w-4 mr-2" />
-                                Editar
-                              </DropdownMenuItem>
-                            )}
-                            {onDelete && (
-                              <DropdownMenuItem 
-                                onClick={() => handleDeleteClick(item)} 
-                                className="text-destructive cursor-pointer focus:text-destructive focus:bg-destructive/10"
+                  return (
+                    <TableRow 
+                      key={item.ID_PERSONA || index} 
+                      className={`transition-colors ${isProtectedPersona ? "bg-muted/10 italic" : "hover:bg-muted/30"}`}
+                    >
+                      {columns.map((column) => {
+                        const value = getNestedValue(item, column.key as string);
+                        const isEmpty = value === undefined || value === null || value === '';
+
+                        return (
+                          <TableCell key={column.key as string} className="whitespace-nowrap">
+                            {column.render ? (
+                              (column.render as CallSiteRenderer<T>)(value, item)
+                            ) : isEmpty ? (
+                              <span className="text-muted-foreground/70 italic text-sm">Sin información</span>
+                            ) : (
+                              <span 
+                                className={`block truncate max-w-[250px] ${isProtectedPersona ? "font-medium" : "text-foreground"}`} 
+                                title={String(value)}
                               >
-                                <Trash2 className="h-4 w-4 mr-2" />
-                                Inactivar
-                              </DropdownMenuItem>
+                                {String(value)}
+                              </span>
                             )}
-                          </DropdownMenuContent>
-                        </DropdownMenu>
-                      </TableCell>
-                    )}
-                  </TableRow>
-                ))
+                          </TableCell>
+                        );
+                      })}
+
+                      {hasActions && (
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="sm" className="hover:bg-muted cursor-pointer">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" className="w-48">
+                              
+                              {onViewDetail && (
+                                <DropdownMenuItem onClick={() => onViewDetail(item)} className="cursor-pointer">
+                                  <Eye className="h-4 w-4 mr-2" />
+                                  Ver Detalle
+                                </DropdownMenuItem>
+                              )}
+
+                              {onEdit && (
+                                <DropdownMenuItem 
+                                  onClick={() => !isProtectedPersona && onEdit(item)} 
+                                  disabled={isProtectedPersona}
+                                  className={`cursor-pointer ${isProtectedPersona ? "opacity-50" : ""}`}
+                                >
+                                  <Edit className="h-4 w-4 mr-2" />
+                                  <div className="flex flex-col">
+                                    <span>Editar</span>
+                                    {isProtectedPersona && <span className="text-[10px] text-muted-foreground">Registro de sistema</span>}
+                                  </div>
+                                </DropdownMenuItem>
+                              )}
+
+                              {onDelete && (
+                                <DropdownMenuItem 
+                                  onClick={() => !isProtectedPersona && handleDeleteClick(item)} 
+                                  disabled={isProtectedPersona}
+                                  className={`cursor-pointer ${
+                                    isProtectedPersona 
+                                      ? "opacity-50" 
+                                      : "text-destructive focus:text-destructive focus:bg-destructive/10"
+                                  }`}
+                                >
+                                  <Trash2 className="h-4 w-4 mr-2" />
+                                  <div className="flex flex-col">
+                                    <span>Inactivar</span>
+                                    {isProtectedPersona && <span className="text-[10px] text-muted-foreground">No editable</span>}
+                                  </div>
+                                </DropdownMenuItem>
+                              )}
+
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      )}
+                    </TableRow>
+                  );
+                })
               )}
             </TableBody>
           </Table>
