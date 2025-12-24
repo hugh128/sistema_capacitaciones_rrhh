@@ -182,7 +182,7 @@ export default function ColaboradoresPage() {
           <main className="flex-1 overflow-auto p-6 custom-scrollbar">
             <Toaster />
 
-            <div className="max-w-7xl mx-auto">
+            <div className="max-w-[1600px] mx-auto">
               {selectedCollaborator ? (
                 <ProfileContent 
                   collaborator={selectedCollaborator} 

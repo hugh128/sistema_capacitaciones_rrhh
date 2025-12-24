@@ -19,6 +19,7 @@ import {
   Calendar,
   FileCheck,
   Download,
+  Loader2,
 } from "lucide-react"
 import DocumentCard from "./document-card"
 import type { CapacitacionColaborador, CapacitacionInduccion, Colaborador, DETALLE_PLAN_COLABORADOR, DocumentoColaborador, GrupoCapacitacion, HistorialColaborador, InduccionDocumental, ResumenColaborador } from "@/lib/colaboradores/type"
@@ -222,7 +223,20 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
     handleDownloadInduccionDocumental(dataInduccion);
   };
 
+  const LoadingState = ({ message }: { message: string }) => (
+    <div className="text-center py-12">
+      <div className="flex flex-col items-center gap-3">
+        <Loader2 className="h-10 w-10 text-primary animate-spin" />
+        <p className="text-muted-foreground font-medium">{message}</p>
+      </div>
+    </div>
+  )
+
   const renderTabContent = () => {
+    if (isLoading) {
+      return <LoadingState message="Cargando información..." />
+    }
+
     switch (activeTab) {
       case "General":     
         const colors = getCompletionColors(collaborator.PORCENTAJE_CUMPLIMIENTO);

@@ -253,7 +253,7 @@ export function Sidebar({ className }: SidebarProps) {
             variant="ghost"
             size="sm"
             onClick={() => setCollapsed(!collapsed)}
-            className="text-sidebar-foreground hover:bg-sidebar-accent flex-shrink-0 hidden md:flex relative w-8 h-8"
+            className="text-sidebar-foreground hover:bg-sidebar-accent flex-shrink-0 hidden md:flex relative w-8 h-8 cursor-pointer"
           >
             <Menu
               className={cn(

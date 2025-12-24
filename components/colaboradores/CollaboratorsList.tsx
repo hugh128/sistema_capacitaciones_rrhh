@@ -51,10 +51,8 @@ export default function CollaboratorsList({
     return colaboradores.filter((collab) => {
       const matchesSearch = !searchLower || 
         collab.NOMBRE_COMPLETO.toLowerCase().includes(searchLower) ||
-        collab.EMAIL.toLowerCase().includes(searchLower) ||
         (collab.PUESTO && collab.PUESTO.toLowerCase().includes(searchLower)) ||
         (collab.DEPARTAMENTO && collab.DEPARTAMENTO.toLowerCase().includes(searchLower))
-
 
       const matchesStatus = filterStatus === "all" || 
         collab.ESTADO.toLowerCase() === filterStatus
@@ -145,22 +143,22 @@ export default function CollaboratorsList({
         <Table>
           <TableHeader>
             <TableRow className="bg-muted/50 border-b border-border">
-              <TableHead className="px-6 py-3 text-xs font-semibold uppercase text-foreground">
+              <TableHead className="px-3 py-3 text-xs font-semibold uppercase text-foreground">
                 Colaborador
               </TableHead>
-              <TableHead className="px-6 py-3 text-xs font-semibold uppercase text-foreground">
+              <TableHead className="px-3 py-3 text-xs font-semibold uppercase text-foreground">
                 Puesto
               </TableHead>
-              <TableHead className="px-6 py-3 text-xs font-semibold uppercase text-foreground">
+              <TableHead className="px-3 py-3 text-xs font-semibold uppercase text-foreground">
                 Departamento
               </TableHead>
-              <TableHead className="px-6 py-3 text-xs font-semibold uppercase text-foreground">
+              <TableHead className="px-3 py-3 text-xs font-semibold uppercase text-foreground">
                 Jefe Inmediato
               </TableHead>
-              <TableHead className="px-6 py-3 text-xs font-semibold uppercase text-foreground">
+              <TableHead className="px-3 py-3 text-xs font-semibold uppercase text-foreground">
                 Cumplimiento
               </TableHead>
-              <TableHead className="px-6 py-3 text-xs font-semibold uppercase text-foreground">
+              <TableHead className="px-3 py-3 text-xs font-semibold uppercase text-foreground">
                 Estado
               </TableHead>
             </TableRow>
@@ -172,7 +170,7 @@ export default function CollaboratorsList({
                 onClick={() => onSelectCollaborator(collaborator)}
                 className="hover:bg-muted/30 cursor-pointer transition-colors"
               >
-                <TableCell className="px-6 py-4">
+                <TableCell className="px-3 py-4">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-primary flex items-center justify-center text-primary-foreground font-semibold">
                       {collaborator.INICIALES}
@@ -185,16 +183,16 @@ export default function CollaboratorsList({
                     </div>
                   </div>
                 </TableCell>
-                <TableCell className="px-6 py-4 text-sm text-foreground">
+                <TableCell className="px-3 py-4 text-sm text-foreground truncate max-w-[300px]" title={collaborator.PUESTO}>
                   {collaborator.PUESTO}
                 </TableCell>
-                <TableCell className="px-6 py-4 text-sm text-foreground">
+                <TableCell className="px-3 py-4 text-sm text-foreground truncate max-w-[300px]" title={collaborator.DEPARTAMENTO}>
                   {collaborator.DEPARTAMENTO}
                 </TableCell>
-                <TableCell className="px-6 py-4 text-sm text-foreground">
+                <TableCell className="px-3 py-4 text-sm text-foreground">
                   {collaborator.ENCARGADO}
                 </TableCell>
-                <TableCell className="px-6 py-4">
+                <TableCell className="px-3 py-4">
                   <div className="flex items-center gap-2">
                     <div className="flex-1 bg-muted rounded-full h-2 max-w-[100px]">
                       <div
@@ -207,7 +205,7 @@ export default function CollaboratorsList({
                     </span>
                   </div>
                 </TableCell>
-                <TableCell className="px-6 py-4">
+                <TableCell className="px-3 py-4">
                   <span
                     className={`inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold ${getStatusColor(
                       collaborator.ESTADO.toLowerCase()
