@@ -9,7 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuth } from "@/contexts/auth-context"
 import { useTheme } from "@/contexts/theme-context"
 import { ThemeToggle } from "@/components/theme-toggle"
-import { Eye, EyeOff, User, Lock } from "lucide-react"
+import { Eye, EyeOff, User, Lock, Loader2 } from "lucide-react"
 import Image from "next/image"
 
 export function LoginForm() {
@@ -128,7 +128,14 @@ export function LoginForm() {
                     className="w-full h-12 sm:h-14 bg-[#F7AC25] hover:bg-[#F7AC25]/90 text-accent-foreground font-semibold text-lg rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 cursor-pointer"
                     disabled={loading}
                   >
-                    {loading ? "Iniciando sesión..." : "Iniciar Sesión"}
+                    {loading ? (
+                      <span className="flex items-center justify-center gap-2">
+                        <Loader2 className="w-5 h-5 animate-spin" />
+                        Iniciando sesión...
+                      </span>
+                    ) : (
+                      "Iniciar Sesión"
+                    )}
                   </Button>
                 </form>
               </CardContent>

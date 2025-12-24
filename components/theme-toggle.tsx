@@ -8,7 +8,7 @@ export function ThemeToggle() {
   const { theme, toggleTheme } = useTheme()
 
   return (
-    <Button variant="ghost" size="icon" onClick={toggleTheme}>
+    <Button variant="ghost" size="icon" onClick={toggleTheme} className="cursor-pointer">
       {theme === "light" ? <Moon className="h-5 w-5" /> : <Sun className="h-5 w-5" />}
       <span className="sr-only">Toggle theme</span>
     </Button>
