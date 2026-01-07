@@ -3,7 +3,7 @@ import type { Metadata } from "next";
 import { GeistSans } from 'geist/font/sans';
 import { GeistMono } from 'geist/font/mono';
 import { AuthProvider } from "@/contexts/auth-context"
-import { ThemeProvider } from "@/contexts/theme-context"
+import { ThemeProvider } from "@/components/theme-provider";
 import { Suspense } from "react"
 import "./globals.css";
 
@@ -18,10 +18,15 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
       <body className={`font-sans ${GeistSans.variable} ${GeistMono.variable}`}>
         <Suspense fallback={<div>Loading...</div>}>
-          <ThemeProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
             <AuthProvider>
               {children}
             </AuthProvider>

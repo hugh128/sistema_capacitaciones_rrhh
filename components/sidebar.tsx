@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { usePathname, useRouter } from 'next/navigation'
 import { useAuth } from "@/contexts/auth-context"
-import { useTheme } from "@/contexts/theme-context"
+import { useTheme } from "next-themes"
 import { Button } from "@/components/ui/button"
 import { cn } from "@/lib/utils"
 import {
@@ -124,7 +124,7 @@ const MAIN_MENU_CONFIG: MenuItem[] = [
 
 export function Sidebar({ className }: SidebarProps) {
   const { user, logout, loggingOut } = useAuth()
-  const { theme, toggleTheme } = useTheme()
+  const { theme, setTheme } = useTheme()
   const router = useRouter()
 
   const [collapsed, setCollapsed] = useState(() => {
@@ -202,6 +202,10 @@ export function Sidebar({ className }: SidebarProps) {
       {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
     </Button>
   )
+
+  const toggleTheme = () => {
+    setTheme(theme === "dark" ? "light" : "dark")
+  }
 
   return (
     <>

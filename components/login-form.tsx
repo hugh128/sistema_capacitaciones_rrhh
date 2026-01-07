@@ -7,8 +7,8 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { useAuth } from "@/contexts/auth-context"
-import { useTheme } from "@/contexts/theme-context"
-import { ThemeToggle } from "@/components/theme-toggle"
+import { ThemeToggle } from "./theme-toggle"
+import { useTheme } from "next-themes"
 import { Eye, EyeOff, User, Lock, Loader2 } from "lucide-react"
 import Image from "next/image"
 
@@ -18,8 +18,8 @@ export function LoginForm() {
   const [showPassword, setShowPassword] = useState(false)
   const [error, setError] = useState("")
   const { login } = useAuth()
-  const { theme } = useTheme()
   const [loading, setLoading] = useState(false)
+  const { theme } = useTheme()
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
