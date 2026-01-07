@@ -1,13 +1,14 @@
-// components/RequirePermission.tsx
+"use client";
+
 import { useAuth } from "@/contexts/auth-context";
 import { hasAnyPermission } from "@/lib/permissions";
-import React from "react";
+import React, { useEffect } from "react";
 import { Button } from "./ui/button";
 import { useRouter } from "next/navigation";
 import { ShieldAlert, Home } from "lucide-react";
 
 interface RequirePermissionProps {
-  requiredPermissions: string[]; 
+  requiredPermissions: string[];
   children: React.ReactNode;
 }
 
@@ -17,11 +18,18 @@ export const RequirePermission: React.FC<RequirePermissionProps> = ({
 }) => {
   const { user, loading, loggingOut } = useAuth();
   const router = useRouter();
-  
+
   const isProtected = requiredPermissions.length > 0;
   const hasAccess = user && hasAnyPermission(user, requiredPermissions);
 
-  if (loading || loggingOut || (isProtected && !user)) {
+  useEffect(() => {
+    if (!loading && !loggingOut && isProtected && !user) {
+      router.push("/");
+    }
+  }, [loading, loggingOut, isProtected, user, router]);
+
+  // 1. ESTADO DE CARGA O CIERRE DE SESIÓN
+  if (loading || loggingOut) {
     return (
       <div className="flex min-h-svh bg-gradient-to-br from-background via-muted/30 to-background relative overflow-hidden">
         <div className="absolute inset-0 bg-grid-white/5 bg-[size:40px_40px]" />
@@ -32,17 +40,13 @@ export const RequirePermission: React.FC<RequirePermissionProps> = ({
           <div className="flex flex-col items-center gap-6 animate-in fade-in zoom-in-95 duration-700">
             <div className="relative w-24 h-24">
               <div className="absolute inset-0 rounded-full border-4 border-primary/20" />
-              
               <div className="absolute inset-2 rounded-full border-4 border-t-primary border-r-primary/40 border-b-primary/20 border-l-primary/40 animate-spin" 
                    style={{ animationDuration: '1.5s' }} />
-              
               <div className="absolute inset-4 rounded-full border-4 border-b-primary border-l-primary/40 border-t-primary/20 border-r-primary/40 animate-spin" 
                    style={{ animationDuration: '1s', animationDirection: 'reverse' }} />
-              
               <div className="absolute inset-0 flex items-center justify-center">
                 <div className="w-4 h-4 bg-primary rounded-full animate-pulse shadow-lg shadow-primary/50" />
               </div>
-              
               <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl animate-pulse" />
             </div>
 
@@ -67,18 +71,20 @@ export const RequirePermission: React.FC<RequirePermissionProps> = ({
 
         <style jsx>{`
           @keyframes shimmer {
-            0% {
-              background-position: -200% 0;
-            }
-            100% {
-              background-position: 200% 0;
-            }
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
           }
         `}</style>
       </div>
     );
   }
-  
+
+  // 2. RUTA PROTEGIDA SIN USUARIO
+  if (isProtected && !user) {
+    return null; 
+  }
+
+  // 3. ACCESO DENEGADO
   if (isProtected && !hasAccess) {
     return (
       <div className="flex min-h-svh bg-gradient-to-br from-background via-background to-muted/20">
@@ -124,5 +130,6 @@ export const RequirePermission: React.FC<RequirePermissionProps> = ({
     );
   }
 
+  // 4. ACCESO AUTORIZADO
   return <>{children}</>;
 };
