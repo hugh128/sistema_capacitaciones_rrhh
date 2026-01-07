@@ -88,17 +88,13 @@ export default function DashboardPage() {
       
   }, [user, obtenerEstadisticasDashboard])
 
-  if (!user) {
-    return null
-  }
-
   return (
     <RequirePermission requiredPermissions={[]}>
       <div className="flex h-screen bg-background">
         <Sidebar />
 
         <div className="flex-1 flex flex-col overflow-hidden">
-          <AppHeader title="Dashboard" subtitle={`Bienvenido, ${user.NOMBRE} ${user.APELLIDO}`} />
+          <AppHeader title="Dashboard" subtitle={`Bienvenido, ${user?.NOMBRE} ${user?.APELLIDO}`} />
 
           <main className="flex-1 overflow-y-auto p-4 sm:p-6 custom-scrollbar">
             <Toaster />
@@ -111,7 +107,7 @@ export default function DashboardPage() {
                     Administra y da seguimiento a todas las capacitaciones de tu organización
                   </p>
                   <div className="flex flex-wrap gap-2">
-                    {user.ROLES[0]?.NOMBRE === "RRHH" && (
+                    {user?.ROLES[0]?.NOMBRE === "RRHH" && (
                       <>
                         <Link href="/planes_programas">
                           <Button variant="default" size="sm" className="cursor-pointer">
@@ -126,14 +122,14 @@ export default function DashboardPage() {
                         </Link>
                       </>
                     )}
-                    {user.ROLES[0]?.NOMBRE === "Capacitador" && (
+                    {user?.ROLES[0]?.NOMBRE === "Capacitador" && (
                       <>
                         <Button variant="default" size="sm" className="cursor-pointer">
                           Mis Capacitaciones
                         </Button>
                       </>
                     )}
-                    {["Gerente", "Jefe"].includes(user.ROLES[0]?.NOMBRE) && (
+                    {user && ["Gerente", "Jefe"].includes(user.ROLES[0]?.NOMBRE) && (
                       <>
                         <Button variant="default" size="sm">
                           Ver Mi Equipo
