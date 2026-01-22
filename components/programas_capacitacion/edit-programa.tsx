@@ -519,11 +519,11 @@ export function EditPrograma({ programa, departamentos, puestos, onSave, onCance
           <Button
             type="submit"
             disabled={!nombre || !descripcion || detalles.length === 0}
-            className="bg-primary text-primary-foreground hover:bg-primary/90"
+            className="bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer"
           >
             Guardar Cambios
           </Button>
-          <Button type="button" variant="outline" onClick={onCancel} className="border-border bg-transparent">
+          <Button type="button" variant="outline" onClick={onCancel} className="border-border bg-transparent dark:hover:border-foreground/50 dark:hover:text-foreground cursor-pointer">
             Cancelar
           </Button>
         </div>

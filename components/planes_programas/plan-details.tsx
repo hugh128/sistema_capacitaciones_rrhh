@@ -5,7 +5,7 @@ import { ArrowLeft, Edit, Users, BookOpen, Calendar, Building2, Briefcase } from
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import type { CapacitacionPlan, ColaboradoresPlan, DetallePlan, PlanCapacitacion } from "@/lib/planes_programas/types"
+import type { ColaboradoresPlan, DetallePlan, PlanCapacitacion } from "@/lib/planes_programas/types"
 import { usePlanesCapacitacion } from "@/hooks/usePlanesCapacitacion"
 import { useAuth } from "@/contexts/auth-context"
 
@@ -48,7 +48,7 @@ export default function PlanDetails({ plan, onBack, onEdit }: PlanDetailsProps) 
   } = usePlanesCapacitacion(user)
 
   const [activeTab, setActiveTab] = useState("info")
-  const [detallaPlan, setDetallaPlan] = useState<DetallePlan>();
+  const [detallePlan, setDetallePlan] = useState<DetallePlan>();
   const [colaboradoresPlan, setColaboradoresPlan] = useState<ColaboradoresPlan[]>([]);
 
   useEffect(() => {
@@ -62,7 +62,7 @@ export default function PlanDetails({ plan, onBack, onEdit }: PlanDetailsProps) 
           DETALLE_PLAN,
           COLABORADORES_PLAN
         } = await obtenerDetallePlanColaborador(plan.ID_PLAN)
-        setDetallaPlan(DETALLE_PLAN)
+        setDetallePlan(DETALLE_PLAN)
         setColaboradoresPlan(COLABORADORES_PLAN)
 
       } catch (error) {
