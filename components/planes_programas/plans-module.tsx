@@ -59,6 +59,7 @@ export default function PlansModule() {
     aplicarPlanCapacitacion,
     obtenerColaboradoresDisponiblesPlan,
     sincronizarCapacitacionesPlan,
+    loading
   } = usePlanesCapacitacion(user)
 
   useEffect(() => {
@@ -128,6 +129,7 @@ export default function PlansModule() {
           onObtenerColaboradores={obtenerColaboradoresDisponiblesPlan}
           onSynchronize={handleSynchronizePlan}
           usuario={user}
+          loading={loading}
         />
       )}
       {currentView === "create" &&

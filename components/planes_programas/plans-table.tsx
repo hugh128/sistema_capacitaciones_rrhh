@@ -10,7 +10,7 @@ import {
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { Eye, MoreHorizontal, UserPlus, Calendar, FileText, BookOpenText, CalendarSync } from "lucide-react"
+import { Eye, MoreHorizontal, UserPlus, Calendar, FileText, BookOpenText, CalendarSync, Loader2 } from "lucide-react"
 import type { PlanCapacitacion } from "@/lib/planes_programas/types"
 import { getEstatusBadgeVariant } from "./plans-list-view"
 import {
@@ -30,6 +30,7 @@ interface PlansTableProps {
   onAssignPlan: (plan: PlanCapacitacion) => void
   onSynchronizePlan: (idPlan: number, usuario: string) => void
   usuario: UsuarioLogin | null
+  loading?: boolean
 }
 
 export const getTypeBadgeColor = (type: string) => {
@@ -45,7 +46,7 @@ export const getTypeBadgeColor = (type: string) => {
   }
 };
 
-export function PlansTable({ title, filteredPlans, onViewDetails, onAssignPlan, onSynchronizePlan, usuario }: PlansTableProps) {
+export function PlansTable({ title, filteredPlans, onViewDetails, onAssignPlan, onSynchronizePlan, usuario, loading = false }: PlansTableProps) {
   return (
     <div className="space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-2 border-b border-border/40">
@@ -100,7 +101,16 @@ export function PlansTable({ title, filteredPlans, onViewDetails, onAssignPlan, 
             </TableHeader>
 
             <TableBody>
-              {filteredPlans.length > 0 ? (
+              {loading ? (
+                <TableRow className="hover:bg-transparent">
+                  <TableCell colSpan={6} className="text-center py-12">
+                    <div className="flex flex-col items-center gap-3">
+                      <Loader2 className="h-8 w-8 text-primary animate-spin" />
+                      <p className="text-muted-foreground font-medium">Cargando planes...</p>
+                    </div>
+                  </TableCell>
+                </TableRow>
+              ) : filteredPlans.length > 0 ? (
                 filteredPlans.map((plan) => (
                   <TableRow
                     key={plan.ID_PLAN}

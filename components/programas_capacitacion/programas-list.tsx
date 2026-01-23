@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Plus, Search, Eye, Pencil, MoreHorizontal, UserPlus } from "lucide-react"
+import { Plus, Search, Eye, Pencil, MoreHorizontal, UserPlus, Loader2 } from "lucide-react"
 import type { 
   AsignarProgramaCapacitacionSelectivo, 
   ProgramaCapacitacion,
@@ -31,6 +31,7 @@ interface ProgramasCapacitacionListProps {
   onDelete: (id: number) => void
   usuario: UsuarioLogin | null
   obtenerColaboradores: (idPrograma: number) => Promise<ColaboradorDisponiblePrograma[]>
+  loading?: boolean
 }
 
 export function ProgramasCapacitacionList({
@@ -42,6 +43,7 @@ export function ProgramasCapacitacionList({
   onDelete,
   usuario,
   obtenerColaboradores,
+  loading = false,
 }: ProgramasCapacitacionListProps) {
   const [searchTerm, setSearchTerm] = useState("")
   const [assignModalOpen, setAssignModalOpen] = useState(false)
@@ -163,6 +165,7 @@ export function ProgramasCapacitacionList({
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
+                disabled={loading}
               />
             </div>
           </div>
@@ -182,10 +185,24 @@ export function ProgramasCapacitacionList({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {filteredProgramas.length === 0 ? (
+                {loading ? (
+                  <TableRow className="hover:bg-transparent">
+                    <TableCell colSpan={7} className="text-center py-12">
+                      <div className="flex flex-col items-center gap-3">
+                        <Loader2 className="h-8 w-8 text-primary animate-spin" />
+                        <p className="text-muted-foreground font-medium">Cargando programas...</p>
+                      </div>
+                    </TableCell>
+                  </TableRow>
+                ) : filteredProgramas.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={7} className="text-center py-8 text-muted-foreground">
-                      No se encontraron programas
+                      <div className="flex flex-col items-center gap-2">
+                        <Search className="h-8 w-8 text-muted-foreground/50" />
+                        <p className="font-medium">
+                          {searchTerm ? 'No se encontraron resultados' : 'No se encontraron programas'}
+                        </p>
+                      </div>
                     </TableCell>
                   </TableRow>
                 ) : (

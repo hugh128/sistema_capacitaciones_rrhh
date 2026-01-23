@@ -38,6 +38,7 @@ interface PlansListViewProps {
   onObtenerColaboradores: (idPlan: number) => Promise<ColaboradorDisponible[]>
   onSynchronize: (idPlan: number, usuario: string) => void
   usuario: UsuarioLogin | null
+  loading?: boolean
 }
 
 type BadgeVariant = "default" | "secondary" | "destructive" | "outline";
@@ -68,7 +69,7 @@ export const getTypeBadgeColor = (type: string) => {
   }
 };
 
-export default function PlansListView({ plans, onCreatePlan, onViewDetails, onAssign, onImport, onObtenerColaboradores, onSynchronize, usuario }: PlansListViewProps) {
+export default function PlansListView({ plans, onCreatePlan, onViewDetails, onAssign, onImport, onObtenerColaboradores, onSynchronize, usuario, loading = false }: PlansListViewProps) {
   const [searchQuery, setSearchQuery] = useState("")
   const [typeFilter, setTypeFilter] = useState<string>("all")
   const [statusFilter, setStatusFilter] = useState<string>("all")
@@ -389,6 +390,7 @@ export default function PlansListView({ plans, onCreatePlan, onViewDetails, onAs
         onAssignPlan={handleAssignClick}
         onSynchronizePlan={onSynchronize}
         usuario={usuario}
+        loading={loading}
       />
 
       {planParaAsignar && (

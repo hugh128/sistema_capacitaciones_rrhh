@@ -51,7 +51,8 @@ export default function ProgramsModule() {
     saveProgramaCapacitacion,
     saveProgramaDetalle,
     asignarProgramaCapacitacionSelectivo,
-    obtenerColaboradoresDisponiblesPrograma
+    obtenerColaboradoresDisponiblesPrograma,
+    loading
   } = useProgramasCapacitacion(user)
 
   useEffect(() => {
@@ -117,6 +118,7 @@ export default function ProgramsModule() {
           onDelete={handleDelete}
           usuario={user}
           obtenerColaboradores={obtenerColaboradoresDisponiblesPrograma}
+          loading={loading}
         />
       )}
 

@@ -88,8 +88,7 @@ export function RolesTab() {
     { key: "NOMBRE", label: "Nombre del Rol" },
     {
       key: "DESCRIPCION",
-      label: "Descripción",
-      render: (value: string) => value || "Sin descripción",
+      label: "Descripción"
     },
     {
       key: "ROL_PERMISOS",
