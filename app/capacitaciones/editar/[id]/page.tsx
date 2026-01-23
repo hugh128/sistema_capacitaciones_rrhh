@@ -24,7 +24,7 @@ import { COLABORADORES_SESION, SESION_DETALLE } from "@/lib/mis-capacitaciones/c
 import toast, { Toaster } from "react-hot-toast"
 
 export default function EditarSesionPage() {
-  const { user } = useAuth()
+  const { user, loading: isAuthLoading } = useAuth()
   const params = useParams()
   const router = useRouter()
   const sesionId = Number(params.id)
@@ -57,8 +57,18 @@ export default function EditarSesionPage() {
   const [aplicaDiploma, setAplicaDiploma] = useState(false)
   const [observaciones, setObservaciones] = useState("")
   const [selectedColaboradores, setSelectedColaboradores] = useState<number[]>([])
+  const [categoria, setCategoria] = useState("")
 
   useEffect(() => {
+    if (isAuthLoading) {
+      return;
+    }
+
+    if (!user || !user.PERSONA_ID) {
+      setIsLoading(false);
+      return; 
+    }
+
     const fetchData = async () => {
       setIsLoading(true)
       try {
@@ -109,6 +119,8 @@ export default function EditarSesionPage() {
         setAplicaExamen(SESION.APLICA_EXAMEN || false)
         setNotaMinima(SESION.NOTA_MINIMA?.toString() || "")
         setAplicaDiploma(SESION.APLICA_DIPLOMA || false)
+        setCategoria(SESION.CATEGORIA || "")
+        setObservaciones(SESION.OBSERVACIONES_SESION || "")
         
         const idsColaboradoresActuales = (COLABORADORES || []).map((c: COLABORADORES_SESION) => c.ID_COLABORADOR)
         setSelectedColaboradores(idsColaboradoresActuales)
@@ -132,13 +144,20 @@ export default function EditarSesionPage() {
     if (sesionId && user) {
       fetchData()
     }
-  }, [sesionId, user, obtenerDetalleSesion, obtenerCapacitadores, obtenerColaboradoresSinSesion, router])
+  }, [isAuthLoading, user, sesionId, obtenerDetalleSesion, obtenerCapacitadores, obtenerColaboradoresSinSesion, router])
 
   const handleEditar = useCallback(async () => {
     const errors: string[] = []
 
-    if (!capacitadorId) errors.push("Selecciona un capacitador.")
-    if (!fechaProgramada) errors.push("Selecciona una fecha para programar la sesión.")
+    if (!capacitadorId) {
+      errors.push("Selecciona un capacitador.")
+      toast.error("Selecciona un capacitador.")
+    }
+
+    if (!fechaProgramada) {
+      errors.push("Selecciona una fecha para programar la sesión.")
+      toast.error("Selecciona una fecha para programar la sesión.")
+    }
     
     if (!horaInicio || !horaFin) {
       errors.push("Debes seleccionar hora de inicio y fin.")
@@ -155,6 +174,7 @@ export default function EditarSesionPage() {
     
     if (aplicaExamen && (!notaMinima || Number(notaMinima) < 0 || Number(notaMinima) > 100)) {
       errors.push("Ingresa una nota mínima válida entre 0 y 100.")
+      toast.error("Ingresa una nota mínima válida entre 0 y 100.")
     }
     
     setValidationErrors(errors)
@@ -194,6 +214,7 @@ export default function EditarSesionPage() {
       idsColaboradoresAgregar: idsColaboradoresAgregar,
       idsColaboradoresQuitar: idsColaboradoresQuitar,
       usuario: user.USERNAME,
+      categoria: categoria,
     }
 
     try {
@@ -205,7 +226,7 @@ export default function EditarSesionPage() {
   }, [
     capacitadorId, fechaProgramada, horaInicio, horaFin, nombreSesion, selectedColaboradores,
     aplicaExamen, notaMinima, sesionId, tipoCapacitacion, modalidad, aplicaDiploma,
-    grupoObjetivo, objetivo, observaciones, user, colaboradoresOriginales, router, editarSesion,
+    grupoObjetivo, objetivo, observaciones, user, colaboradoresOriginales, router, categoria, editarSesion,
   ])
 
   if (isLoading) {
@@ -329,6 +350,8 @@ export default function EditarSesionPage() {
                   observaciones={observaciones}
                   setObservaciones={setObservaciones}
                   capacitadores={capacitadores}
+                  categoria={categoria}
+                  setCategoria={setCategoria}
                 />
 
                 <TablaColaboradoresEditar
@@ -352,6 +375,12 @@ export default function EditarSesionPage() {
                   aplicaExamen={aplicaExamen}
                   notaMinima={notaMinima}
                   aplicaDiploma={aplicaDiploma}
+                  categoria={categoria}
+                  tipoCapacitacion={tipoCapacitacion}
+                  modalidad={modalidad}
+                  grupoObjetivo={grupoObjetivo}
+                  objetivo={objetivo}
+                  observaciones={observaciones}
                   onGuardar={handleEditar}
                 />
               </div>

@@ -1,8 +1,8 @@
-import { memo } from "react"
+import { memo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
-import { Calendar, Clock, UserPlus } from "lucide-react"
+import { Calendar, Clock, UserPlus, Loader2 } from "lucide-react"
 import type { Capacitador, Capacitacion } from "@/lib/capacitaciones/capacitaciones-types"
 
 interface ResumenCapacitacionProps {
@@ -16,7 +16,13 @@ interface ResumenCapacitacionProps {
   aplicaExamen: boolean
   notaMinima: string
   aplicaDiploma: boolean
-  onAsignar: () => void
+  onAsignar: () => Promise<void>
+  isLoading?: boolean
+  categoria: string
+  tipoCapacitacion: string
+  modalidad: string
+  grupoObjetivo: string
+  objetivo: string
 }
 
 export const ResumenCapacitacion = memo(function ResumenCapacitacion({
@@ -31,8 +37,37 @@ export const ResumenCapacitacion = memo(function ResumenCapacitacion({
   notaMinima,
   aplicaDiploma,
   onAsignar,
+  isLoading = false,
+  categoria,
+  tipoCapacitacion,
+  modalidad,
+  grupoObjetivo,
+  objetivo
 }: ResumenCapacitacionProps) {
+  const [isAssigning, setIsAssigning] = useState(false)
+  
   const capacitadorSeleccionado = capacitadores.find((c) => c.PERSONA_ID === +capacitadorId)
+
+  const handleAsignar = async () => {
+    setIsAssigning(true)
+    try {
+      await onAsignar()
+    } finally {
+      setIsAssigning(false)
+    }
+  }
+
+  const puedeAsignar =
+    capacitadorId &&
+    fechaProgramada &&
+    horaInicio &&
+    horaFin &&
+    categoria &&
+    tipoCapacitacion &&
+    modalidad &&
+    (grupoObjetivo.length >= 4) &&
+    (objetivo.length >= 4) &&
+    selectedColaboradores.length > 0
 
   return (
     <Card>
@@ -93,10 +128,30 @@ export const ResumenCapacitacion = memo(function ResumenCapacitacion({
           </div>
         )}
 
-        <Button onClick={onAsignar} className="w-full cursor-pointer" size="lg">
-          <UserPlus className="h-4 w-4 mr-2" />
-          Asignar Capacitación
+        <Button 
+          onClick={handleAsignar} 
+          className="w-full cursor-pointer" 
+          size="lg"
+          disabled={!puedeAsignar || isAssigning || isLoading}
+        >
+          {isAssigning ? (
+            <>
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              Asignando...
+            </>
+          ) : (
+            <>
+              <UserPlus className="h-4 w-4 mr-2" />
+              Asignar Capacitación
+            </>
+          )}
         </Button>
+
+        {!puedeAsignar && !isAssigning && (
+          <p className="text-xs text-center text-muted-foreground">
+            Completa todos los campos requeridos para asignar
+          </p>
+        )}
       </CardContent>
     </Card>
   )

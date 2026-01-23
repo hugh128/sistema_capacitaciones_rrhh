@@ -95,13 +95,13 @@ export function ProgramasCapacitacionList({
             {recentProgramas.map((programa) => (
               <Card
                 key={programa.ID_PROGRAMA}
-                className="border-border hover:shadow-lg transition-shadow cursor-pointer group flex flex-col h-full"
+                className="border-border hover:shadow-lg transition-shadow cursor-pointer group flex flex-col h-full hover:scale-[1.02] ease-in-out"
                 onClick={() => onViewDetails(programa)}
               >
                 <CardHeader className="pb-3 flex-grow">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors break-words leading-snug line-clamp-2">
+                      <h3 className="font-semibold text-foreground group-hover:text-primary dark:group-hover:text-gray-500 transition-colors break-words leading-snug line-clamp-2">
                         {programa.NOMBRE}
                       </h3>
                       <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{programa.DESCRIPCION}</p>
@@ -140,7 +140,7 @@ export function ProgramasCapacitacionList({
                         e.stopPropagation()
                         onViewDetails(programa)
                       }}
-                      className="hover:bg-primary/10 hover:text-primary"
+                      className="hover:bg-primary/10 dark:hover:bg-transparent dark:hover:border dark:border-blue-800 hover:text-primary dark:hover:text-blue-100 cursor-pointer"
                     >
                       <Eye className="w-4 h-4 mr-1" />
                       Ver detalles
@@ -191,8 +191,10 @@ export function ProgramasCapacitacionList({
                 ) : (
                   filteredProgramas.map((programa) => (
                     <TableRow key={programa.ID_PROGRAMA} className="hover:bg-muted/50">
-                      <TableCell className="font-medium">{programa.NOMBRE}</TableCell>
-                      <TableCell className="max-w-xs truncate">{programa.DESCRIPCION}</TableCell>
+                      <TableCell className="font-medium" title={programa.NOMBRE}>{programa.NOMBRE}</TableCell>
+                      <TableCell className="max-w-xs truncate" title={programa.DESCRIPCION}>
+                        {programa.DESCRIPCION}
+                      </TableCell>
                       <TableCell>
                         <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 dark:text-foreground dark:border-blue-900">
                           {programa.TIPO}

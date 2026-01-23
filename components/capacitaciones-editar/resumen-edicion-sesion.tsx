@@ -21,6 +21,12 @@ interface ResumenEdicionSesionProps {
   aplicaDiploma: boolean
   onGuardar: () => Promise<void>
   isLoading?: boolean
+  categoria: string
+  tipoCapacitacion: string
+  modalidad: string
+  grupoObjetivo: string
+  objetivo: string
+  observaciones: string
 }
 
 export const ResumenEdicionSesion = memo(function ResumenEdicionSesion({
@@ -37,6 +43,12 @@ export const ResumenEdicionSesion = memo(function ResumenEdicionSesion({
   aplicaDiploma,
   onGuardar,
   isLoading = false,
+  categoria,
+  tipoCapacitacion,
+  modalidad,
+  grupoObjetivo,
+  objetivo,
+  observaciones,
 }: ResumenEdicionSesionProps) {
   const [isSaving, setIsSaving] = useState(false)
   
@@ -61,13 +73,15 @@ export const ResumenEdicionSesion = memo(function ResumenEdicionSesion({
     return {
       agregados: agregados.length,
       quitados: quitados.length,
-      huboChangios: agregados.length > 0 || quitados.length > 0
+      huboCambios: agregados.length > 0 || quitados.length > 0
     }
   }, [selectedColaboradores, colaboradoresOriginales])
 
   const hayCambios = useMemo(() => {
+    // Verificar cambio de capacitador
     const capacitadorCambio = capacitadorId !== sesion.CAPACITADOR_ID?.toString()
     
+    // Verificar cambio de fecha
     let fechaCambio = false
     if (sesion.FECHA_PROGRAMADA) {
       const fechaOriginal = new Date(sesion.FECHA_PROGRAMADA).toISOString().split('T')[0]
@@ -76,9 +90,8 @@ export const ResumenEdicionSesion = memo(function ResumenEdicionSesion({
       fechaCambio = fechaProgramada !== ""
     }
     
+    // Verificar cambio de hora inicio
     let horaInicioCambio = false
-    let horaFinCambio = false
-    
     if (sesion.HORA_INICIO) {
       const horaInicioOriginal = new Date(sesion.HORA_INICIO)
       const hours = horaInicioOriginal.getHours()
@@ -87,6 +100,8 @@ export const ResumenEdicionSesion = memo(function ResumenEdicionSesion({
       horaInicioCambio = horaInicio !== horaOriginalStr
     }
     
+    // Verificar cambio de hora fin
+    let horaFinCambio = false
     if (sesion.HORA_FIN) {
       const horaFinOriginal = new Date(sesion.HORA_FIN)
       const hours = horaFinOriginal.getHours()
@@ -95,8 +110,55 @@ export const ResumenEdicionSesion = memo(function ResumenEdicionSesion({
       horaFinCambio = horaFin !== horaOriginalStr
     }
 
-    return capacitadorCambio || fechaCambio || horaInicioCambio || horaFinCambio || cambiosColaboradores.huboChangios
-  }, [capacitadorId, fechaProgramada, horaInicio, horaFin, sesion, cambiosColaboradores])
+    // Verificar cambios en los nuevos campos
+    const categoriaCambio = categoria !== (sesion.CATEGORIA || '')
+    const tipoCapacitacionCambio = tipoCapacitacion !== (sesion.TIPO_CAPACITACION || '')
+    const modalidadCambio = modalidad !== (sesion.MODALIDAD || '')
+    const grupoObjetivoCambio = grupoObjetivo !== (sesion.GRUPO_OBJETIVO || '')
+    const objetivoCambio = objetivo !== (sesion.OBJETIVO || '')
+    const aplicaExamenCambio = aplicaExamen !== (sesion.APLICA_EXAMEN || false)
+
+    // Solo validar cambio de nota mínima si aplica examen está activado
+    const notaMinimaCambio = aplicaExamen 
+      ? notaMinima !== (sesion.NOTA_MINIMA?.toString() || '')
+      : false
+
+    const aplicaDiplomaCambio = aplicaDiploma !== (sesion.APLICA_DIPLOMA || false)
+    const observacionesCambio = observaciones !== (sesion.OBSERVACIONES_SESION || '')
+
+    return (
+      capacitadorCambio || 
+      fechaCambio || 
+      horaInicioCambio || 
+      horaFinCambio || 
+      cambiosColaboradores.huboCambios ||
+      categoriaCambio ||
+      tipoCapacitacionCambio ||
+      modalidadCambio ||
+      grupoObjetivoCambio ||
+      objetivoCambio ||
+      aplicaExamenCambio ||
+      notaMinimaCambio ||
+      aplicaDiplomaCambio ||
+      observacionesCambio
+    )
+  }, [
+    capacitadorId, 
+    fechaProgramada, 
+    horaInicio, 
+    horaFin, 
+    sesion, 
+    cambiosColaboradores,
+    categoria,
+    tipoCapacitacion,
+    modalidad,
+    grupoObjetivo,
+    objetivo,
+    aplicaExamen,
+    notaMinima,
+    aplicaDiploma,
+    observaciones
+  ])
 
   return (
     <Card>
@@ -148,7 +210,7 @@ export const ResumenEdicionSesion = memo(function ResumenEdicionSesion({
           <Label className="text-muted-foreground">Participantes</Label>
           <p className="font-medium">{selectedColaboradores.length} seleccionados</p>
           
-          {cambiosColaboradores.huboChangios && (
+          {cambiosColaboradores.huboCambios && (
             <div className="mt-2 space-y-1">
               {cambiosColaboradores.agregados > 0 && (
                 <div className="flex items-center gap-2 text-sm">

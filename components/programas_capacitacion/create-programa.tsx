@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Plus, Trash2 } from "lucide-react"
+import { ArrowLeft, Loader2, Plus, Trash2 } from "lucide-react"
 import type { ProgramaCapacitacionForm, ProgramaDetalleForm } from "@/lib/programas_capacitacion/types"
 import type { Departamento, Puesto } from "@/lib/types"
 
@@ -50,6 +50,7 @@ export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: Cre
 
   const [showAddTraining, setShowAddTraining] = useState(false)
   const [newTraining, setNewTraining] = useState<ProgramaDetalleForm>(INITIAL_TRAINING_STATE)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const isTrainingValid = () => {
     if (!newTraining.NOMBRE || !newTraining.MES_PROGRAMADO) {
@@ -121,14 +122,18 @@ export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: Cre
         DEPARTAMENTOS_IDS: detalle.APLICA_TODOS_COLABORADORES
           ? []
           : detalle.DEPARTAMENTO_RELACIONES.map((d) => d.ID_DEPARTAMENTO),
-
-      PUESTOS_IDS: detalle.APLICA_TODOS_COLABORADORES
-        ? []
-        : detalle.PUESTO_RELACIONES.map((p) => p.ID_PUESTO),
+        PUESTOS_IDS: detalle.APLICA_TODOS_COLABORADORES
+          ? []
+          : detalle.PUESTO_RELACIONES.map((p) => p.ID_PUESTO),
       })),
     }
 
-    await onSave(payload)
+    setIsSubmitting(true)
+    try {
+      await onSave(payload)
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -260,7 +265,7 @@ export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: Cre
                         </Button>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
                           {detalle.CATEGORIA_CAPACITACION}
                         </Badge>
                         <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/20">
@@ -464,10 +469,17 @@ export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: Cre
         <div className="flex gap-3">
           <Button
             type="submit"
-            disabled={!nombre || !descripcion || detalles.length === 0}
+            disabled={!nombre || !descripcion || detalles.length === 0 || isSubmitting}
             className="bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer"
           >
-            Crear Programa
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Creando...
+              </>
+            ) : (
+              'Crear Programa'
+            )}
           </Button>
           <Button type="button" variant="outline" onClick={onCancel} className="border-border bg-transparent dark:text-foreground dark:border-1 dark:hover:border-foreground/30 cursor-pointer">
             Cancelar

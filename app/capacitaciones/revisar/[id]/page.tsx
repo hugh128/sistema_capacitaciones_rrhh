@@ -41,7 +41,7 @@ import { COLABORADORES_SESION, EstadoColaborador, SESION_DETALLE } from "@/lib/m
 import toast from "react-hot-toast"
 
 export default function RevisarCapacitacionPage() {
-  const { user } = useAuth()
+  const { user, loading: isAuthLoading } = useAuth()
   const params = useParams()
   const router = useRouter()
   const sesionId = Number(params.id)
@@ -72,6 +72,10 @@ export default function RevisarCapacitacionPage() {
   const [attemptedRefound, setAttemptedRefound] = useState(false)
 
   useEffect(() => {
+    if (isAuthLoading) {
+      return;
+    }
+
     if (!user || !user.PERSONA_ID) {
       setIsLoading(false);
       return; 
@@ -106,7 +110,7 @@ export default function RevisarCapacitacionPage() {
     }
 
     fetchData()
-  }, [user, sesionId, obtenerCapacitacionEnRevision, setAsistenciaState, setNotasState])
+  }, [isAuthLoading, user, sesionId, obtenerCapacitacionEnRevision, setAsistenciaState, setNotasState])
 
   const stats = useMemo(() => {
     const total = colaboradoresAsignados.length

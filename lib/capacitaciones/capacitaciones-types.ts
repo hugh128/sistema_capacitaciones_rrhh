@@ -240,6 +240,7 @@ export interface CrearSesionAsignarColaboradores {
   aplicaDiploma: boolean
   observaciones: string
   usuario: string
+  categoria: string
 }
 
 export interface EditarSesion {
@@ -260,6 +261,7 @@ export interface EditarSesion {
   idsColaboradoresAgregar: number[]
   idsColaboradoresQuitar: number[]
   usuario: string
+  categoria: string
 }
 
 // ========================================

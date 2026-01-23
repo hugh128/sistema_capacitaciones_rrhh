@@ -22,7 +22,7 @@ import { AppHeader } from "@/components/app-header"
 import toast, { Toaster } from "react-hot-toast"
 
 export default function TrainerCapacitacionDetailPage() {
-  const { user } = useAuth()
+  const { user, loading: isAuthLoading } = useAuth()
   const params = useParams()
   const router = useRouter()
   const sesionId = Number(params.id)
@@ -52,9 +52,13 @@ export default function TrainerCapacitacionDetailPage() {
   const isInitialMount = useRef(true);
 
   useEffect(() => {
+    if (isAuthLoading) {
+      return;
+    }
+
     if (!user || !user.PERSONA_ID) {
       setIsLoading(false);
-      return;
+      return; 
     }
 
     const fetchData = async () => {
@@ -100,7 +104,7 @@ export default function TrainerCapacitacionDetailPage() {
     }
 
     fetchData()
-  }, [user, sesionId, obtenerDetalleSesionCapacitador, obtenerPlantillaExamen])
+  }, [isAuthLoading, user, sesionId, obtenerDetalleSesionCapacitador, obtenerPlantillaExamen])
 
   const examenesParticipantsState = useMemo(() => {
     const state: Record<number, File | null> = {};

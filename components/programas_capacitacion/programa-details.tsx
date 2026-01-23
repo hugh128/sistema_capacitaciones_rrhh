@@ -174,7 +174,7 @@ export function ProgramaDetails({ programa, departamentos, puestos, onEdit, onBa
   return (
     <div className="flex-1 bg-background rounded-lg overflow-hidden flex flex-col">
       {/* Header */}
-      <div className="relative bg-gradient-to-r from-[#000428] to-[#004e92] text-white p-8 mt-8 overflow-hidden">
+      <div className="relative bg-gradient-to-r from-[#000428] to-[#004e92] text-white p-8 overflow-hidden">
 
         <div className="absolute inset-0 opacity-10">
           <div className="absolute top-0 left-0 w-64 h-64 bg-white rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
@@ -241,7 +241,7 @@ export function ProgramaDetails({ programa, departamentos, puestos, onEdit, onBa
               <TrendingUp className="w-4 h-4 mr-2" />
               Información del Programa
             </TabsTrigger>
-            <TabsTrigger
+{/*             <TabsTrigger
               value="colaboradores"
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-b-blue-800 dark:data-[state=active]:border-b-blue-800 data-[state=active]:bg-white/60 dark:data-[state=active]:bg-slate-800/60 px-6 py-4 cursor-pointer font-medium"
             >
@@ -250,7 +250,7 @@ export function ProgramaDetails({ programa, departamentos, puestos, onEdit, onBa
               <span className="ml-2 px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/50 text-blue-800 dark:text-blue-300 rounded-full text-xs font-bold">
                 {COLABORADORES_PRUEBA.length}
               </span>
-            </TabsTrigger>
+            </TabsTrigger> */}
           </TabsList>
 
           {/* Tab: Información */}

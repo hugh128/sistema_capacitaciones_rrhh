@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Plus, Trash2, Users } from "lucide-react"
+import { ArrowLeft, Loader2, Plus, Trash2, Users } from "lucide-react"
 import type {
   ProgramaCapacitacion,
   ProgramaDetalle,
@@ -53,6 +53,7 @@ export function EditPrograma({ programa, departamentos, puestos, onSave, onCance
   const [periodo, setPeriodo] = useState(programa.PERIODO)
   const [estado, setEstado] = useState(programa.ESTADO)
   const [detalles, setDetalles] = useState<ProgramaDetalle[]>(programa.PROGRAMA_DETALLES)
+  const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [showAddTraining, setShowAddTraining] = useState(false)
   const [newTraining, setNewTraining] = useState<ProgramaDetalleForm>(INITIAL_TRAINING_STATE)
@@ -151,7 +152,7 @@ export function EditPrograma({ programa, departamentos, puestos, onSave, onCance
     });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     const detallesParaGuardar = detalles.map((d) => {
@@ -179,7 +180,12 @@ export function EditPrograma({ programa, departamentos, puestos, onSave, onCance
       PROGRAMA_DETALLES: detallesParaGuardar,
     };
 
-    onSave(updatedPrograma, programa.ID_PROGRAMA);
+    setIsSubmitting(true)
+    try {
+      await onSave(updatedPrograma, programa.ID_PROGRAMA);
+    } finally {
+      setIsSubmitting(false)
+    }
   };
 
   return (
@@ -278,7 +284,7 @@ export function EditPrograma({ programa, departamentos, puestos, onSave, onCance
                 variant="outline"
                 size="sm"
                 onClick={() => setShowAddTraining(true)}
-                className="border-primary text-primary hover:bg-primary/10"
+                className="border-primary text-primary hover:bg-primary/10 dark:bg-blue-500/10 dark:text-blue-600 dark:border-blue-500/20 cursor-pointer"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Agregar Capacitación
@@ -311,7 +317,7 @@ export function EditPrograma({ programa, departamentos, puestos, onSave, onCance
                         </Button>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20">
+                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
                           {detalle.CATEGORIA_CAPACITACION}
                         </Badge>
                         <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/20">
@@ -497,7 +503,7 @@ export function EditPrograma({ programa, departamentos, puestos, onSave, onCance
                   type="button"
                   onClick={handleAddTraining}
                   disabled={!isTrainingValid()}
-                  className="bg-primary text-primary-foreground hover:bg-primary/90"
+                  className="bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer"
                 >
                   Agregar
                 </Button>
@@ -505,7 +511,7 @@ export function EditPrograma({ programa, departamentos, puestos, onSave, onCance
                   type="button"
                   variant="outline"
                   onClick={handleCancelAddTraining}
-                  className="border-border"
+                  className="border-border cursor-pointer dark:hover:text-foreground dark:hover:border-foreground/50"
                 >
                   Cancelar
                 </Button>
@@ -518,10 +524,17 @@ export function EditPrograma({ programa, departamentos, puestos, onSave, onCance
         <div className="flex gap-3">
           <Button
             type="submit"
-            disabled={!nombre || !descripcion || detalles.length === 0}
+            disabled={!nombre || !descripcion || detalles.length === 0 || isSubmitting}
             className="bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer"
           >
-            Guardar Cambios
+            {isSubmitting ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Guardando...
+              </>
+            ) : (
+              'Guardar Cambios'
+            )}
           </Button>
           <Button type="button" variant="outline" onClick={onCancel} className="border-border bg-transparent dark:hover:border-foreground/50 dark:hover:text-foreground cursor-pointer">
             Cancelar

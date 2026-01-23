@@ -16,9 +16,10 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { FormularioCapacitacion } from "@/components/capacitaciones-asignar/formulario-capacitaciones"
 import { TablaColaboradores } from "@/components/capacitaciones-asignar/tabla-colaboradores"
 import { ResumenCapacitacion } from "@/components/capacitaciones-asignar/resumen-capacitacion"
+import toast, { Toaster } from "react-hot-toast"
 
 export default function AsignarCapacitacionPage() {
-  const { user } = useAuth()
+  const { user, loading: isAuthLoading } = useAuth()
   const params = useParams()
   const router = useRouter()
   const capacitacionId = Number(params.id)
@@ -48,8 +49,18 @@ export default function AsignarCapacitacionPage() {
   const [aplicaDiploma, setAplicaDiploma] = useState(false)
   const [observaciones, setObservaciones] = useState("")
   const [selectedColaboradores, setSelectedColaboradores] = useState<number[]>([])
+  const [categoria, setCategoria] = useState("")
 
   useEffect(() => {
+    if (isAuthLoading) {
+      return;
+    }
+
+    if (!user || !user.PERSONA_ID) {
+      setIsLoading(false);
+      return; 
+    }
+
     const fetchData = async () => {
       setIsLoading(true);
       try {
@@ -77,24 +88,36 @@ export default function AsignarCapacitacionPage() {
     }
 
     fetchData()
-  }, [capacitacionId, obtenerDetallesCapacitacion, obtenerCapacitadores, obtenerColaboradoresSinSesion])
+  }, [isAuthLoading, user, capacitacionId, obtenerDetallesCapacitacion, obtenerCapacitadores, obtenerColaboradoresSinSesion])
 
   const handleAsignar = useCallback(async () => {
     const errors: string[] = [];
 
-    if (!capacitadorId) errors.push("Selecciona un capacitador.");
-    if (!fechaProgramada) errors.push("Selecciona una fecha para programar la sesion.");
+    if (!capacitadorId) {
+      errors.push("Selecciona un capacitador.")
+      toast.error("Selecciona un capacitador.")
+    }
+    if (!fechaProgramada) {
+      errors.push("Selecciona una fecha para programar la sesión.")
+      toast.error("Selecciona una fecha para programar la sesión.")
+    }
     
     if (!horaInicio || !horaFin) {
       errors.push("Debes seleccionar hora de inicio y fin.");
+      toast.error("Debes seleccionar hora de inicio y fin.");
     } else if (horaFin <= horaInicio) {
       errors.push("La hora de fin debe ser posterior a la hora de inicio.");
+      toast.error("La hora de fin debe ser posterior a la hora de inicio.")
     }
 
-    if (selectedColaboradores.length === 0) errors.push("Selecciona al menos un colaborador.");
+    if (selectedColaboradores.length === 0) {
+      errors.push("Debe haber al menos un colaborador asignado.")
+      toast.error("Debe haber al menos un colaborador asignado.")
+    }
     
     if (aplicaExamen && (!notaMinima || Number(notaMinima) < 0 || Number(notaMinima) > 100)) {
-      errors.push("Ingresa una nota mínima válida entre 0 y 100.");
+      errors.push("Ingresa una nota mínima válida entre 0 y 100.")
+      toast.error("Ingresa una nota mínima válida entre 0 y 100.")
     }
     
     setValidationErrors(errors);
@@ -122,6 +145,7 @@ export default function AsignarCapacitacionPage() {
       aplicaDiploma: aplicaDiploma,
       observaciones: observaciones,
       usuario: user.USERNAME,
+      categoria: categoria,
     }
 
     try {
@@ -133,7 +157,7 @@ export default function AsignarCapacitacionPage() {
   }, [
     capacitadorId, fechaProgramada, horaInicio, horaFin, selectedColaboradores,
     aplicaExamen, notaMinima, capacitacionId, tipoCapacitacion, modalidad,
-    aplicaDiploma, grupoObjetivo, observaciones, user, objetivo, router,
+    aplicaDiploma, grupoObjetivo, observaciones, user, objetivo, router, categoria,
     crearSesionAsignarColaboradores,
   ])
 
@@ -195,6 +219,8 @@ export default function AsignarCapacitacionPage() {
           />
 
           <main className="flex-1 p-6 space-y-6 overflow-auto custom-scrollbar">
+            <Toaster />
+
             {validationErrors.length > 0 && (
               <Alert variant="destructive">
                 <AlertCircle className="h-4 w-4" />
@@ -253,6 +279,8 @@ export default function AsignarCapacitacionPage() {
                   observaciones={observaciones}
                   setObservaciones={setObservaciones}
                   capacitadores={capacitadores}
+                  categoria={categoria}
+                  setCategoria={setCategoria}
                 />
 
                 <TablaColaboradores
@@ -274,6 +302,11 @@ export default function AsignarCapacitacionPage() {
                   aplicaExamen={aplicaExamen}
                   notaMinima={notaMinima}
                   aplicaDiploma={aplicaDiploma}
+                  categoria={categoria}
+                  tipoCapacitacion={tipoCapacitacion}
+                  modalidad={modalidad}
+                  grupoObjetivo={grupoObjetivo}
+                  objetivo={objetivo}
                   onAsignar={handleAsignar}
                 />
               </div>

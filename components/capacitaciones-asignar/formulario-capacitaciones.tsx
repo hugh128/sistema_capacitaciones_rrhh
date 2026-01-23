@@ -120,6 +120,8 @@ interface FormularioCapacitacionProps {
   observaciones: string
   setObservaciones: (value: string) => void
   capacitadores: Capacitador[]
+  categoria: string
+  setCategoria: (value: string) => void
 }
 
 export const FormularioCapacitacion = memo(function FormularioCapacitacion({
@@ -148,6 +150,8 @@ export const FormularioCapacitacion = memo(function FormularioCapacitacion({
   observaciones,
   setObservaciones,
   capacitadores,
+  categoria,
+  setCategoria
 }: FormularioCapacitacionProps) {
   return (
     <Card>
@@ -157,18 +161,34 @@ export const FormularioCapacitacion = memo(function FormularioCapacitacion({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div className="space-y-2">
-            <Label htmlFor="capacitador">Capacitador *</Label>
-            <Select value={capacitadorId} onValueChange={setCapacitadorId}>
-              <SelectTrigger id="capacitador" className="w-full">
-                <SelectValue placeholder="Seleccionar capacitador" />
+          <div className="space-y-2 w-full">
+            <Label htmlFor="categoria" className="text-blue-950 dark:text-foreground/90">Categoría *</Label>
+            <Select value={categoria} onValueChange={setCategoria}>
+              <SelectTrigger id="categoria" className="w-full">
+                <SelectValue placeholder="Seleccionar categoría" />
               </SelectTrigger>
               <SelectContent>
-                {capacitadores.map((cap) => (
-                  <SelectItem key={cap.PERSONA_ID} value={cap.PERSONA_ID.toString()}>
-                    {cap.NOMBRE} {cap.APELLIDO}
-                  </SelectItem>
-                ))}
+                <SelectItem value="ACON">ACON</SelectItem>
+                <SelectItem value="ASR">ASR</SelectItem>
+                <SelectItem value="BOD">BOD</SelectItem>
+                <SelectItem value="CC">CC</SelectItem>
+                <SelectItem value="CCFQ">CCFQ</SelectItem>
+                <SelectItem value="CCMIC">CCMIC</SelectItem>
+                <SelectItem value="COM">COM</SelectItem>
+                <SelectItem value="DG">DG</SelectItem>
+                <SelectItem value="GC">GC</SelectItem>
+                <SelectItem value="I&D">I&D</SelectItem>
+                <SelectItem value="IMP">IMP</SelectItem>
+                <SelectItem value="MANT">MANT</SelectItem>
+                <SelectItem value="OP">OP</SelectItem>
+                <SelectItem value="PROD">PROD</SelectItem>
+                <SelectItem value="PRODLIQ">PRODLIQ</SelectItem>
+                <SelectItem value="PRODSEM">PRODSEM</SelectItem>
+                <SelectItem value="PRODSOL">PRODSOL</SelectItem>
+                <SelectItem value="RRHH">RRHH</SelectItem>
+                <SelectItem value="SSO">SSO</SelectItem>
+                <SelectItem value="VAL">VAL</SelectItem>
+                <SelectItem value="OTROS">OTROS</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -217,6 +237,22 @@ export const FormularioCapacitacion = memo(function FormularioCapacitacion({
           </div>
         </div>
 
+        <div className="space-y-2">
+          <Label htmlFor="capacitador">Capacitador *</Label>
+          <Select value={capacitadorId} onValueChange={setCapacitadorId}>
+            <SelectTrigger id="capacitador" className="w-full">
+              <SelectValue placeholder="Seleccionar capacitador" />
+            </SelectTrigger>
+            <SelectContent>
+              {capacitadores.map((cap) => (
+                <SelectItem key={cap.PERSONA_ID} value={cap.PERSONA_ID.toString()}>
+                  {cap.NOMBRE} {cap.APELLIDO}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
         <TextInputOptimizado
           id="grupoObjetivo"
           label="Grupo Objetivo"
@@ -239,7 +275,12 @@ export const FormularioCapacitacion = memo(function FormularioCapacitacion({
             <Checkbox
               id="aplicaExamen"
               checked={aplicaExamen}
-              onCheckedChange={(checked) => setAplicaExamen(checked as boolean)}
+              onCheckedChange={(checked) => {
+                setAplicaExamen(checked as boolean)
+                if (!checked) {
+                  setNotaMinima('')
+                }
+              }}
               className="
                 dark:border dark:border-gray-500
                 data-[state=checked]:dark:border-transparent cursor-pointer
@@ -251,7 +292,7 @@ export const FormularioCapacitacion = memo(function FormularioCapacitacion({
           </div>
 
           {aplicaExamen && (
-            <div className="ml-6">
+            <div className="ml-6 space-y-2">
               <Label htmlFor="notaMinima">Nota Mínima (0-100)</Label>
               <Input
                 id="notaMinima"

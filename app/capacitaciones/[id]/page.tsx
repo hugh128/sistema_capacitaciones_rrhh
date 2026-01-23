@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Label } from "@/components/ui/label"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { ArrowLeft, CheckCircle2, XCircle, Calendar, Clock, Users, BookOpen, Eye, FileText, Target, TrendingUp, Download } from "lucide-react"
+import { ArrowLeft, CheckCircle2, XCircle, Calendar, Clock, Users, BookOpen, Eye, FileText, Target, TrendingUp, Download, Building2 } from "lucide-react"
 import Link from "next/link"
 import { useParams } from "next/navigation"
 import { getEstadoCapacitacionColor, getEstadoColaboradorColor } from "@/lib/capacitaciones/capacitaciones-types"
@@ -18,7 +18,7 @@ import { useCapacitaciones } from "@/hooks/useCapacitaciones"
 import { COLABORADORES_SESION, SESION_DETALLE } from "@/lib/mis-capacitaciones/capacitaciones-types"
 
 export default function CapacitacionDetailPage() {
-  const { user } = useAuth()
+  const { user, loading: isAuthLoading } = useAuth()
   const params = useParams()
   const sesionId = Number(params.id)
 
@@ -33,6 +33,10 @@ export default function CapacitacionDetailPage() {
   const [loadingDownload, setLoadingDownload] = useState(false);
 
   useEffect(() => {
+    if (isAuthLoading) {
+      return;
+    }
+
     if (!user || !user.PERSONA_ID) {
       setIsLoading(false);
       return; 
@@ -52,7 +56,7 @@ export default function CapacitacionDetailPage() {
     }
 
     fetchData()
-  }, [user, sesionId, obtenerDetalleSesion])
+  }, [isAuthLoading, user, sesionId, obtenerDetalleSesion])
 
   const stats = useMemo(() => {
     const total = colaboradoresAsignados.length
@@ -108,6 +112,19 @@ export default function CapacitacionDetailPage() {
         </Card>
       </div>
     );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Card className="w-96">
+          <CardHeader>
+            <CardTitle>Acceso Denegado</CardTitle>
+            <CardDescription>No tienes permisos para acceder a esta página.</CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    )
   }
 
   if (!sesion) {
@@ -201,12 +218,20 @@ export default function CapacitacionDetailPage() {
                     value={sesion.CODIGO_DOCUMENTO || "N/A"}
                   />
                   <InfoItem 
+                    label="Categoria"
+                    value={sesion.CATEGORIA ?? ""}
+                  />
+                  <InfoItem 
                     label="Capacitador" 
                     value={sesion.CAPACITADOR_NOMBRE} 
                   />
                   <InfoItem 
                     label="Tipo" 
                     value={sesion.TIPO_CAPACITACION} 
+                  />
+                  <InfoItem 
+                    label="Modalidad"
+                    value={sesion.MODALIDAD ?? ""}
                   />
                   <InfoItem 
                     label="Origen"
@@ -233,6 +258,20 @@ export default function CapacitacionDetailPage() {
                     value={sesion.NOTA_MINIMA !== null && sesion.NOTA_MINIMA !== undefined ? String(sesion.NOTA_MINIMA) : "No aplica examen"} 
                   />
                 </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Building2 className="h-5 w-5" />
+                  Grupo Objetivo
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                  {sesion.GRUPO_OBJETIVO}
+                </p>
               </CardContent>
             </Card>
 

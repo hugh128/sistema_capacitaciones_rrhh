@@ -178,6 +178,7 @@ export interface SESION_DETALLE {
   FECHA_CREACION: string;
   FECHA_MODIFICACION: string | null;
   USUARIO_CREACION: string;
+  CATEGORIA?: string | null;
 }
 
 export interface COLABORADORES_SESION {
