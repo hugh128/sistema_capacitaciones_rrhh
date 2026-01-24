@@ -31,7 +31,9 @@ export function usePuestos(user: UsuarioLogin | null) {
     setError(null);
     const loadingToastId = toast.loading("Inactivando puesto...");
     try {
-      await apiClient.delete(`/puesto/${puesto.ID_PUESTO}`);
+      await apiClient.delete(`/puesto/${puesto.ID_PUESTO}`, {
+        data: { USUARIO_ACCION_ID: user?.ID_USUARIO }
+      });
       toast.success("Puesto inactivado con éxito.", { id: loadingToastId });
       setPuestos((prev) =>
         prev.map((e) =>
@@ -52,7 +54,10 @@ export function usePuestos(user: UsuarioLogin | null) {
     const isEditing = !!editingPuesto;
     const action = isEditing ? "Editar" : "Guardar";
 
-    const payload = { ...formData } as Partial<Puesto>;
+    const payload = {
+      ...formData,
+      USUARIO_ACCION_ID: user?.ID_USUARIO
+    } as Partial<Puesto>;
 
     const departamentoIdString = payload.DEPARTAMENTO_ID;
     if (departamentoIdString && typeof departamentoIdString === 'string') {
