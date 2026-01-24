@@ -52,6 +52,7 @@ export function AssignProgramModal({
   const [submitting, setSubmitting] = useState(false)
   const [searchTerm, setSearchTerm] = useState("")
   const [selections, setSelections] = useState<Map<number, Set<number>>>(new Map())
+  const [searchCapacitacion, setSearchCapacitacion] = useState("")
 
   const loadColaboradores = useCallback(async () => {
     setLoading(true)
@@ -81,17 +82,40 @@ export function AssignProgramModal({
     } else {
       setColaboradores([])
       setSearchTerm("")
+      setSearchCapacitacion("")
       setSelections(new Map())
     }
   }, [open, loadColaboradores])
 
   const filteredColaboradores = useMemo(() => {
-    return colaboradores.filter(colab =>
-      colab.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      colab.departamento.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      colab.puesto.toLowerCase().includes(searchTerm.toLowerCase())
-    )
-  }, [colaboradores, searchTerm])
+    let result = colaboradores;
+
+    if (searchTerm.trim()) {
+      const searchLower = searchTerm.toLowerCase().trim();
+      result = result.filter(colab =>
+        colab.nombre.toLowerCase().includes(searchLower) ||
+        colab.departamento.toLowerCase().includes(searchLower) ||
+        colab.puesto.toLowerCase().includes(searchLower)
+      );
+    }
+
+    if (searchCapacitacion.trim()) {
+      const searchCapLower = searchCapacitacion.toLowerCase().trim();
+      
+      result = result
+        .map(colab => {
+          const matchingCaps = colab.capacitaciones.filter(cap =>
+            cap.nombre.toLowerCase().includes(searchCapLower) ||
+            cap.categoria.toLowerCase().includes(searchCapLower)
+          );
+          
+          return { ...colab, capacitaciones: matchingCaps };
+        })
+        .filter(colab => colab.capacitaciones.length > 0);
+    }
+
+    return result;
+  }, [colaboradores, searchTerm, searchCapacitacion]);
 
   const toggleColaborador = (idColaborador: number, capacitacionesIds: number[]) => {
     const newSelections = new Map(selections)
@@ -213,18 +237,48 @@ export function AssignProgramModal({
         ) : (
           <>
             <div className="space-y-4 flex-1 overflow-hidden flex flex-col min-h-0">
-              <div className="px-6 py-4 border-b bg-muted/30 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div className="relative w-full sm:max-w-sm">
+
+            <div className="px-6 py-4 border-b bg-muted/30 flex flex-col gap-3">
+              {/* Buscadores */}
+              <div className="flex flex-col sm:flex-row gap-3">
+                <div className="relative flex-1">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
                   <Input
-                    placeholder="Buscar colaboradores..."
+                    placeholder="Buscar por colaborador, departamento o puesto..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
                   />
                 </div>
+                
+                <div className="relative flex-1">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <Input
+                    placeholder="Buscar por capacitación o categoría..."
+                    value={searchCapacitacion}
+                    onChange={(e) => setSearchCapacitacion(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
 
-                <div className="flex items-center gap-3 justify-center sm:justify-end">
+              {/* Controles */}
+              <div className="flex items-center gap-3 justify-between sm:justify-end">
+                {(searchTerm || searchCapacitacion) && (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => {
+                      setSearchTerm("")
+                      setSearchCapacitacion("")
+                    }}
+                    className="cursor-pointer text-xs dark:hover:border-foreground/50 dark:hover:text-foreground/90"
+                  >
+                    Limpiar búsqueda
+                  </Button>
+                )}
+                
+                <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2 hover:scale-[1.02]">
                     <Checkbox
                       id="select-all"
@@ -239,14 +293,16 @@ export function AssignProgramModal({
                   
                   <Button
                     size="sm"
+                    variant="destructive"
                     onClick={deselectAll}
                     disabled={totalSeleccionados === 0}
-                    className="cursor-pointer bg-transparent border-1 border-red-400 text-red-900 hover:bg-red-100 hover:text-red-500 dark:hover:bg-transparent"
+                    className="cursor-pointer"
                   >
                     Limpiar
                   </Button>
                 </div>
               </div>
+            </div>
 
               {totalSeleccionados > 0 && (
                 <Alert className="flex-shrink-0 mx-6 w-auto">
@@ -325,7 +381,7 @@ export function AssignProgramModal({
                                         variant={selected ? "default" : "outline"}
                                         className={`
                                           cursor-pointer px-2 py-0.5 rounded-md transition-discrete ease-in-out 
-                                          max-w-full h-auto inline-flex items-center hover:scale-[1.02]
+                                          max-w-full h-auto inline-flex items-center hover:scale-[1.02] dark:border-gray-800
                                           ${selected ? "bg-primary" : "hover:bg-primary/10"}
                                         `}
                                         onClick={() => toggleCapacitacion(colab.idColaborador, cap.idDetalle)}
