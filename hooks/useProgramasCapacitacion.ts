@@ -183,12 +183,53 @@ export function useProgramasCapacitacion(user: UsuarioLogin | null) {
     }
   }, [user]);
 
+  const obtenerDetalleProgramaConColaboradores = useCallback(async (idPrograma: number) => {  
+    if (!user) {
+      toast.error("Usuario no autenticado.");
+      return;
+    }
+
+    setIsMutating(true);
+    setError(null);
+
+    try {
+      const { data } = await apiClient.get(`/programa-capacitacion/${idPrograma}/detalle-colaboradores`);
+      return data;
+    } catch (err) {
+      const baseMessage = "Error al obtener detalle de programa de capacitacion.";
+      setError(baseMessage);
+      handleApiError(err, baseMessage);
+    } finally {
+      setIsMutating(false);
+    }
+  }, [user]);
+
+  const obtenerProgramaDetalle = useCallback(async (idPrograma: number) => {  
+    if (!user) {
+      toast.error("Usuario no autenticado.");
+      return;
+    }
+
+    setIsMutating(true);
+    setError(null);
+
+    try {
+      const { data } = await apiClient.get(`/programa-detalle/${idPrograma}`);
+      return data;
+    } catch (err) {
+      const baseMessage = `Error al cargar el detalle del plan: ${err}`;
+      setError(baseMessage);
+      handleApiError(err, baseMessage);
+    } finally {
+      setIsMutating(false);
+    }
+  }, [user]);
+
   useEffect(() => {
     if (user) {
       refreshProgramasCapacitacion();
     }
   }, [user, refreshProgramasCapacitacion]);
-
 
   return {
     programasCapacitacion,
@@ -201,5 +242,7 @@ export function useProgramasCapacitacion(user: UsuarioLogin | null) {
     asignarProgramaCapacitacion,
     obtenerColaboradoresDisponiblesPrograma,
     asignarProgramaCapacitacionSelectivo,
+    obtenerDetalleProgramaConColaboradores,
+    obtenerProgramaDetalle,
   }
 }

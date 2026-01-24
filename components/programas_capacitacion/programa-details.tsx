@@ -1,6 +1,6 @@
 "use client"
 
-import { useCallback, useEffect, useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
@@ -14,16 +14,19 @@ import {
 import type {
   ProgramaCapacitacion,
   CreateProgramaDetalleDto,
-  ProgramaDetalle
+  ProgramaDetalle,
+  ProgramaCapacitacionDetalle,
+  ColaboradorPrograma
 } from "@/lib/programas_capacitacion/types"
 import type { Departamento, Puesto } from "@/lib/types"
-import { apiClient } from "@/lib/api-client"
 import toast from "react-hot-toast"
 import { TrainingModal } from "./training-modal"
 import { TrainingDetailModal } from "./training-detail-modal"
 import { Badge } from "../ui/badge"
 import { Card } from "../ui/card"
 import { Progress } from "../ui/progress"
+import { useAuth } from "@/contexts/auth-context"
+import { useProgramasCapacitacion } from "@/hooks/useProgramasCapacitacion"
 
 interface ProgramaDetailsProps {
   programa: ProgramaCapacitacion
@@ -33,46 +36,6 @@ interface ProgramaDetailsProps {
   onBack: () => void
   onUpdate: (programaDetalle: CreateProgramaDetalleDto) => void
 }
-
-// Datos de prueba para colaboradores asignados
-const COLABORADORES_PRUEBA = [
-  {
-    id: 1,
-    nombre: "Juan Pérez",
-    puesto: "Desarrollador Junior",
-    departamento: "TI",
-    avatar: "",
-    fechaAsignacion: "2025-01-15",
-    capacitacionesAsignadas: [
-      { id: 1033, nombre: "Mapeos de almacenes - VAL-INS-011", completada: true },
-      { id: 1034, nombre: "Plan maestro de validaciones - VAL-PMV-001", completada: false },
-    ],
-  },
-  {
-    id: 2,
-    nombre: "María González",
-    puesto: "Analista RRHH",
-    departamento: "RRHH",
-    avatar: "",
-    fechaAsignacion: "2025-01-10",
-    capacitacionesAsignadas: [
-      { id: 1033, nombre: "Mapeos de almacenes - VAL-INS-011", completada: true },
-      { id: 1035, nombre: "Trabajos de personal - MANT-INS-045", completada: true },
-      { id: 1036, nombre: "Instructivo Elaboración de Análisis Causa Raíz GC-INS-008", completada: false },
-    ],
-  },
-  {
-    id: 3,
-    nombre: "Carlos Ramírez",
-    puesto: "Coordinador de RRHH",
-    departamento: "RRHH",
-    avatar: "",
-    fechaAsignacion: "2025-01-12",
-    capacitacionesAsignadas: [
-      { id: 1034, nombre: "Plan maestro de validaciones - VAL-PMV-001", completada: false },
-    ],
-  },
-];
 
 const getEstatusSpanVariant = (estatus: string) => {
   switch (estatus.toLowerCase()) {
@@ -111,24 +74,43 @@ const getTipoVariant = (tipo: string) => {
 
 export function ProgramaDetails({ programa, departamentos, puestos, onEdit, onBack, onUpdate }: ProgramaDetailsProps) {
   const [activeTab, setActiveTab] = useState("info")
-  const [detalles, setDetalles] = useState<ProgramaDetalle[]>(programa.PROGRAMA_DETALLES || []);
   const [showTrainingModal, setShowTrainingModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
   const [selectedTraining, setSelectedTraining] = useState<ProgramaDetalle | null>(null);
   const [editMode, setEditMode] = useState(false);
+  const [detalles, setDetalles] = useState<ProgramaDetalle[]>(programa.PROGRAMA_DETALLES || []);
+  const [programaDetalle, setProgramaDetalle] = useState<ProgramaCapacitacionDetalle>()
+  const [colaboradorPrograma, setColaboradorPrograma] = useState<ColaboradorPrograma[]>([])
 
-  const getProgramaDetalle = useCallback(async () => {
-    try {
-      const { data } = await apiClient.get<ProgramaDetalle[]>(`/programa-detalle/${programa.ID_PROGRAMA}`);
-      setDetalles(data);
-    } catch (err) {
-      toast.error(`Error al cargar el detalle del plan: ${err}`);
-    }
-  }, [programa.ID_PROGRAMA]);
+  const { user } = useAuth()
+  const {
+    obtenerDetalleProgramaConColaboradores,
+    obtenerProgramaDetalle
+  } = useProgramasCapacitacion(user)
 
   useEffect(() => {
-    getProgramaDetalle();
-  }, [getProgramaDetalle]);
+    if (!user || !user.PERSONA_ID) {
+      return; 
+    }
+
+    const fetchData = async () => {
+      try {
+        const {
+          DETALLE_PROGRAMA,
+          COLABORADORES_PROGRAMA
+        } = await obtenerDetalleProgramaConColaboradores(programa.ID_PROGRAMA)
+        setProgramaDetalle(DETALLE_PROGRAMA)
+        setColaboradorPrograma(COLABORADORES_PROGRAMA)
+
+        const data = await obtenerProgramaDetalle(programa.ID_PROGRAMA)
+        setDetalles(data);
+      } catch (error) {
+        console.error('Error al cargar datos:', error)
+      }
+    }
+
+    fetchData()
+  }, [user, obtenerDetalleProgramaConColaboradores, obtenerProgramaDetalle, programa.ID_PROGRAMA])
 
   const handleAddTraining = () => {
     setEditMode(false);
@@ -157,7 +139,6 @@ export function ProgramaDetails({ programa, departamentos, puestos, onEdit, onBa
         await onUpdate(data);
         toast.success("Capacitación agregada correctamente");
       }
-      await getProgramaDetalle();
       setShowTrainingModal(false);
     } catch (error) {
       toast.error("Error al guardar la capacitación");
@@ -165,9 +146,9 @@ export function ProgramaDetails({ programa, departamentos, puestos, onEdit, onBa
     }
   };
 
-  const calcularProgreso = (colaborador: typeof COLABORADORES_PRUEBA[0]) => {
-    const completadas = colaborador.capacitacionesAsignadas.filter(c => c.completada).length;
-    const total = colaborador.capacitacionesAsignadas.length;
+  const calcularProgreso = (colaborador: typeof colaboradorPrograma[0]) => {
+    const completadas = colaborador.CAPACITACIONES_ASIGNADAS.filter(c => c.COMPLETADA).length;
+    const total = colaborador.CAPACITACIONES_ASIGNADAS.length;
     return total > 0 ? Math.round((completadas / total) * 100) : 0;
   };
 
@@ -241,22 +222,22 @@ export function ProgramaDetails({ programa, departamentos, puestos, onEdit, onBa
               <TrendingUp className="w-4 h-4 mr-2" />
               Información del Programa
             </TabsTrigger>
-{/*             <TabsTrigger
+            <TabsTrigger
               value="colaboradores"
               className="rounded-none border-b-2 border-transparent data-[state=active]:border-b-blue-800 dark:data-[state=active]:border-b-blue-800 data-[state=active]:bg-white/60 dark:data-[state=active]:bg-slate-800/60 px-6 py-4 cursor-pointer font-medium"
             >
               <Users className="w-4 h-4 mr-2" />
               Colaboradores Participantes
               <span className="ml-2 px-2 py-0.5 bg-indigo-100 dark:bg-indigo-900/50 text-blue-800 dark:text-blue-300 rounded-full text-xs font-bold">
-                {COLABORADORES_PRUEBA.length}
+                {programaDetalle?.TOTAL_COLABORADORES_ASIGNADOS}
               </span>
-            </TabsTrigger> */}
+            </TabsTrigger>
           </TabsList>
 
           {/* Tab: Información */}
           <TabsContent value="info" className="flex-1 overflow-y-auto p-6 mt-0">
             <div className="space-y-6 mx-auto max-w-7xl">
-              {/* Stats Cards con diseño único */}
+              {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div className="relative bg-gradient-to-br from-cyan-500 to-blue-600 dark:from-cyan-800 dark:to-blue-900 p-6 rounded-xl shadow-lg overflow-hidden group hover:shadow-xl transition-all">
                   <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform"></div>
@@ -289,7 +270,7 @@ export function ProgramaDetails({ programa, departamentos, puestos, onEdit, onBa
                       Colaboradores Activos
                     </p>
                     <p className="text-4xl font-bold text-white">
-                      {COLABORADORES_PRUEBA.length}
+                      {colaboradorPrograma.length}
                     </p>
                   </div>
                 </div>
@@ -496,7 +477,7 @@ export function ProgramaDetails({ programa, departamentos, puestos, onEdit, onBa
                             </td>
                             <td className="px-4 py-4 text-center">
                               <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
+                                <DropdownMenuTrigger asChild className="cursor-pointer">
                                   <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
                                     <MoreVertical className="h-4 w-4" />
                                   </Button>
@@ -506,10 +487,10 @@ export function ProgramaDetails({ programa, departamentos, puestos, onEdit, onBa
                                     <Eye className="mr-2 h-4 w-4" />
                                     Ver detalle
                                   </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => handleEditTraining(detalle)} className="cursor-pointer">
+{/*                                   <DropdownMenuItem onClick={() => handleEditTraining(detalle)} className="cursor-pointer">
                                     <Pencil className="mr-2 h-4 w-4" />
                                     Editar
-                                  </DropdownMenuItem>
+                                  </DropdownMenuItem> */}
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </td>
@@ -541,19 +522,19 @@ export function ProgramaDetails({ programa, departamentos, puestos, onEdit, onBa
                 </div>
                 <div className="flex flex-col items-end gap-1">
                   <span className="text-[10px] font-bold uppercase tracking-[0.1em] text-slate-400">Total asignados</span>
-                  <span className="text-3xl font-light text-blue-800">{COLABORADORES_PRUEBA.length}</span>
+                  <span className="text-3xl font-light text-blue-800">{colaboradorPrograma.length}</span>
                 </div>
               </div>
 
               {/* Listado de Colaboradores */}
               <div className="grid gap-4 p-4">
-                {COLABORADORES_PRUEBA.map((colaborador) => {
+                {colaboradorPrograma.map((colaborador) => {
                   const progreso = calcularProgreso(colaborador);
-                  const completadas = colaborador.capacitacionesAsignadas.filter(c => c.completada).length;
-                  const totales = colaborador.capacitacionesAsignadas.length;
+                  const completadas = colaborador.CAPACITACIONES_ASIGNADAS.filter(c => c.COMPLETADA).length;
+                  const totales = colaborador.CAPACITACIONES_ASIGNADAS.length;
 
                   return (
-                    <Card key={colaborador.id} className="group overflow-hidden border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-900 transition-all duration-300 shadow-none hover:shadow-lg hover:shadow-indigo-500/5 p-0">
+                    <Card key={colaborador.ID_COLABORADOR} className="group overflow-hidden border-slate-200 dark:border-slate-800 hover:border-blue-300 dark:hover:border-blue-900 transition-all duration-300 shadow-none hover:shadow-lg hover:shadow-indigo-500/5 p-0">
                       <div className="flex flex-col lg:flex-row">
                         
                         {/* Perfil */}
@@ -561,16 +542,16 @@ export function ProgramaDetails({ programa, departamentos, puestos, onEdit, onBa
                           <div className="flex items-start gap-4">
                             <Avatar className="h-14 w-14 ring-4 ring-white dark:ring-slate-900 shadow-md">
                               <AvatarFallback className="bg-slate-900 text-white font-medium">
-                                {colaborador.nombre.split(" ").map(n => n[0]).join("")}
+                                {colaborador.NOMBRE_COMPLETO.split(" ").map(n => n[0]).join("")}
                               </AvatarFallback>
                             </Avatar>
                             <div className="space-y-1">
                               <h3 className="font-bold text-slate-900 dark:text-white leading-tight">
-                                {colaborador.nombre}
+                                {colaborador.NOMBRE_COMPLETO}
                               </h3>
-                              <p className="text-xs text-blue-800 dark:text-blue-800 font-semibold uppercase tracking-wider">{colaborador.puesto}</p>
+                              <p className="text-xs text-blue-800 dark:text-blue-800 font-semibold uppercase tracking-wider">{colaborador.PUESTO}</p>
                               <p className="text-xs text-slate-400 flex items-center gap-1">
-                                <Building2 className="w-3 h-3" /> {colaborador.departamento}
+                                <Building2 className="w-3 h-3" /> {colaborador.DEPARTAMENTO}
                               </p>
                             </div>
                           </div>
@@ -593,19 +574,19 @@ export function ProgramaDetails({ programa, departamentos, puestos, onEdit, onBa
                             <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-slate-400">
                               Capacitaciones Asignadas
                               <span className="ml-2 px-2 py-0.5 bg-indigo-100 dark:bg-transparent dark:border dark:border-blue-600 text-blue-800 dark:text-slate-300 rounded-full text-xs font-bold">
-                                {colaborador.capacitacionesAsignadas.length}
+                                {colaborador.CAPACITACIONES_ASIGNADAS.length}
                               </span>
                             </h4>
                           </div>
                           
                           <div className="grid gap-2">
-                            {colaborador.capacitacionesAsignadas.map((cap, idx) => (
+                            {colaborador.CAPACITACIONES_ASIGNADAS.map((cap, idx) => (
                               <div
                                 key={idx}
                                 className="group/item flex items-center justify-between rounded-xl border border-transparent"
                               >
                                 <div className="flex items-center gap-3 min-w-0">
-                                  {cap.completada ? (
+                                  {cap.COMPLETADA ? (
                                     <div className="flex-shrink-0 w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-900/30 flex items-center justify-center">
                                       <CheckCircle2 className="w-3 h-3 text-emerald-600" />
                                     </div>
@@ -615,14 +596,14 @@ export function ProgramaDetails({ programa, departamentos, puestos, onEdit, onBa
                                     </div>
                                   )}
                                   <span className={`text-sm font-medium truncate sm:whitespace-normal ${
-                                    cap.completada ? 'text-slate-500' : 'text-slate-700 dark:text-slate-300'
+                                    cap.COMPLETADA ? 'text-slate-500' : 'text-slate-700 dark:text-slate-300'
                                   }`}>
-                                    {cap.nombre}
+                                    {cap.NOMBRE}
                                   </span>
                                 </div>
                                 
                                 <div className="ml-4">
-                                  {cap.completada ? (
+                                  {cap.COMPLETADA ? (
                                     <Badge className="bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/30">Completada</Badge>
                                   ) : (
                                     <Badge className="bg-orange-50 text-red-700 dark:bg-red-900/20 dark:text-red-400 border border-red-200 dark:border-red-950">Pendiente</Badge>
