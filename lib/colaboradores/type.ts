@@ -42,6 +42,8 @@ export interface CapacitacionColaborador {
   NOMBRE_CAPACITACION: string;
   NOMBRE_SESION: string | null;
   NUMERO_SESION: number | null;
+  CATEGORIA: string;
+  CODIGO_DOCUMENTO: string | null,
   ESTADO: string;
   FECHA: string;
   FECHA_RAW: string | null;

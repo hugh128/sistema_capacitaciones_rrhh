@@ -311,10 +311,10 @@ export default function EditarSesionPage() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-3xl font-bold text-foreground">Editar Sesión</h1>
-                <p className="text-xl mt-1">
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold text-foreground">Editar Sesión</h1>
+                <p className="text-xl sm:text-2xl lg:xl text-foreground break-words">
                   {sesionOriginal.CAPACITACION_NOMBRE}
-                  {sesionOriginal.VERSION && ` - Versión: ${sesionOriginal.VERSION}`}
+                  {sesionOriginal.VERSION_SESION && ` - Versión: ${sesionOriginal.VERSION_SESION}`}
                 </p>
                 <p className="text-sm text-muted-foreground mt-1">
                   {sesionOriginal.NOMBRE_SESION} • Estado: {sesionOriginal.ESTADO}

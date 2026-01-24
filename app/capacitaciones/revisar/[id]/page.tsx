@@ -395,10 +395,10 @@ export default function RevisarCapacitacionPage() {
                 </Link>
                 <div>
                   <div className="flex items-center gap-2 mb-1">
-                    <h1 className="text-3xl font-bold text-foreground">Revisar Capacitación</h1>
+                    <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold text-foreground">Revisar Capacitación</h1>
                     <Badge className={getEstadoCapacitacionColor(sesion.ESTADO)}>{sesion.ESTADO}</Badge>
                   </div>
-                  <p className="text-xl">{sesion.CAPACITACION_NOMBRE}</p>
+                  <p className="text-xl sm:text-2xl lg:xl text-foreground/80 break-words">{sesion.CAPACITACION_NOMBRE}</p>
                 </div>
               </div>
             </div>
@@ -837,7 +837,7 @@ export default function RevisarCapacitacionPage() {
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel className="dark:text-foreground cursor-pointer">Cancelar</AlertDialogCancel>
+                        <AlertDialogCancel className="dark:hover:border-foreground/50 dark:hover:text-foreground/90 cursor-pointer">Cancelar</AlertDialogCancel>
                         <AlertDialogAction onClick={handleAprobar} className="cursor-pointer">Aprobar</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
@@ -859,7 +859,7 @@ export default function RevisarCapacitacionPage() {
                         </AlertDialogDescription>
                       </AlertDialogHeader>
                       <AlertDialogFooter>
-                        <AlertDialogCancel className="dark:text-foreground cursor-pointer">Cancelar</AlertDialogCancel>
+                        <AlertDialogCancel className="dark:hover:border-foreground/50 dark:hover:text-foreground/90 cursor-pointer">Cancelar</AlertDialogCancel>
                         <AlertDialogAction onClick={handleDevolver} className="cursor-pointer">Devolver</AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>

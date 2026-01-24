@@ -170,8 +170,6 @@ export function useProgramasCapacitacion(user: UsuarioLogin | null) {
     try {
       const { data } = await apiClient.get(`/capacitaciones/programas/${idPrograma}/colaboradores-disponibles`);
 
-      console.log(data)
-
       return data.disponibles;
     } catch (err) {
       const baseMessage = "Error al obtener colaboradores disponibles para aplicar programa de capacitacion.";

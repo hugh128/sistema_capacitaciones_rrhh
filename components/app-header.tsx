@@ -71,7 +71,7 @@ export function AppHeader({ title, subtitle, showActions = true }: AppHeaderProp
             <DropdownMenuTrigger asChild>
               <Button 
                 variant="ghost" 
-                className="flex items-center gap-2 px-2 sm:px-3" 
+                className="flex items-center gap-2 px-2 sm:px-3 cursor-pointer"
               >
                 <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center">
                   <span className="text-sm font-medium text-primary-foreground">
@@ -103,7 +103,7 @@ export function AppHeader({ title, subtitle, showActions = true }: AppHeaderProp
                 Perfil
               </DropdownMenuItem>
               <DropdownMenuSeparator />
-              <DropdownMenuItem onClick={logout} className="text-destructive">
+              <DropdownMenuItem onClick={logout} className="text-destructive cursor-pointer">
                 Cerrar Sesión
               </DropdownMenuItem>
             </DropdownMenuContent>

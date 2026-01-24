@@ -542,7 +542,7 @@ export function ProgramaDetails({ programa, departamentos, puestos, onEdit, onBa
                           <div className="flex items-start gap-4">
                             <Avatar className="h-14 w-14 ring-4 ring-white dark:ring-slate-900 shadow-md">
                               <AvatarFallback className="bg-slate-900 text-white font-medium">
-                                {colaborador.NOMBRE_COMPLETO.split(" ").map(n => n[0]).join("")}
+                                {colaborador.INICIALES}
                               </AvatarFallback>
                             </Avatar>
                             <div className="space-y-1">

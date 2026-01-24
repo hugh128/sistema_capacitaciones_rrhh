@@ -148,6 +148,7 @@ export interface ColaboradorPrograma {
   NOMBRE: string
   APELLIDO: string
   NOMBRE_COMPLETO: string
+  INICIALES: string
   ESTADO_COLABORADOR: string
   PUESTO: string
   DEPARTAMENTO: string

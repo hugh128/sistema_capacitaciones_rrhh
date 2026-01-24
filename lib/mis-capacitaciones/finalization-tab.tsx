@@ -210,7 +210,7 @@ export function FinalizationTab({
           <AlertDialogTrigger asChild>
             <Button
               size="lg"
-              className="w-full h-14 text-md sm:text-lg"
+              className="w-full h-14 text-md sm:text-lg cursor-pointer"
               disabled={!canFinalize || !isEditable}
             >
               <CheckCheck className="h-6 w-6" />
@@ -226,8 +226,8 @@ export function FinalizationTab({
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={onFinalizar}>Sí, Finalizar</AlertDialogAction>
+              <AlertDialogCancel className="cursor-pointer dark:hover:border-foreground/50 dark:hover:text-foreground/90">Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={onFinalizar} className="cursor-pointer">Sí, Finalizar</AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

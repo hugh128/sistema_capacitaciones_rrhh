@@ -131,6 +131,7 @@ export interface SESION_DETALLE {
   CAPACITACION_NOMBRE: string;
   OBJETIVO: string | null;
   VERSION: number | null;
+  VERSION_SESION: number | null;
   ES_SISTEMA_DOCUMENTAL: boolean;
   TIPO_CAPACITACION: string; // "CURSO"
   MODALIDAD: string; // "EXTERNA"

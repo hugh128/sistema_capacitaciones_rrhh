@@ -214,7 +214,7 @@ export function DocumentsTab({
       const datos = {
         sistemaDocumental: sesion.ES_SISTEMA_DOCUMENTAL,
         codigoDocumento: sesion.CODIGO_DOCUMENTO,
-        version: sesion.VERSION?.toString(),
+        version: sesion.VERSION_SESION?.toString(),
         documentosAsociados: sesion.TEMAS_CODIGOS,
         taller,
         curso,

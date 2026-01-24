@@ -243,8 +243,8 @@ export default function AsignarCapacitacionPage() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-3xl font-bold text-foreground">Asignar Capacitación</h1>
-                <p className="text-xl mt-1">
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-semibold text-foreground">Asignar Capacitación</h1>
+                <p className="text-xl sm:text-2xl lg:xl text-foreground break-words">
                   {capacitacion.NOMBRE}
                   {capacitacion.DOCUMENTO_VERSION && ` - Versión: ${capacitacion.DOCUMENTO_VERSION}`}
                 </p>
