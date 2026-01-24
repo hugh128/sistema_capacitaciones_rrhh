@@ -40,6 +40,30 @@ const INITIAL_TRAINING_STATE: ProgramaDetalleForm = {
   PUESTO_RELACIONES: [],
 };
 
+const getCategoriaVariant = (categoria: string) => {
+  switch (categoria) {
+    case "GENERAL":
+      return "bg-cyan-50 text-cyan-700 dark:bg-cyan-900/20 dark:text-cyan-400 border border-cyan-200 dark:border-cyan-800"
+    case "ESPECIFICA":
+      return "bg-violet-50 text-violet-700 dark:bg-violet-900/20 dark:text-violet-400 border border-violet-200 dark:border-violet-800"
+    case "CONTINUA":
+      return "bg-amber-50 text-amber-700 dark:bg-amber-900/20 dark:text-amber-400 border border-amber-200 dark:border-amber-800"
+    default:
+      return "bg-slate-50 text-slate-700 dark:bg-slate-800/20 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
+  }
+}
+
+const getTipoVariant = (tipo: string) => {
+  switch (tipo) {
+    case "INTERNA":
+      return "bg-indigo-50 text-indigo-700 dark:bg-indigo-900/20 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-800"
+    case "EXTERNA":
+      return "bg-orange-50 text-orange-700 dark:bg-orange-900/20 dark:text-orange-400 border border-orange-200 dark:border-orange-800"
+    default:
+      return "bg-slate-50 text-slate-700 dark:bg-slate-800/20 dark:text-slate-400 border border-slate-200 dark:border-slate-700"
+  }
+}
+
 export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: CreateProgramaProps) {
   const [nombre, setNombre] = useState("")
   const [descripcion, setDescripcion] = useState("")
@@ -155,7 +179,7 @@ export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: Cre
           <CardHeader className="border-b border-border">
             <CardTitle>Información del Programa</CardTitle>
           </CardHeader>
-          <CardContent className="pt-6 space-y-4">
+          <CardContent className="space-y-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="nombre">Nombre del Programa <span className="text-destructive">*</span></Label>
@@ -265,12 +289,12 @@ export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: Cre
                         </Button>
                       </div>
                       <div className="flex flex-wrap gap-2">
-                        <Badge variant="outline" className="bg-green-500/10 text-green-600 border-green-500/20">
+                        <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium border ${getCategoriaVariant(detalle.CATEGORIA_CAPACITACION)}`}>
                           {detalle.CATEGORIA_CAPACITACION}
-                        </Badge>
-                        <Badge variant="outline" className="bg-blue-500/10 text-blue-600 border-blue-500/20">
+                        </span>
+                        <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${getTipoVariant(detalle.TIPO_CAPACITACION)}`}>
                           {detalle.TIPO_CAPACITACION}
-                        </Badge>
+                        </span>
                         <Badge variant="outline">📅 {detalle.MES_PROGRAMADO}</Badge>
                         {detalle.APLICA_DIPLOMA && <Badge variant="outline">🎓 Diploma</Badge>}
                       </div>

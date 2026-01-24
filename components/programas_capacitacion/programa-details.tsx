@@ -155,12 +155,9 @@ export function ProgramaDetails({ programa, departamentos, puestos, onEdit, onBa
   return (
     <div className="flex-1 bg-background rounded-lg overflow-hidden flex flex-col">
       {/* Header */}
-      <div className="relative bg-gradient-to-r from-[#000428] to-[#004e92] text-white p-8 overflow-hidden">
-
-        <div className="absolute inset-0 opacity-10">
-          <div className="absolute top-0 left-0 w-64 h-64 bg-white rounded-full blur-3xl -translate-x-1/2 -translate-y-1/2"></div>
-          <div className="absolute bottom-0 right-0 w-96 h-96 bg-white rounded-full blur-3xl translate-x-1/2 translate-y-1/2"></div>
-        </div>
+      <div className="relative bg-gradient-to-r from-[#000428] to-[#004e92] dark:from-slate-950 dark:to-blue-900 text-white p-8 overflow-hidden">
+        
+        <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl hidden dark:block" />
 
         <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
           <div className="flex items-start md:items-center gap-4 w-full md:w-auto flex-wrap">
@@ -203,7 +200,9 @@ export function ProgramaDetails({ programa, departamentos, puestos, onEdit, onBa
 
           <Button
             onClick={() => onEdit(programa)}
-            className="bg-white text-blue-900 hover:bg-white/90 cursor-pointer w-full md:w-auto font-semibold shadow-lg"
+            className="bg-white text-blue-900 hover:bg-white/90 
+              dark:bg-white/10 dark:text-white dark:hover:bg-white/20 dark:border dark:border-white/20 dark:backdrop-blur-sm
+              cursor-pointer w-full md:w-auto font-semibold shadow-lg transition-all"
           >
             <Pencil className="w-4 h-4 mr-2" />
             Editar Programa
@@ -353,7 +352,7 @@ export function ProgramaDetails({ programa, departamentos, puestos, onEdit, onBa
                     <Button
                       onClick={handleAddTraining}
                       size="sm"
-                      className="bg-primary text-primary-foreground hover:bg-primary/90"
+                      className="bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer"
                     >
                       <Plus className="w-4 h-4 mr-2" />
                       Agregar Capacitación
