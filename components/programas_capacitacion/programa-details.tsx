@@ -34,7 +34,6 @@ interface ProgramaDetailsProps {
   puestos: Puesto[]
   onEdit: (programa: ProgramaCapacitacion) => void
   onBack: () => void
-  onUpdate: (programaDetalle: CreateProgramaDetalleDto) => void
 }
 
 const getEstatusSpanVariant = (estatus: string) => {
@@ -72,7 +71,7 @@ const getTipoVariant = (tipo: string) => {
   }
 }
 
-export function ProgramaDetails({ programa, departamentos, puestos, onEdit, onBack, onUpdate }: ProgramaDetailsProps) {
+export function ProgramaDetails({ programa, departamentos, puestos, onEdit, onBack }: ProgramaDetailsProps) {
   const [activeTab, setActiveTab] = useState("info")
   const [showTrainingModal, setShowTrainingModal] = useState(false);
   const [showDetailModal, setShowDetailModal] = useState(false);
@@ -85,7 +84,9 @@ export function ProgramaDetails({ programa, departamentos, puestos, onEdit, onBa
   const { user } = useAuth()
   const {
     obtenerDetalleProgramaConColaboradores,
-    obtenerProgramaDetalle
+    obtenerProgramaDetalle,
+    saveProgramaDetalle,
+    updateProgramaDetalle,
   } = useProgramasCapacitacion(user)
 
   useEffect(() => {
@@ -132,16 +133,29 @@ export function ProgramaDetails({ programa, departamentos, puestos, onEdit, onBa
   const handleSaveTraining = async (data: CreateProgramaDetalleDto) => {
     try {
       if (editMode && selectedTraining) {
-        // TODO: Aquí irá el endpoint para actualizar la capacitación
-        // await apiClient.put(`/programa-detalle/${selectedTraining.ID_DETALLE}`, data);
-        toast.success("Capacitación actualizada correctamente (pendiente endpoint)");
+        const detallesActualizados = await updateProgramaDetalle(selectedTraining.ID_DETALLE, data);
+        if (detallesActualizados) {
+          setDetalles(detallesActualizados);
+        }
+        toast.success("Capacitación actualizada correctamente");
       } else {
-        await onUpdate(data);
+        const detallesActualizados = await saveProgramaDetalle(data);
+        if (detallesActualizados) {
+          setDetalles(detallesActualizados);
+        }
         toast.success("Capacitación agregada correctamente");
       }
       setShowTrainingModal(false);
+      
+      const {
+        DETALLE_PROGRAMA,
+        COLABORADORES_PROGRAMA
+      } = await obtenerDetalleProgramaConColaboradores(programa.ID_PROGRAMA)
+      setProgramaDetalle(DETALLE_PROGRAMA)
+      setColaboradorPrograma(COLABORADORES_PROGRAMA)
+      
     } catch (error) {
-      toast.error("Error al guardar la capacitación");
+      toast.error(editMode ? "Error al actualizar la capacitación" : "Error al agregar la capacitación");
       console.error(error);
     }
   };
@@ -486,10 +500,10 @@ export function ProgramaDetails({ programa, departamentos, puestos, onEdit, onBa
                                     <Eye className="mr-2 h-4 w-4" />
                                     Ver detalle
                                   </DropdownMenuItem>
-{/*                                   <DropdownMenuItem onClick={() => handleEditTraining(detalle)} className="cursor-pointer">
+                                  <DropdownMenuItem onClick={() => handleEditTraining(detalle)} className="cursor-pointer">
                                     <Pencil className="mr-2 h-4 w-4" />
                                     Editar
-                                  </DropdownMenuItem> */}
+                                  </DropdownMenuItem>
                                 </DropdownMenuContent>
                               </DropdownMenu>
                             </td>

@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Loader2, Plus, Trash2, Users } from "lucide-react"
+import { ArrowLeft, Loader2, Plus, Trash2, Users, Pencil } from "lucide-react"
 import type {
   ProgramaCapacitacion,
   ProgramaDetalle,
@@ -76,10 +76,15 @@ export function EditPrograma({ programa, departamentos, puestos, onSave, onCance
   const [tipo, setTipo] = useState(programa.TIPO)
   const [periodo, setPeriodo] = useState(programa.PERIODO)
   const [estado, setEstado] = useState(programa.ESTADO)
+  
+  const [detallesOriginalesIds] = useState<Set<number>>(
+    new Set(programa.PROGRAMA_DETALLES.map(d => d.ID_DETALLE))
+  )
   const [detalles, setDetalles] = useState<ProgramaDetalle[]>(programa.PROGRAMA_DETALLES)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
   const [showAddTraining, setShowAddTraining] = useState(false)
+  const [editingTraining, setEditingTraining] = useState<ProgramaDetalle | null>(null)
   const [newTraining, setNewTraining] = useState<ProgramaDetalleForm>(INITIAL_TRAINING_STATE)
 
   const isTrainingValid = () => {
@@ -97,6 +102,10 @@ export function EditPrograma({ programa, departamentos, puestos, onSave, onCance
     return true
   }
 
+  const isCapacitacionOriginal = (idDetalle: number) => {
+    return detallesOriginalesIds.has(idDetalle)
+  }
+
   useEffect(() => {
     if (showAddTraining) {
       document.body.style.overflow = "hidden"
@@ -111,7 +120,28 @@ export function EditPrograma({ programa, departamentos, puestos, onSave, onCance
 
   const handleCancelAddTraining = () => {
     setShowAddTraining(false);
+    setEditingTraining(null);
     setNewTraining(INITIAL_TRAINING_STATE);
+  };
+
+  const handleEditTraining = (detalle: ProgramaDetalle) => {
+    if (isCapacitacionOriginal(detalle.ID_DETALLE)) {
+      return;
+    }
+
+    setEditingTraining(detalle);
+    setNewTraining({
+      NOMBRE: detalle.NOMBRE,
+      CATEGORIA_CAPACITACION: detalle.CATEGORIA_CAPACITACION,
+      TIPO_CAPACITACION: detalle.TIPO_CAPACITACION,
+      APLICA_TODOS_COLABORADORES: detalle.APLICA_TODOS_COLABORADORES,
+      APLICA_DIPLOMA: detalle.APLICA_DIPLOMA,
+      MES_PROGRAMADO: detalle.MES_PROGRAMADO,
+      ESTADO: detalle.ESTADO,
+      DEPARTAMENTO_RELACIONES: detalle.DEPARTAMENTO_RELACIONES || [],
+      PUESTO_RELACIONES: detalle.PUESTO_RELACIONES || [],
+    });
+    setShowAddTraining(true);
   };
 
   const handleAddTraining = () => {
@@ -120,23 +150,32 @@ export function EditPrograma({ programa, departamentos, puestos, onSave, onCance
     const newTrainingIsGlobal = newTraining.APLICA_TODOS_COLABORADORES;
     const newDetalleBase: ProgramaDetalleBase = newTraining;
     
-    const newDetalle: ProgramaDetalle = {
-      ...newDetalleBase, 
-      
-      ID_DETALLE: Date.now() + Math.random(), 
-      PROGRAMA_ID: programa.ID_PROGRAMA,
+    if (editingTraining) {
+      setDetalles((prev) => 
+        prev.map((d) => 
+          d.ID_DETALLE === editingTraining.ID_DETALLE
+            ? {
+                ...d,
+                ...newDetalleBase,
+                DEPARTAMENTO_RELACIONES: newTrainingIsGlobal ? [] : newDetalleBase.DEPARTAMENTO_RELACIONES,
+                PUESTO_RELACIONES: newTrainingIsGlobal ? [] : newDetalleBase.PUESTO_RELACIONES,
+              }
+            : d
+        )
+      );
+    } else {
+      const newDetalle: ProgramaDetalle = {
+        ...newDetalleBase, 
+        ID_DETALLE: Date.now() + Math.random(), 
+        PROGRAMA_ID: programa.ID_PROGRAMA,
+        DEPARTAMENTO_RELACIONES: newTrainingIsGlobal ? [] : newDetalleBase.DEPARTAMENTO_RELACIONES,
+        PUESTO_RELACIONES: newTrainingIsGlobal ? [] : newDetalleBase.PUESTO_RELACIONES,
+      };
+      setDetalles((prev) => [...prev, newDetalle]);
+    }
 
-      DEPARTAMENTO_RELACIONES: newTrainingIsGlobal 
-        ? [] 
-        : newDetalleBase.DEPARTAMENTO_RELACIONES,
-      
-      PUESTO_RELACIONES: newTrainingIsGlobal 
-        ? [] 
-        : newDetalleBase.PUESTO_RELACIONES,
-    };
-
-    setDetalles((prev) => [...prev, newDetalle]);
     setNewTraining(INITIAL_TRAINING_STATE);
+    setEditingTraining(null);
     setShowAddTraining(false);
   };
 
@@ -212,10 +251,13 @@ export function EditPrograma({ programa, departamentos, puestos, onSave, onCance
     }
   };
 
+  const capacitacionesOriginales = detalles.filter(d => isCapacitacionOriginal(d.ID_DETALLE));
+  const capacitacionesNuevas = detalles.filter(d => !isCapacitacionOriginal(d.ID_DETALLE));
+
   return (
     <div className="space-y-6">
       <div className="flex flex-col items-start gap-2">
-        <Button variant="ghost" onClick={onCancel} className="hover:bg-muted">
+        <Button variant="ghost" onClick={onCancel} className="hover:bg-muted cursor-pointer">
           <ArrowLeft className="w-4 h-4 mr-2" />
           Volver
         </Button>
@@ -302,88 +344,201 @@ export function EditPrograma({ programa, departamentos, puestos, onSave, onCance
         <Card className="border-border">
           <CardHeader className="border-b border-border">
             <div className="flex items-center justify-between">
-              <CardTitle>Capacitaciones del Programa</CardTitle>
+              <div>
+                <CardTitle>Capacitaciones del Programa</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Total: {detalles.length} capacitaciones
+                  {capacitacionesNuevas.length > 0 && (
+                    <span className="ml-2 text-emerald-600 dark:text-emerald-400">
+                      ({capacitacionesNuevas.length} {capacitacionesNuevas.length === 1 ? 'nueva' : 'nuevas'})
+                    </span>
+                  )}
+                </p>
+              </div>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => setShowAddTraining(true)}
-                className="border-primary text-primary hover:bg-primary/10 dark:bg-blue-500/10 dark:text-blue-600 dark:border-blue-500/20 cursor-pointer"
+                onClick={() => {
+                  setEditingTraining(null);
+                  setShowAddTraining(true);
+                }}
+                className="border-primary text-primary hover:bg-primary/10 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20 cursor-pointer"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Agregar Capacitación
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="pt-6">
+          <CardContent className="">
             {detalles.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 No hay capacitaciones agregadas. Haz clic en Agregar Capacitación para comenzar.
               </div>
             ) : (
-              <div className="space-y-3">
-                {detalles.map((detalle) => (
-                  <div
-                    key={detalle.ID_DETALLE}
-                    className="flex items-start gap-3 p-4 border border-border rounded-lg bg-muted/30"
-                  >
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-start justify-between">
-                        <h4 className="font-semibold text-foreground">{detalle.NOMBRE}</h4>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveTraining(detalle.ID_DETALLE)}
-                          className="hover:bg-destructive/10 hover:text-destructive"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium border ${getCategoriaVariant(detalle.CATEGORIA_CAPACITACION)}`}>
-                          {detalle.CATEGORIA_CAPACITACION}
-                        </span>
-                        <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${getTipoVariant(detalle.TIPO_CAPACITACION)}`}>
-                          {detalle.TIPO_CAPACITACION}
-                        </span>
-                        <Badge variant="outline">📅 {detalle.MES_PROGRAMADO}</Badge>
-                        {detalle.APLICA_DIPLOMA && <Badge variant="outline">🎓 Diploma</Badge>}
-                      </div>
-
-                      <div className="text-sm text-muted-foreground">
-                        {detalle.APLICA_TODOS_COLABORADORES ? (
-                          <>
-                            <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/20">
-                              <Users className="" />
-                            </Badge>
-                            <span> Aplica a todos los colaboradores</span>
-                          </>
-                        ) : (
-                          <>
-                            <div>Departamentos: {detalle.DEPARTAMENTO_RELACIONES.map((d) => d.NOMBRE).join(", ")}</div>
-                            {detalle.PUESTO_RELACIONES.length > 0 && (
-                              <div>Puestos: {detalle.PUESTO_RELACIONES.map((p) => p.NOMBRE).join(", ")}</div>
-                            )}
-                          </>
-                        )}
-                      </div>
-
+              <div className="space-y-6">
+                {/* Capacitaciones Originales */}
+                {capacitacionesOriginales.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-foreground">Capacitaciones Existentes</h3>
+                      <Badge variant="outline" className="text-xs bg-blue-50 dark:bg-blue-950/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800">
+                        {capacitacionesOriginales.length}
+                      </Badge>
                     </div>
+                    {capacitacionesOriginales.map((detalle) => (
+                      <div
+                        key={detalle.ID_DETALLE}
+                        className="flex items-start gap-3 p-4 border-2 border-blue-200 dark:border-blue-900/40 rounded-lg bg-blue-50/30 dark:bg-blue-950/10"
+                      >
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-semibold text-foreground">{detalle.NOMBRE}</h4>
+                                <Badge variant="outline" className="text-xs bg-blue-100 dark:bg-blue-900/20 text-blue-700 dark:text-blue-300 border-blue-300 dark:border-blue-800">
+                                  Original
+                                </Badge>
+                              </div>
+                            </div>
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleRemoveTraining(detalle.ID_DETALLE)}
+                              className="hover:bg-destructive/10 hover:text-destructive shrink-0 cursor-pointer"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium border ${getCategoriaVariant(detalle.CATEGORIA_CAPACITACION)}`}>
+                              {detalle.CATEGORIA_CAPACITACION}
+                            </span>
+                            <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${getTipoVariant(detalle.TIPO_CAPACITACION)}`}>
+                              {detalle.TIPO_CAPACITACION}
+                            </span>
+                            <Badge variant="outline">📅 Mes {detalle.MES_PROGRAMADO}</Badge>
+                            {detalle.APLICA_DIPLOMA && <Badge variant="outline">🎓 Diploma</Badge>}
+                          </div>
+
+                          <div className="text-sm text-muted-foreground">
+                            {detalle.APLICA_TODOS_COLABORADORES ? (
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="bg-purple-500/10 text-purple-600 dark:text-purple-200 border-purple-500/20">
+                                  <Users className="w-3 h-3 mr-1" />
+                                  Todos los colaboradores
+                                </Badge>
+                              </div>
+                            ) : (
+                              <>
+                                <div>Departamentos: {detalle.DEPARTAMENTO_RELACIONES.map((d) => d.NOMBRE).join(", ")}</div>
+                                {detalle.PUESTO_RELACIONES.length > 0 && (
+                                  <div>Puestos: {detalle.PUESTO_RELACIONES.map((p) => p.NOMBRE).join(", ")}</div>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                ))}
+                )}
+
+                {/* Capacitaciones Nuevas */}
+                {capacitacionesNuevas.length > 0 && (
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-2">
+                      <h3 className="text-sm font-semibold text-foreground">Capacitaciones Agregadas</h3>
+                      <Badge variant="outline" className="text-xs bg-emerald-50 dark:bg-emerald-950/30 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800">
+                        {capacitacionesNuevas.length} {capacitacionesNuevas.length === 1 ? 'nueva' : 'nuevas'}
+                      </Badge>
+                    </div>
+                    {capacitacionesNuevas.map((detalle) => (
+                      <div
+                        key={detalle.ID_DETALLE}
+                        className="flex items-start gap-3 p-4 border-2 border-emerald-200 dark:border-emerald-900/40 rounded-lg bg-emerald-50/30 dark:bg-emerald-950/10"
+                      >
+                        <div className="flex-1 space-y-2">
+                          <div className="flex items-start justify-between gap-2">
+                            <div className="flex-1">
+                              <div className="flex items-center gap-2 mb-1">
+                                <h4 className="font-semibold text-foreground">{detalle.NOMBRE}</h4>
+                                <Badge variant="outline" className="text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800">
+                                  Nueva
+                                </Badge>
+                              </div>
+                            </div>
+                            <div className="flex gap-1 shrink-0">
+                              <Button
+                                type="button"
+                                variant="default"
+                                size="sm"
+                                onClick={() => handleEditTraining(detalle)}
+                                className="hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
+                                title="Editar capacitación"
+                              >
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                type="button"
+                                variant="destructive"
+                                size="sm"
+                                onClick={() => handleRemoveTraining(detalle.ID_DETALLE)}
+                                className="hover:bg-destructive/10 hover:text-destructive cursor-pointer"
+                                title="Eliminar capacitación"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                          <div className="flex flex-wrap gap-2">
+                            <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium border ${getCategoriaVariant(detalle.CATEGORIA_CAPACITACION)}`}>
+                              {detalle.CATEGORIA_CAPACITACION}
+                            </span>
+                            <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${getTipoVariant(detalle.TIPO_CAPACITACION)}`}>
+                              {detalle.TIPO_CAPACITACION}
+                            </span>
+                            <Badge variant="outline">📅 Mes {detalle.MES_PROGRAMADO}</Badge>
+                            {detalle.APLICA_DIPLOMA && <Badge variant="outline">🎓 Diploma</Badge>}
+                          </div>
+
+                          <div className="text-sm text-muted-foreground">
+                            {detalle.APLICA_TODOS_COLABORADORES ? (
+                              <div className="flex items-center gap-2">
+                                <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/20 dark:text-purple-300">
+                                  <Users className="w-3 h-3 mr-1" />
+                                  Todos los colaboradores
+                                </Badge>
+                              </div>
+                            ) : (
+                              <>
+                                <div>Departamentos: {detalle.DEPARTAMENTO_RELACIONES.map((d) => d.NOMBRE).join(", ")}</div>
+                                {detalle.PUESTO_RELACIONES.length > 0 && (
+                                  <div>Puestos: {detalle.PUESTO_RELACIONES.map((p) => p.NOMBRE).join(", ")}</div>
+                                )}
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </CardContent>
         </Card>
 
-        {/* Add Training Form */}
+        {/* Add/Edit Training Form */}
         {showAddTraining && (
           <Card className="border-primary shadow-lg">
             <CardHeader className="border-b border-border bg-primary/5">
-              <CardTitle>Nueva Capacitación</CardTitle>
+              <CardTitle>
+                {editingTraining ? 'Editar Capacitación' : 'Nueva Capacitación'}
+              </CardTitle>
             </CardHeader>
-            <CardContent className="pt-6 space-y-4">
+            <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="training-nombre">Nombre de la Capacitación *</Label>
@@ -432,17 +587,17 @@ export function EditPrograma({ programa, departamentos, puestos, onSave, onCance
                   </Select>
                 </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="modal-fecha">Mes Programado <span className="text-destructive">*</span></Label>
-                <Input
-                  id="modal-fecha"
-                  type="number"
-                  value={newTraining.MES_PROGRAMADO}
-                  onChange={(e) => setNewTraining({ ...newTraining, MES_PROGRAMADO: +e.target.value })}
-                  min={1} max={12}
-                  className="bg-background"
-                />
-              </div>
+                <div className="space-y-2">
+                  <Label htmlFor="modal-fecha">Mes Programado <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="modal-fecha"
+                    type="number"
+                    value={newTraining.MES_PROGRAMADO}
+                    onChange={(e) => setNewTraining({ ...newTraining, MES_PROGRAMADO: +e.target.value })}
+                    min={1} max={12}
+                    className="bg-background"
+                  />
+                </div>
 
                 <div className="space-y-2">
                   <Label htmlFor="training-estado">Estado *</Label>
@@ -529,7 +684,7 @@ export function EditPrograma({ programa, departamentos, puestos, onSave, onCance
                   disabled={!isTrainingValid()}
                   className="bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer"
                 >
-                  Agregar
+                  {editingTraining ? 'Guardar Cambios' : 'Agregar'}
                 </Button>
                 <Button
                   type="button"

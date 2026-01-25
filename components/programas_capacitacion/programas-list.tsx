@@ -84,7 +84,7 @@ export function ProgramasCapacitacionList({
           <h1 className="text-3xl font-bold text-foreground">Programas de Capacitación</h1>
           <p className="text-muted-foreground mt-1">Gestiona los programas de capacitación de tu organización</p>
         </div>
-        <Button onClick={onCreateNew} className="bg-primary text-primary-foreground hover:bg-primary/90">
+        <Button onClick={onCreateNew} className="bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer">
           <Plus className="w-4 h-4 mr-2" />
           Crear Programa
         </Button>

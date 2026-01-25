@@ -11,7 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { ArrowLeft, Loader2, Plus, Trash2 } from "lucide-react"
+import { ArrowLeft, Loader2, Plus, Trash2, Pencil, Users } from "lucide-react"
 import type { ProgramaCapacitacionForm, ProgramaDetalleForm } from "@/lib/programas_capacitacion/types"
 import type { Departamento, Puesto } from "@/lib/types"
 
@@ -73,6 +73,7 @@ export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: Cre
   const [detalles, setDetalles] = useState<ProgramaDetalleForm[]>([])
 
   const [showAddTraining, setShowAddTraining] = useState(false)
+  const [editingTrainingIndex, setEditingTrainingIndex] = useState<number | null>(null)
   const [newTraining, setNewTraining] = useState<ProgramaDetalleForm>(INITIAL_TRAINING_STATE)
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -103,34 +104,87 @@ export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: Cre
     }
   }, [showAddTraining])
 
+  const handleCancelAddTraining = () => {
+    setShowAddTraining(false);
+    setEditingTrainingIndex(null);
+    setNewTraining(INITIAL_TRAINING_STATE);
+  };
+
+  const handleEditTraining = (index: number) => {
+    const detalle = detalles[index];
+    setEditingTrainingIndex(index);
+    setNewTraining({
+      NOMBRE: detalle.NOMBRE,
+      CATEGORIA_CAPACITACION: detalle.CATEGORIA_CAPACITACION,
+      TIPO_CAPACITACION: detalle.TIPO_CAPACITACION,
+      APLICA_TODOS_COLABORADORES: detalle.APLICA_TODOS_COLABORADORES,
+      APLICA_DIPLOMA: detalle.APLICA_DIPLOMA,
+      MES_PROGRAMADO: detalle.MES_PROGRAMADO,
+      ESTADO: detalle.ESTADO,
+      DEPARTAMENTO_RELACIONES: detalle.DEPARTAMENTO_RELACIONES || [],
+      PUESTO_RELACIONES: detalle.PUESTO_RELACIONES || [],
+    });
+    setShowAddTraining(true);
+  };
+
   const handleAddTraining = () => {
-    if (newTraining.NOMBRE && newTraining.MES_PROGRAMADO) {
-      setDetalles((prev) => [...prev, newTraining])
-      setNewTraining(INITIAL_TRAINING_STATE)
-      setShowAddTraining(false)
+    if (!isTrainingValid()) return;
+
+    const newTrainingIsGlobal = newTraining.APLICA_TODOS_COLABORADORES;
+    const trainingData: ProgramaDetalleForm = {
+      ...newTraining,
+      DEPARTAMENTO_RELACIONES: newTrainingIsGlobal ? [] : newTraining.DEPARTAMENTO_RELACIONES,
+      PUESTO_RELACIONES: newTrainingIsGlobal ? [] : newTraining.PUESTO_RELACIONES,
+    };
+
+    if (editingTrainingIndex !== null) {
+      setDetalles((prev) => 
+        prev.map((d, i) => (i === editingTrainingIndex ? trainingData : d))
+      );
+    } else {
+      setDetalles((prev) => [...prev, trainingData]);
     }
-  }
+
+    setNewTraining(INITIAL_TRAINING_STATE);
+    setEditingTrainingIndex(null);
+    setShowAddTraining(false);
+  };
 
   const handleRemoveTraining = (index: number) => {
     setDetalles(detalles.filter((_, i) => i !== index))
   }
 
   const handleToggleDepartamento = (dept: Departamento) => {
-    const exists = newTraining.DEPARTAMENTO_RELACIONES.some((d) => d.ID_DEPARTAMENTO === dept.ID_DEPARTAMENTO)
-    if (exists) {
-      setNewTraining({
-        ...newTraining,
-        DEPARTAMENTO_RELACIONES: newTraining.DEPARTAMENTO_RELACIONES.filter(
-          (d) => d.ID_DEPARTAMENTO !== dept.ID_DEPARTAMENTO,
-        ),
-      })
-    } else {
-      setNewTraining({
-        ...newTraining,
-        DEPARTAMENTO_RELACIONES: [...newTraining.DEPARTAMENTO_RELACIONES, dept],
-      })
-    }
-  }
+    setNewTraining((prev) => {
+      const newTrainingState: ProgramaDetalleForm = {
+        ...prev,
+        APLICA_TODOS_COLABORADORES: false,
+      };
+
+      const exists = newTrainingState.DEPARTAMENTO_RELACIONES.some(
+        (d) => d.ID_DEPARTAMENTO === dept.ID_DEPARTAMENTO
+      );
+
+      if (exists) {
+        const newDeptRelations = newTrainingState.DEPARTAMENTO_RELACIONES.filter(
+          (d) => d.ID_DEPARTAMENTO !== dept.ID_DEPARTAMENTO
+        );
+        
+        return {
+          ...newTrainingState,
+          DEPARTAMENTO_RELACIONES: newDeptRelations,
+          PUESTO_RELACIONES: newTrainingState.PUESTO_RELACIONES.filter(puesto => 
+            puesto.DEPARTAMENTO_ID && newDeptRelations.some(d => d.ID_DEPARTAMENTO === puesto.DEPARTAMENTO_ID)
+          )
+        };
+      }
+      
+      return {
+        ...newTrainingState,
+        DEPARTAMENTO_RELACIONES: [...newTrainingState.DEPARTAMENTO_RELACIONES, dept],
+      };
+    });
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -251,22 +305,30 @@ export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: Cre
 
         {/* Training Details */}
         <Card className="border-border">
-          <CardHeader className="border-b border-border">
+          <CardHeader className="border-border">
             <div className="flex items-center justify-between">
-              <CardTitle>Capacitaciones del Programa</CardTitle>
+              <div>
+                <CardTitle>Capacitaciones del Programa</CardTitle>
+                <p className="text-sm text-muted-foreground mt-1">
+                  Total: {detalles.length} {detalles.length === 1 ? 'capacitación' : 'capacitaciones'}
+                </p>
+              </div>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
-                onClick={() => setShowAddTraining(true)}
-                className="border-primary text-primary hover:bg-primary/10 dark:border-blue-700 dark:text-foreground cursor-pointer"
+                onClick={() => {
+                  setEditingTrainingIndex(null);
+                  setShowAddTraining(true);
+                }}
+                className="border-primary text-primary hover:bg-primary/10 dark:bg-blue-500/10 dark:text-blue-400 dark:border-blue-500/20 cursor-pointer"
               >
                 <Plus className="w-4 h-4 mr-2" />
                 Agregar Capacitación
               </Button>
             </div>
           </CardHeader>
-          <CardContent className="pt-6">
+          <CardContent className="">
             {detalles.length === 0 ? (
               <div className="text-center py-8 text-muted-foreground">
                 No hay capacitaciones agregadas. Haz clic en Agregar Capacitación para comenzar.
@@ -274,19 +336,39 @@ export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: Cre
             ) : (
               <div className="space-y-3">
                 {detalles.map((detalle, index) => (
-                  <div key={index} className="flex items-start gap-3 p-4 border border-border rounded-lg bg-muted/30">
+                  <div key={index} className="flex items-start gap-3 p-4 border border-emerald-200 dark:border-emerald-900/40 rounded-lg bg-emerald-50/20 dark:bg-emerald-950/10">
                     <div className="flex-1 space-y-2">
-                      <div className="flex items-start justify-between">
-                        <h4 className="font-semibold text-foreground">{detalle.NOMBRE}</h4>
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => handleRemoveTraining(index)}
-                          className="hover:bg-destructive/10 hover:text-destructive"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h4 className="font-semibold text-foreground">{detalle.NOMBRE}</h4>
+                            <Badge variant="outline" className="text-xs bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border-emerald-300 dark:border-emerald-800">
+                              Nueva
+                            </Badge>
+                          </div>
+                        </div>
+                        <div className="flex gap-1 shrink-0">
+                          <Button
+                            type="button"
+                            variant="default"
+                            size="sm"
+                            onClick={() => handleEditTraining(index)}
+                            className="hover:bg-blue-500/10 hover:text-blue-600 dark:hover:text-blue-400 cursor-pointer"
+                            title="Editar capacitación"
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            type="button"
+                            variant="destructive"
+                            size="sm"
+                            onClick={() => handleRemoveTraining(index)}
+                            className="hover:bg-destructive/10 hover:text-destructive cursor-pointer"
+                            title="Eliminar capacitación"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </div>
                       <div className="flex flex-wrap gap-2">
                         <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium border ${getCategoriaVariant(detalle.CATEGORIA_CAPACITACION)}`}>
@@ -295,20 +377,23 @@ export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: Cre
                         <span className={`inline-flex px-2.5 py-1 rounded-full text-xs font-medium ${getTipoVariant(detalle.TIPO_CAPACITACION)}`}>
                           {detalle.TIPO_CAPACITACION}
                         </span>
-                        <Badge variant="outline">📅 {detalle.MES_PROGRAMADO}</Badge>
+                        <Badge variant="outline">📅 Mes {detalle.MES_PROGRAMADO}</Badge>
                         {detalle.APLICA_DIPLOMA && <Badge variant="outline">🎓 Diploma</Badge>}
                       </div>
                       <div className="text-sm text-muted-foreground">
                         {detalle.APLICA_TODOS_COLABORADORES ? (
-                          <span>👥 Aplica a todos los colaboradores</span>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="bg-purple-500/10 text-purple-600 border-purple-500/20 dark:text-purple-300">
+                              <Users className="w-3 h-3 mr-1" />
+                              Todos los colaboradores
+                            </Badge>
+                          </div>
                         ) : (
                           <>
-                            <span className="block">
-                              Departamentos: {detalle.DEPARTAMENTO_RELACIONES.map((d) => d.NOMBRE).join(", ")}
-                            </span>
-                            <span className="block">
-                              Puestos: {detalle.PUESTO_RELACIONES.map((p) => p.NOMBRE).join(", ")}
-                            </span>
+                            <div>Departamentos: {detalle.DEPARTAMENTO_RELACIONES.map((d) => d.NOMBRE).join(", ")}</div>
+                            {detalle.PUESTO_RELACIONES.length > 0 && (
+                              <div>Puestos: {detalle.PUESTO_RELACIONES.map((p) => p.NOMBRE).join(", ")}</div>
+                            )}
                           </>
                         )}
                       </div>
@@ -320,13 +405,15 @@ export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: Cre
           </CardContent>
         </Card>
 
-        {/* Add Training Form */}
+        {/* Add/Edit Training Form */}
         {showAddTraining && (
           <Card className="border-primary shadow-lg">
-            <CardHeader className="py-4 bg-primary/5">
-              <CardTitle>Nueva Capacitación</CardTitle>
+            <CardHeader className="border-b border-border bg-primary/5">
+              <CardTitle>
+                {editingTrainingIndex !== null ? 'Editar Capacitación' : 'Nueva Capacitación'}
+              </CardTitle>
             </CardHeader>
-            <CardContent className="pt-6 space-y-4">
+            <CardContent className="space-y-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div className="space-y-2 md:col-span-2">
                   <Label htmlFor="training-nombre">Nombre de la Capacitación *</Label>
@@ -474,12 +561,12 @@ export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: Cre
                   disabled={!isTrainingValid()}
                   className="bg-primary text-primary-foreground hover:bg-primary/90 cursor-pointer"
                 >
-                  Agregar
+                  {editingTrainingIndex !== null ? 'Guardar Cambios' : 'Agregar'}
                 </Button>
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => setShowAddTraining(false)}
+                  onClick={handleCancelAddTraining}
                   className="border-border dark:text-foreground dark:hover:border-foreground/30 cursor-pointer"
                 >
                   Cancelar

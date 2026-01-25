@@ -1,6 +1,6 @@
 import { apiClient } from "@/lib/api-client";
 import { UsuarioLogin } from "@/lib/auth";
-import type { ProgramaCapacitacion, ProgramaCapacitacionForm, CreateProgramaDetalleDto, AsignarProgramaCapacitacion, ColaboradorDisponiblePrograma, AsignarProgramaCapacitacionSelectivo } from "@/lib/programas_capacitacion/types";
+import type { ProgramaCapacitacion, ProgramaCapacitacionForm, CreateProgramaDetalleDto, AsignarProgramaCapacitacion, ColaboradorDisponiblePrograma, AsignarProgramaCapacitacionSelectivo, ProgramaDetalle } from "@/lib/programas_capacitacion/types";
 import { handleApiError } from "@/utils/error-handler";
 import { useCallback, useEffect, useState } from "react";
 import toast from "react-hot-toast";
@@ -63,7 +63,7 @@ export function useProgramasCapacitacion(user: UsuarioLogin | null) {
     }
   }, [user, refreshProgramasCapacitacion]);
 
-  const saveProgramaDetalle = useCallback(async (payload: CreateProgramaDetalleDto) => {
+  const saveProgramaDetalle = useCallback(async (payload: CreateProgramaDetalleDto): Promise<ProgramaDetalle[] | undefined> => {
     if (!user) {
       toast.error("Usuario no autenticado.");
       return;
@@ -71,19 +71,48 @@ export function useProgramasCapacitacion(user: UsuarioLogin | null) {
 
     setIsMutating(true);
     setError(null);
-    let successMessage = "";
 
     try {
       await apiClient.post('/programa-detalle', payload);
-      successMessage = "Capacitacion para el programa creada exitosamente.";
       
-      toast.success(successMessage);
+      const { data } = await apiClient.get(`/programa-detalle/${payload.PROGRAMA_ID}`);
+      
       await refreshProgramasCapacitacion();
+      
+      return data;
 
     } catch (err) {
       const baseMessage = "Error al crear la capacitacion del programa.";
       setError(baseMessage);
       handleApiError(err, baseMessage);
+      throw err;
+    } finally {
+      setIsMutating(false);
+    }
+  }, [user, refreshProgramasCapacitacion]);
+
+  const updateProgramaDetalle = useCallback(async (idDetalle: number, payload: CreateProgramaDetalleDto): Promise<ProgramaDetalle[] | undefined> => {
+    if (!user) {
+      toast.error("Usuario no autenticado.");
+      return;
+    }
+
+    setIsMutating(true);
+    setError(null);
+
+    try {
+      await apiClient.patch(`/programa-detalle/${idDetalle}`, payload);
+      
+      const { data } = await apiClient.get(`/programa-detalle/${payload.PROGRAMA_ID}`);
+      
+      await refreshProgramasCapacitacion();
+      
+      return data;
+    } catch (err) {
+      const baseMessage = "Error al actualizar la capacitacion del programa.";
+      setError(baseMessage);
+      handleApiError(err, baseMessage);
+      throw err;
     } finally {
       setIsMutating(false);
     }
@@ -235,6 +264,7 @@ export function useProgramasCapacitacion(user: UsuarioLogin | null) {
     error,
     isMutating,
     saveProgramaDetalle,
+    updateProgramaDetalle,
     saveProgramaCapacitacion,
     deleteProgramasCapacitacion,
     asignarProgramaCapacitacion,
@@ -242,5 +272,6 @@ export function useProgramasCapacitacion(user: UsuarioLogin | null) {
     asignarProgramaCapacitacionSelectivo,
     obtenerDetalleProgramaConColaboradores,
     obtenerProgramaDetalle,
+    refreshProgramasCapacitacion,
   }
 }

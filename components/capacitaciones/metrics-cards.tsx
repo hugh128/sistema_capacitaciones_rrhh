@@ -1,6 +1,7 @@
 "use client"
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Skeleton } from "@/components/ui/skeleton"
 import { BookOpen, Clock, CheckCircle2, AlertCircle, Users, TrendingUp } from "lucide-react"
 
 interface MetricsCardsProps {
@@ -12,6 +13,7 @@ interface MetricsCardsProps {
   totalParticipantes: number
   asistenciaPromedio: number
   aprobacionPromedio: number
+  loading?: boolean
 }
 
 export function MetricsCards({
@@ -23,6 +25,7 @@ export function MetricsCards({
   totalParticipantes,
   asistenciaPromedio,
   aprobacionPromedio,
+  loading = false,
 }: MetricsCardsProps) {
   const metrics = [
     {
@@ -98,6 +101,25 @@ export function MetricsCards({
       borderColorClass: "border-l-green-600",
     },
   ];
+
+  if (loading) {
+    return (
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {Array.from({ length: 8 }).map((_, idx) => (
+          <Card key={idx} className="border-l-4">
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <Skeleton className="h-4 w-32" />
+              <Skeleton className="h-10 w-10 rounded-lg" />
+            </CardHeader>
+            <CardContent>
+              <Skeleton className="h-8 w-16 mb-2" />
+              <Skeleton className="h-3 w-full" />
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+    );
+  }
 
   return (
     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

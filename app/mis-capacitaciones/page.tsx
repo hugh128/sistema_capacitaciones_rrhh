@@ -6,45 +6,23 @@ import { Sidebar } from "@/components/sidebar"
 import { AppHeader } from "@/components/app-header"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Input } from "@/components/ui/input"
-import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import {
-  Calendar,
-  Clock,
-  Users,
-  CheckCircle2,
-  AlertCircle,
-  BookOpen,
-  Search,
-  Filter,
-  Eye,
-  TrendingUp,
-  AlertTriangle,
-  RefreshCw,
-  ChevronLeft,
-  ChevronRight,
-  ChevronsLeft,
-  ChevronsRight,
-} from "lucide-react"
-import Link from "next/link"
-import { CapacitacionSesion, getEstadoColor } from "@/lib/mis-capacitaciones/capacitaciones-types"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { AlertTriangle, RefreshCw } from "lucide-react"
+import { CapacitacionSesion } from "@/lib/mis-capacitaciones/capacitaciones-types"
 import { RequirePermission } from "@/components/RequirePermission"
 import { useCapacitaciones } from "@/hooks/useCapacitaciones"
 import { Toaster } from "react-hot-toast"
+import { CapacitadorMetricsCards } from "@/components/mis-capacitaciones/capacitador-metrics-cards"
+import { ProximasCapacitaciones } from "@/components/mis-capacitaciones/proximas-capacitaciones"
+import { CapacitacionesProgramadasTab } from "@/components/mis-capacitaciones/capacitaciones-programadas-tab"
+import { TodasCapacitacionesTab } from "@/components/mis-capacitaciones/todas-capacitaciones-tab"
 
 export default function MisCapacitacionesPage() {
   const { user } = useAuth()
-  const [searchTerm, setSearchTerm] = useState("")
-  const [estadoFilter, setEstadoFilter] = useState<string>("TODOS")
-  const [tipoFilter, setTipoFilter] = useState<string>("TODOS")
   const [misCapacitaciones, setMisCapacitaciones] = useState<CapacitacionSesion[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
   const [errorMessage, setErrorMessage] = useState("")
-  
-  const [currentPage, setCurrentPage] = useState(1)
-  const [itemsPerPage, setItemsPerPage] = useState(10)
 
   const isFetchingRef = useRef(false)
   const hasFetchedRef = useRef(false)
@@ -100,47 +78,6 @@ export default function MisCapacitacionesPage() {
       fetchCapacitaciones()
     }
   }, [fetchCapacitaciones])
-
-  const searchTermLower = useMemo(() => searchTerm.toLowerCase(), [searchTerm])
-
-  const capacitacionesFiltradas = useMemo(() => {
-    if (!Array.isArray(misCapacitaciones) || misCapacitaciones.length === 0) {
-      return []
-    }
-
-    return misCapacitaciones.filter((cap) => {
-      const matchesSearch = !searchTerm || 
-        cap.NOMBRE?.toLowerCase().includes(searchTermLower) ||
-        cap.CODIGO_DOCUMENTO?.toLowerCase().includes(searchTermLower)
-      
-      const matchesEstado = estadoFilter === "TODOS" || cap.ESTADO === estadoFilter
-      const matchesTipo = tipoFilter === "TODOS" || cap.TIPO_CAPACITACION === tipoFilter
-      
-      return matchesSearch && matchesEstado && matchesTipo
-    })
-  }, [misCapacitaciones, searchTerm, searchTermLower, estadoFilter, tipoFilter])
-
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [searchTerm, estadoFilter, tipoFilter])
-
-  const paginationData = useMemo(() => {
-    const totalItems = capacitacionesFiltradas.length
-    const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage))
-    const startIndex = (currentPage - 1) * itemsPerPage
-    const endIndex = startIndex + itemsPerPage
-    const currentItems = capacitacionesFiltradas.slice(startIndex, endIndex)
-    
-    return {
-      totalItems,
-      totalPages,
-      startIndex,
-      endIndex,
-      currentItems,
-      showingFrom: totalItems === 0 ? 0 : startIndex + 1,
-      showingTo: Math.min(endIndex, totalItems)
-    }
-  }, [capacitacionesFiltradas, currentPage, itemsPerPage])
 
   const metrics = useMemo(() => {
     if (!Array.isArray(misCapacitaciones) || misCapacitaciones.length === 0) {
@@ -213,14 +150,13 @@ export default function MisCapacitacionesPage() {
     }
   }, [misCapacitaciones])
 
-  const goToPage = useCallback((page: number) => {
-    setCurrentPage(Math.max(1, Math.min(page, paginationData.totalPages)))
-  }, [paginationData.totalPages])
-
-  const goToFirstPage = useCallback(() => goToPage(1), [goToPage])
-  const goToLastPage = useCallback(() => goToPage(paginationData.totalPages), [goToPage, paginationData.totalPages])
-  const goToPreviousPage = useCallback(() => goToPage(currentPage - 1), [goToPage, currentPage])
-  const goToNextPage = useCallback(() => goToPage(currentPage + 1), [goToPage, currentPage])
+  const capacitacionesProgramadasYRechazadas = useMemo(() => {
+    if (!Array.isArray(misCapacitaciones)) return []
+    
+    return misCapacitaciones.filter(
+      (cap) => cap.ESTADO === "PROGRAMADA" || cap.ESTADO === "RECHAZADA"
+    )
+  }, [misCapacitaciones])
 
   const hasAccess = user?.ROLES.some(
     (role) => role.NOMBRE === "Capacitador" || role.NOMBRE === "RRHH"
@@ -279,7 +215,7 @@ export default function MisCapacitacionesPage() {
                     hasFetchedRef.current = false
                     fetchCapacitaciones()
                   }}
-                  className="w-full"
+                  className="w-full cursor-pointer"
                   size="lg"
                 >
                   <RefreshCw className="h-4 w-4 mr-2" />
@@ -302,359 +238,54 @@ export default function MisCapacitacionesPage() {
         <Sidebar />
         <div className="flex-1 flex flex-col overflow-hidden">
 
-          <AppHeader title="Mis Capacitaciones" subtitle="Gestiona tus capacitaciones asignadas y registra el progreso de los participantes" />
+          <AppHeader 
+            title="Mis Capacitaciones" 
+            subtitle="Gestiona tus capacitaciones asignadas y registra el progreso de los participantes" 
+          />
 
           <main className="flex-1 p-6 space-y-6 max-w-[1600px] mx-auto w-full overflow-auto custom-scrollbar">
             <Toaster />
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-              <Card className="border-l-4 border-l-blue-500 hover:shadow-md transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Total Asignadas</CardTitle>
-                  <div className="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/20 flex items-center justify-center">
-                    <BookOpen className="h-5 w-5 text-blue-600 dark:text-blue-400" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-foreground">{metrics.total}</div>
-                  <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                    <TrendingUp className="h-3 w-3" />
-                    Capacitaciones totales
-                  </p>
-                </CardContent>
-              </Card>
+            {/* Métricas */}
+            <CapacitadorMetricsCards
+              total={metrics.total}
+              pendientes={metrics.pendientes}
+              enProceso={metrics.enProceso}
+              finalizadasEsteMes={metrics.finalizadasEsteMes}
+              loading={false}
+            />
 
-              <Card className="border-l-4 border-l-yellow-500 hover:shadow-md transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Pendientes</CardTitle>
-                  <div className="h-10 w-10 rounded-full bg-yellow-100 dark:bg-yellow-900/20 flex items-center justify-center">
-                    <AlertCircle className="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-foreground">{metrics.pendientes}</div>
-                  <p className="text-xs text-muted-foreground mt-1">Por iniciar</p>
-                </CardContent>
-              </Card>
+            {/* Próximas Capacitaciones */}
+            <ProximasCapacitaciones 
+              capacitaciones={proximasCapacitaciones}
+              loading={false}
+            />
 
-              <Card className="border-l-4 border-l-purple-500 hover:shadow-md transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">En Proceso</CardTitle>
-                  <div className="h-10 w-10 rounded-full bg-purple-100 dark:bg-purple-900/20 flex items-center justify-center">
-                    <Clock className="h-5 w-5 text-purple-600 dark:text-purple-400" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-foreground">{metrics.enProceso}</div>
-                  <p className="text-xs text-muted-foreground mt-1">Activas ahora</p>
-                </CardContent>
-              </Card>
+            {/* Tabs de capacitaciones */}
+            <Tabs defaultValue="programadas" className="w-full">
+              <TabsList className="flex flex-wrap w-full gap-1 p-1 h-auto">
+                <TabsTrigger value="programadas" className="flex-1 text-sm whitespace-nowrap cursor-pointer">
+                  Programadas y Rechazadas ({capacitacionesProgramadasYRechazadas.length})
+                </TabsTrigger>
+                <TabsTrigger value="todas" className="flex-1 text-sm whitespace-nowrap cursor-pointer">
+                  Todas las Capacitaciones ({misCapacitaciones.length})
+                </TabsTrigger>
+              </TabsList>
 
-              <Card className="border-l-4 border-l-green-500 hover:shadow-md transition-shadow">
-                <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                  <CardTitle className="text-sm font-medium text-muted-foreground">Este Mes</CardTitle>
-                  <div className="h-10 w-10 rounded-full bg-green-100 dark:bg-green-900/20 flex items-center justify-center">
-                    <CheckCircle2 className="h-5 w-5 text-green-600 dark:text-green-400" />
-                  </div>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold text-foreground">{metrics.finalizadasEsteMes}</div>
-                  <p className="text-xs text-muted-foreground mt-1">Completadas</p>
-                </CardContent>
-              </Card>
-            </div>
+              <TabsContent value="programadas">
+                <CapacitacionesProgramadasTab 
+                  capacitaciones={capacitacionesProgramadasYRechazadas}
+                  loading={false}
+                />
+              </TabsContent>
 
-            {proximasCapacitaciones.length > 0 && (
-              <Card className="shadow-sm">
-                <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50 dark:from-blue-950/20 dark:to-purple-950/20">
-                  <div className="flex items-center gap-3">
-                    <div className="h-10 w-10 rounded-lg bg-blue-600 flex items-center justify-center">
-                      <Calendar className="h-5 w-5 text-white" />
-                    </div>
-                    <div>
-                      <CardTitle className="text-xl">Próximas Capacitaciones</CardTitle>
-                      <CardDescription>Programadas para los próximos 7 días</CardDescription>
-                    </div>
-                  </div>
-                </CardHeader>
-                <CardContent className="pt-6">
-                  <div className="space-y-3">
-                    {proximasCapacitaciones.map((cap) => (
-                      <div
-                        key={cap.ID_SESION}
-                        className="flex items-center justify-between p-4 border-2 rounded-xl hover:border-primary hover:bg-accent/50 transition-all group"
-                      >
-                        <div className="flex-1 space-y-2">
-                          <div className="flex items-center gap-3 flex-wrap">
-                            <h4 className="font-semibold text-lg group-hover:text-primary dark:group-hover:text-foreground transition-colors">
-                              {cap.NOMBRE}
-                            </h4>
-                            <Badge className={getEstadoColor(cap.ESTADO)}>{cap.ESTADO}</Badge>
-                            <Badge variant="outline" className="font-medium">
-                              {cap.TIPO_CAPACITACION}
-                            </Badge>
-                          </div>
-                          <div className="flex items-center gap-6 text-sm text-muted-foreground flex-wrap">
-                            <span className="flex items-center gap-2 font-medium">
-                              <Calendar className="h-4 w-4 text-blue-600" />
-                              {new Date(cap.FECHA_PROGRAMADA!).toLocaleDateString("es-GT", {
-                                weekday: "long",
-                                day: "numeric",
-                                month: "long",
-                              })}
-                            </span>
-                            <span className="flex items-center gap-2">
-                              <Clock className="h-4 w-4 text-purple-600" />
-                              {cap.HORARIO_FORMATO_12H}
-                            </span>
-                            <span className="flex items-center gap-2">
-                              <Users className="h-4 w-4 text-green-600" />
-                              {cap.TOTAL_COLABORADORES} participantes
-                            </span>
-                          </div>
-                        </div>
-                        <Link href={`/mis-capacitaciones/${cap.ID_SESION}`}>
-                          <Button size="lg" className="ml-4 cursor-pointer">
-                            <Eye className="h-4 w-4 mr-2" />
-                            Ver Detalle
-                          </Button>
-                        </Link>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            <Card className="shadow-sm">
-              <CardHeader>
-                <CardTitle className="text-xl">Todas las Capacitaciones</CardTitle>
-                <CardDescription>Busca y filtra tus capacitaciones asignadas</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="flex flex-col lg:flex-row gap-3">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-                    <Input
-                      placeholder="Buscar por nombre o código..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 h-11 text-base"
-                    />
-                  </div>
-                  <Select value={estadoFilter} onValueChange={setEstadoFilter}>
-                    <SelectTrigger className="w-full lg:w-56 h-11">
-                      <div className="flex items-center gap-2">
-                        <Filter className="h-4 w-4" />
-                        <SelectValue placeholder="Estado" />
-                      </div>
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="TODOS">Todos los estados</SelectItem>
-                      <SelectItem value="PROGRAMADA">Programada</SelectItem>
-                      <SelectItem value="EN_PROCESO">En Proceso</SelectItem>
-                      <SelectItem value="FINALIZADA">Finalizada</SelectItem>
-                      <SelectItem value="FINALIZADA_CAPACITADOR">En Revisión</SelectItem>
-                      <SelectItem value="RECHAZADA">Rechazada</SelectItem>
-                    </SelectContent>
-                  </Select>
-                  <Select value={tipoFilter} onValueChange={setTipoFilter}>
-                    <SelectTrigger className="w-full lg:w-56 h-11">
-                      <SelectValue placeholder="Tipo" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="TODOS">Todos los tipos</SelectItem>
-                      <SelectItem value="CURSO">Curso</SelectItem>
-                      <SelectItem value="TALLER">Taller</SelectItem>
-                      <SelectItem value="CHARLA">Charla</SelectItem>
-                      <SelectItem value="OTRO">Otro</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {paginationData.totalItems > 0 && (
-                  <div className="flex flex-col sm:flex-row justify-between items-center gap-4 py-2 border-y">
-                    <div className="text-sm text-muted-foreground">
-                      Mostrando <span className="font-semibold text-foreground">{paginationData.showingFrom}</span> a{" "}
-                      <span className="font-semibold text-foreground">{paginationData.showingTo}</span> de{" "}
-                      <span className="font-semibold text-foreground">{paginationData.totalItems}</span> capacitaciones
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <span className="text-sm text-muted-foreground whitespace-nowrap">Items por página:</span>
-                      <Select 
-                        value={itemsPerPage.toString()} 
-                        onValueChange={(value) => {
-                          setItemsPerPage(Number(value))
-                          setCurrentPage(1)
-                        }}
-                      >
-                        <SelectTrigger className="w-20 h-9">
-                          <SelectValue />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="5">5</SelectItem>
-                          <SelectItem value="10">10</SelectItem>
-                          <SelectItem value="20">20</SelectItem>
-                          <SelectItem value="50">50</SelectItem>
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
-                )}
-
-                <div className="space-y-4">
-                  {paginationData.totalItems === 0 ? (
-                    <div className="text-center py-16 text-muted-foreground">
-                      <div className="h-20 w-20 rounded-full bg-muted mx-auto mb-4 flex items-center justify-center">
-                        <BookOpen className="h-10 w-10 opacity-50" />
-                      </div>
-                      <p className="text-lg font-medium">No se encontraron capacitaciones</p>
-                      <p className="text-sm mt-1">
-                        {misCapacitaciones.length === 0 
-                          ? "Aún no tienes capacitaciones asignadas" 
-                          : "Intenta ajustar los filtros de búsqueda"}
-                      </p>
-                    </div>
-                  ) : (
-                    paginationData.currentItems.map((cap) => (
-                      <Card
-                        key={cap.ID_SESION}
-                        className="hover:shadow-lg transition-all border-2 hover:border-primary/50 dark:hover:border-primary group"
-                      >
-                        <CardContent className="px-6 py-4">
-                          <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-                            <div className="flex-1 space-y-3">
-                              <div className="flex items-center gap-3 flex-wrap">
-                                <h3 className="font-bold text-lg sm:text-xl group-hover:text-primary transition-colors dark:group-hover:text-foreground">
-                                  {cap.NOMBRE}
-                                </h3>
-                                <Badge className={`${getEstadoColor(cap.ESTADO)} text-xs px-3 py-1`}>{cap.ESTADO}</Badge>
-                                <Badge variant="outline" className="text-xs px-3 py-1">
-                                  {cap.TIPO_CAPACITACION}
-                                </Badge>
-                              </div>
-                              {cap.CODIGO_DOCUMENTO && (
-                                <p className="text-sm text-muted-foreground font-mono bg-muted px-2 py-1 rounded inline-block">
-                                  {cap.CODIGO_DOCUMENTO}
-                                </p>
-                              )}
-                              <p className="text-sm text-muted-foreground leading-relaxed">{cap.GRUPO_OBJETIVO}</p>
-                              <div className="flex flex-wrap gap-4 text-sm pt-2">
-                                <span className="flex items-center gap-2 text-muted-foreground">
-                                  <Calendar className="h-4 w-4 text-blue-600" />
-                                  <span className="font-medium">
-                                    {cap.FECHA_PROGRAMADA
-                                      ? new Date(cap.FECHA_PROGRAMADA).toLocaleDateString("es-GT", {
-                                          day: "numeric",
-                                          month: "long",
-                                          year: "numeric",
-                                        })
-                                      : "Sin fecha"}
-                                  </span>
-                                </span>
-                                <span className="flex items-center gap-2 text-muted-foreground">
-                                  <Clock className="h-4 w-4 text-purple-600" />
-                                  <span className="font-medium">
-                                    {cap.HORARIO_FORMATO_12H} · {cap.DURACION_FORMATO}
-                                  </span>
-                                </span>
-                                <span className="flex items-center gap-2 text-muted-foreground">
-                                  <Users className="h-4 w-4 text-green-600" />
-                                  <span className="font-medium">{cap.TOTAL_COLABORADORES} participantes</span>
-                                </span>
-                              </div>
-                            </div>
-                            <Link href={`/mis-capacitaciones/${cap.ID_SESION}`}>
-                              <Button size="lg" className="shrink-0 cursor-pointer">
-                                <Eye className="h-4 w-4 mr-2" />
-                                Ver Detalle
-                              </Button>
-                            </Link>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))
-                  )}
-                </div>
-
-                {paginationData.totalItems > 0 && (
-                  <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-4 border-t">
-                    <div className="text-sm text-muted-foreground">
-                      Página <span className="font-semibold text-foreground">{currentPage}</span> de{" "}
-                      <span className="font-semibold text-foreground">{paginationData.totalPages}</span>
-                    </div>
-                    
-                    <div className="flex items-center gap-2">
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={goToFirstPage}
-                        disabled={currentPage === 1}
-                        className="h-9 w-9"
-                      >
-                        <ChevronsLeft className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={goToPreviousPage}
-                        disabled={currentPage === 1}
-                        className="h-9 w-9"
-                      >
-                        <ChevronLeft className="h-4 w-4" />
-                      </Button>
-                      
-                      <div className="flex items-center gap-1">
-                        {Array.from({ length: Math.min(5, paginationData.totalPages) }, (_, i) => {
-                          let pageNumber: number
-                          
-                          if (paginationData.totalPages <= 5) {
-                            pageNumber = i + 1
-                          } else if (currentPage <= 3) {
-                            pageNumber = i + 1
-                          } else if (currentPage >= paginationData.totalPages - 2) {
-                            pageNumber = paginationData.totalPages - 4 + i
-                          } else {
-                          pageNumber = currentPage - 2 + i
-                          }
-
-                          return (
-                            <Button
-                              key={pageNumber}
-                              variant={currentPage === pageNumber ? "default" : "outline"}
-                              size="icon"
-                              onClick={() => goToPage(pageNumber)}
-                              className="h-9 w-9"
-                            >
-                              {pageNumber}
-                            </Button>
-                          )
-                        })}
-                      </div>
-                      
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={goToNextPage}
-                        disabled={currentPage === paginationData.totalPages}
-                        className="h-9 w-9"
-                      >
-                        <ChevronRight className="h-4 w-4" />
-                      </Button>
-                      <Button
-                        variant="outline"
-                        size="icon"
-                        onClick={goToLastPage}
-                        disabled={currentPage === paginationData.totalPages}
-                        className="h-9 w-9"
-                      >
-                        <ChevronsRight className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+              <TabsContent value="todas">
+                <TodasCapacitacionesTab 
+                  capacitaciones={misCapacitaciones}
+                  loading={false}
+                />
+              </TabsContent>
+            </Tabs>
           </main>
         </div>
       </div>

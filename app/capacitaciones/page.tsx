@@ -15,17 +15,18 @@ import { useCapacitaciones } from "@/hooks/useCapacitaciones"
 import { Toaster } from "react-hot-toast"
 
 export default function GestionCapacitacionesPage() {
-  const { user, loading } = useAuth()
+  const { user, loading: authLoading } = useAuth()
   const [isInitialized, setIsInitialized] = useState(false)
 
   useEffect(() => {
-    if (!loading && user) {
+    if (!authLoading && user) {
       setIsInitialized(true)
     }
-  }, [loading, user])
+  }, [authLoading, user])
 
   const {
     capacitaciones,
+    loading: capacitacionesLoading,
   } = useCapacitaciones(isInitialized ? user : null);
 
   const pendientesAsignacion = useMemo(() => {
@@ -68,7 +69,7 @@ export default function GestionCapacitacionesPage() {
     }
   }, [capacitaciones, pendientesAsignacion.length, pendientesRevision.length])
 
-  if (loading) {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <Card className="w-96">
@@ -118,27 +119,39 @@ export default function GestionCapacitacionesPage() {
               totalParticipantes={metrics.totalParticipantes}
               asistenciaPromedio={metrics.asistenciaPromedio}
               aprobacionPromedio={metrics.aprobacionPromedio}
+              loading={capacitacionesLoading}
             />
 
             <Tabs defaultValue="pendientes" className="w-full">
               <TabsList className="flex flex-wrap w-full gap-1 p-1 h-auto">
-                <TabsTrigger value="pendientes" className="flex-1 text-sm whitespace-nowrap cursor-pointer">Pendientes de Asignar ({pendientesAsignacion.length})</TabsTrigger>
-                <TabsTrigger value="revision" className="flex-1 text-sm whitespace-nowrap cursor-pointer">Pendientes de Revisión ({pendientesRevision.length})</TabsTrigger>
-                <TabsTrigger value="todas" className="flex-1 text-sm whitespace-nowrap cursor-pointer">Todas las Capacitaciones ({capacitaciones.length})</TabsTrigger>
+                <TabsTrigger value="pendientes" className="flex-1 text-sm whitespace-nowrap cursor-pointer">
+                  Pendientes de Asignar ({capacitacionesLoading ? '...' : pendientesAsignacion.length})
+                </TabsTrigger>
+                <TabsTrigger value="revision" className="flex-1 text-sm whitespace-nowrap cursor-pointer">
+                  Pendientes de Revisión ({capacitacionesLoading ? '...' : pendientesRevision.length})
+                </TabsTrigger>
+                <TabsTrigger value="todas" className="flex-1 text-sm whitespace-nowrap cursor-pointer">
+                  Todas las Capacitaciones ({capacitacionesLoading ? '...' : capacitaciones.length})
+                </TabsTrigger>
               </TabsList>
 
               <TabsContent value="pendientes">
                 <PendingAssignmentsTab
                   capacitaciones={pendientesAsignacion}
+                  loading={capacitacionesLoading}
                 />
               </TabsContent>
 
               <TabsContent value="revision">
-                <PendingReviewsTab capacitaciones={pendientesRevision} />
+                <PendingReviewsTab 
+                  capacitaciones={pendientesRevision}
+                />
               </TabsContent>
 
               <TabsContent value="todas">
-                <AllCapacitacionesTab capacitaciones={capacitaciones} />
+                <AllCapacitacionesTab 
+                  capacitaciones={capacitaciones}
+                />
               </TabsContent>
             </Tabs>
           </main>

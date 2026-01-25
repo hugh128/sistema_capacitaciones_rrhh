@@ -8,7 +8,6 @@ import { ProgramaDetails } from "./programa-details"
 import type { 
   ProgramaCapacitacion, 
   ProgramaCapacitacionForm, 
-  CreateProgramaDetalleDto, 
   AsignarProgramaCapacitacionSelectivo 
 } from "@/lib/programas_capacitacion/types"
 import type { Departamento, Puesto } from "@/lib/types"
@@ -49,10 +48,10 @@ export default function ProgramsModule() {
   const {
     programasCapacitacion,
     saveProgramaCapacitacion,
-    saveProgramaDetalle,
     asignarProgramaCapacitacionSelectivo,
     obtenerColaboradoresDisponiblesPrograma,
-    loading
+    loading,
+    refreshProgramasCapacitacion
   } = useProgramasCapacitacion(user)
 
   useEffect(() => {
@@ -91,13 +90,10 @@ export default function ProgramsModule() {
     // Implementar si es necesario
   }
 
-  const handleBack = () => {
+  const handleBack = async () => {
+    await refreshProgramasCapacitacion()
     setViewState("list")
     setSelectedPrograma(null)
-  }
-
-  const handleNewDetalle = async(programaDetalle: CreateProgramaDetalleDto) => {
-    await saveProgramaDetalle(programaDetalle)
   }
 
   const handleAssignProgram = async (asignarPrograma: AsignarProgramaCapacitacionSelectivo) => {
@@ -148,7 +144,6 @@ export default function ProgramsModule() {
           puestos={puestosList}
           onEdit={handleEdit}
           onBack={handleBack}
-          onUpdate={handleNewDetalle}
         />
       )}
     </div>
