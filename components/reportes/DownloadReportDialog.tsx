@@ -106,7 +106,7 @@ export function DownloadReportDialog({
         )}
 
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading} className="cursor-pointer">
+          <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading} className="dark:hover:border-foreground/50 dark:hover:text-foreground/90 cursor-pointer">
             Cancelar
           </Button>
           <Button onClick={handleDownload} disabled={isLoading} className="cursor-pointer">

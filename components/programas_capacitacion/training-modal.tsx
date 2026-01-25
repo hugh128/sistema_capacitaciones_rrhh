@@ -263,6 +263,7 @@ export function TrainingModal({
               id="modal-diploma"
               checked={newTraining.APLICA_DIPLOMA}
               onCheckedChange={(checked) => setNewTraining({ ...newTraining, APLICA_DIPLOMA: checked as boolean })}
+              className="dark:border dark:border-gray-600 data-[state=checked]:dark:border-transparent"
             />
             <Label htmlFor="modal-diploma" className="cursor-pointer font-medium">
               Aplica Diploma
@@ -282,6 +283,7 @@ export function TrainingModal({
                     PUESTO_RELACIONES: checked ? [] : newTraining.PUESTO_RELACIONES,
                   })
                 }
+                className="dark:border dark:border-gray-600 data-[state=checked]:dark:border-transparent"
               />
               <Label htmlFor="modal-todos-colab" className="cursor-pointer font-medium">
                 Aplica a todos los colaboradores
@@ -303,6 +305,7 @@ export function TrainingModal({
                             (d) => d.ID_DEPARTAMENTO === dept.ID_DEPARTAMENTO,
                           )}
                           onCheckedChange={() => handleToggleDepartamento(dept)}
+                          className="dark:border dark:border-gray-600 data-[state=checked]:dark:border-transparent"
                         />
                         <Label htmlFor={`modal-dept-${dept.ID_DEPARTAMENTO}`} className="cursor-pointer font-normal">
                           {dept.NOMBRE}
@@ -331,6 +334,7 @@ export function TrainingModal({
                                 (p) => p.ID_PUESTO === puesto.ID_PUESTO,
                               )}
                               onCheckedChange={() => handleTogglePuesto(puesto)}
+                              className="dark:border dark:border-gray-600 data-[state=checked]:dark:border-transparent"
                             />
                             <Label htmlFor={`modal-puesto-${puesto.ID_PUESTO}`} className="cursor-pointer font-normal">
                               {puesto.NOMBRE}

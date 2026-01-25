@@ -284,7 +284,7 @@ export const FormularioCapacitacion = memo(function FormularioCapacitacion({
                 }
               }}
               className="
-                dark:border dark:border-gray-500
+                dark:border dark:border-gray-600
                 data-[state=checked]:dark:border-transparent cursor-pointer
               "
             />
@@ -315,7 +315,7 @@ export const FormularioCapacitacion = memo(function FormularioCapacitacion({
               checked={aplicaDiploma}
               onCheckedChange={(checked) => setAplicaDiploma(checked as boolean)}
               className="
-                dark:border dark:border-gray-500
+                dark:border dark:border-gray-600
                 data-[state=checked]:dark:border-transparent cursor-pointer
               "
             />

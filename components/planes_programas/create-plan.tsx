@@ -242,7 +242,7 @@ const DepartmentSection = memo(({
             id="allPositions"
             checked={appliesToAllPositions}
             onCheckedChange={onToggleAllPositions}
-            className="dark:border dark:border-gray-500 data-[state=checked]:dark:border-transparent cursor-pointer"
+            className="dark:border dark:border-gray-600 data-[state=checked]:dark:border-transparent cursor-pointer"
           />
           <Label htmlFor="allPositions" className="text-sm font-normal cursor-pointer">
             Aplica a todos los puestos del departamento

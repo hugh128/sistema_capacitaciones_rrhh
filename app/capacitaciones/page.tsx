@@ -124,13 +124,13 @@ export default function GestionCapacitacionesPage() {
 
             <Tabs defaultValue="pendientes" className="w-full">
               <TabsList className="flex flex-wrap w-full gap-1 p-1 h-auto">
-                <TabsTrigger value="pendientes" className="flex-1 text-sm whitespace-nowrap cursor-pointer">
+                <TabsTrigger value="pendientes" className="flex-1 text-sm whitespace-nowrap cursor-pointer data-[state=active]:border-b-blue-800 dark:data-[state=active]:border-b-blue-800 data-[state=active]:bg-white/60 dark:data-[state=active]:bg-transparent">
                   Pendientes de Asignar ({capacitacionesLoading ? '...' : pendientesAsignacion.length})
                 </TabsTrigger>
-                <TabsTrigger value="revision" className="flex-1 text-sm whitespace-nowrap cursor-pointer">
+                <TabsTrigger value="revision" className="flex-1 text-sm whitespace-nowrap cursor-pointer data-[state=active]:border-b-blue-800 dark:data-[state=active]:border-b-blue-800 data-[state=active]:bg-white/60 dark:data-[state=active]:bg-transparent">
                   Pendientes de Revisión ({capacitacionesLoading ? '...' : pendientesRevision.length})
                 </TabsTrigger>
-                <TabsTrigger value="todas" className="flex-1 text-sm whitespace-nowrap cursor-pointer">
+                <TabsTrigger value="todas" className="flex-1 text-sm whitespace-nowrap cursor-pointer data-[state=active]:border-b-blue-800 dark:data-[state=active]:border-b-blue-800 data-[state=active]:bg-white/60 dark:data-[state=active]:bg-transparent">
                   Todas las Capacitaciones ({capacitacionesLoading ? '...' : capacitaciones.length})
                 </TabsTrigger>
               </TabsList>

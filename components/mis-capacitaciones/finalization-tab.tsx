@@ -16,7 +16,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { Users, CheckCircle2, FileText, Award, AlertCircle, CheckCheck } from "lucide-react"
-import type { SESION_DETALLE } from "./capacitaciones-types"
+import type { SESION_DETALLE } from "@/lib/mis-capacitaciones/capacitaciones-types"
 
 interface FinalizationTabProps {
   sesion: SESION_DETALLE

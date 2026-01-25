@@ -264,10 +264,10 @@ export default function MisCapacitacionesPage() {
             {/* Tabs de capacitaciones */}
             <Tabs defaultValue="programadas" className="w-full">
               <TabsList className="flex flex-wrap w-full gap-1 p-1 h-auto">
-                <TabsTrigger value="programadas" className="flex-1 text-sm whitespace-nowrap cursor-pointer">
+                <TabsTrigger value="programadas" className="flex-1 text-sm whitespace-nowrap cursor-pointer data-[state=active]:border-b-blue-800 dark:data-[state=active]:border-b-blue-800 data-[state=active]:bg-white/60 dark:data-[state=active]:bg-transparent">
                   Programadas y Rechazadas ({capacitacionesProgramadasYRechazadas.length})
                 </TabsTrigger>
-                <TabsTrigger value="todas" className="flex-1 text-sm whitespace-nowrap cursor-pointer">
+                <TabsTrigger value="todas" className="flex-1 text-sm whitespace-nowrap cursor-pointer data-[state=active]:border-b-blue-800 dark:data-[state=active]:border-b-blue-800 data-[state=active]:bg-white/60 dark:data-[state=active]:bg-transparent">
                   Todas las Capacitaciones ({misCapacitaciones.length})
                 </TabsTrigger>
               </TabsList>

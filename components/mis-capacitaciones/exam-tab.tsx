@@ -23,8 +23,8 @@ import {
   CheckSquare,
   AlertCircle
 } from "lucide-react"
-import type { SESION_DETALLE } from "./capacitaciones-types"
-import type { TipoPregunta, Question, Serie, OpcionMultiple } from "./capacitaciones-types"
+import type { SESION_DETALLE } from "@/lib/mis-capacitaciones/capacitaciones-types"
+import type { TipoPregunta, Question, Serie, OpcionMultiple } from "@/lib/mis-capacitaciones/capacitaciones-types"
 
 interface ExamTabProps {
   sesion: SESION_DETALLE

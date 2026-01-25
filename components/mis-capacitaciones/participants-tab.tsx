@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { CheckCircle2, XCircle, Upload, Award, Info, X } from "lucide-react"
-import type { COLABORADORES_SESION, EstadoColaborador, SESION_DETALLE } from "./capacitaciones-types"
+import type { COLABORADORES_SESION, EstadoColaborador, SESION_DETALLE } from "@/lib/mis-capacitaciones/capacitaciones-types"
 
 interface ParticipantsTabProps {
   sesion: SESION_DETALLE
@@ -199,7 +199,7 @@ export function ParticipantsTab({
                   <TableHead className="w-12">
                     <Checkbox
                       className="
-                        dark:border dark:border-gray-500
+                        dark:border dark:border-gray-600
                         data-[state=checked]:dark:border-transparent
                       "
                       checked={
@@ -239,7 +239,7 @@ export function ParticipantsTab({
                       <TableCell>
                         <Checkbox
                           className="
-                            dark:border dark:border-gray-500
+                            dark:border dark:border-gray-600
                             data-[state=checked]:dark:border-transparent
                           "
                           checked={selectedColaboradores.includes(col.ID_COLABORADOR)}
@@ -268,7 +268,7 @@ export function ParticipantsTab({
                           <Checkbox
                             checked={asistio === true}
                             onCheckedChange={() => isEditable && onToggleAsistencia(col.ID_COLABORADOR, asistio)}
-                            className="h-5 w-5 dark:border dark:border-gray-500 data-[state=checked]:dark:border-transparent"
+                            className="h-5 w-5 dark:border dark:border-gray-600 data-[state=checked]:dark:border-transparent"
                           />
                         </div>
                       </TableCell>

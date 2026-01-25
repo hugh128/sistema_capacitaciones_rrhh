@@ -621,6 +621,7 @@ export function EditPrograma({ programa, departamentos, puestos, onSave, onCance
                   id="training-diploma"
                   checked={newTraining.APLICA_DIPLOMA}
                   onCheckedChange={(checked) => setNewTraining({ ...newTraining, APLICA_DIPLOMA: checked as boolean })}
+                  className="dark:border dark:border-gray-600 data-[state=checked]:dark:border-transparent"
                 />
                 <Label htmlFor="training-diploma" className="cursor-pointer">
                   Aplica Diploma
@@ -640,6 +641,7 @@ export function EditPrograma({ programa, departamentos, puestos, onSave, onCance
                         PUESTO_RELACIONES: checked ? [] : newTraining.PUESTO_RELACIONES,
                       })
                     }
+                    className="dark:border dark:border-gray-600 data-[state=checked]:dark:border-transparent"
                   />
                   <Label htmlFor="training-todos-dept" className="cursor-pointer">
                     Aplica a todos los colaboradores
@@ -659,6 +661,7 @@ export function EditPrograma({ programa, departamentos, puestos, onSave, onCance
                                 (d) => d.ID_DEPARTAMENTO === dept.ID_DEPARTAMENTO,
                               )}
                               onCheckedChange={() => handleToggleDepartamento(dept)}
+                              className="dark:border dark:border-gray-600 data-[state=checked]:dark:border-transparent"
                             />
                             <Label htmlFor={`dept-${dept.ID_DEPARTAMENTO}`} className="cursor-pointer font-normal">
                               {dept.NOMBRE}
@@ -770,6 +773,7 @@ const PuestosFiltrados = ({ newTraining, setNewTraining, puestos }: PuestosFiltr
                 (p) => p.ID_PUESTO === puesto.ID_PUESTO,
               )}
               onCheckedChange={() => handleTogglePuesto(puesto)}
+              className="dark:border dark:border-gray-600 data-[state=checked]:dark:border-transparent"
             />
             <Label htmlFor={`puesto-${puesto.ID_PUESTO}`} className="cursor-pointer font-normal">
               {puesto.NOMBRE}

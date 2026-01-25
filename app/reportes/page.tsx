@@ -228,7 +228,7 @@ export default function ReportesPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="grid gap-4 md:grid-cols-2">
-                    <div className="border rounded-lg p-4 space-y-3">
+                    <div className="flex flex-col justify-between border rounded-lg p-4 space-y-3">
                       <div className="flex items-start gap-3">
                         <div className="p-2 rounded-lg bg-primary/10 dark:border dark:text-blue-500 dark:border-blue-500/30">
                           <FileText className="w-6 h-6" />
@@ -247,13 +247,15 @@ export default function ReportesPage() {
                           </ul>
                         </div>
                       </div>
-                      <Button onClick={() => handleOpenDialog("detalle")} className="w-full cursor-pointer">
-                        <Download className="w-4 h-4 mr-2" />
-                        Descargar Reporte
-                      </Button>
+                      <div>
+                        <Button onClick={() => handleOpenDialog("detalle")} className="w-full cursor-pointer">
+                          <Download className="w-4 h-4 mr-2" />
+                          Descargar Reporte
+                        </Button>
+                      </div>
                     </div>
 
-                    <div className="border rounded-lg p-4 space-y-3">
+                    <div className="flex flex-col justify-between border rounded-lg p-4 space-y-3">
                       <div className="flex items-start gap-3">
                         <div className="p-2 rounded-lg bg-chart-2/10">
                           <TrendingUp className="w-6 h-6 text-chart-2" />
@@ -272,10 +274,12 @@ export default function ReportesPage() {
                           </ul>
                         </div>
                       </div>
-                      <Button onClick={() => handleOpenDialog("cumplimiento")} className="w-full border border-blue-600 dark:border-blue-700 dark:hover:text-foreground/70 cursor-pointer" variant="secondary">
-                        <Download className="w-4 h-4 mr-2" />
-                        Descargar Reporte
-                      </Button>
+                      <div>
+                        <Button onClick={() => handleOpenDialog("cumplimiento")} className="w-full border border-blue-600 dark:border-blue-700 dark:hover:text-foreground/70 cursor-pointer" variant="secondary">
+                          <Download className="w-4 h-4 mr-2" />
+                          Descargar Reporte
+                        </Button>
+                      </div>
                     </div>
                   </div>
                 </CardContent>

@@ -28,11 +28,11 @@ export default function ProgramasYPlanesPage() {
               <div className="max-w-7xl mx-auto">
                 <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                   <TabsList className="flex flex-wrap w-full gap-1 p-1 h-auto mb-4">
-                    <TabsTrigger value="plans" className="flex-1 text-sm whitespace-nowrap cursor-pointer">
+                    <TabsTrigger value="plans" className="flex-1 text-sm whitespace-nowrap cursor-pointer data-[state=active]:border-b-blue-800 dark:data-[state=active]:border-b-blue-800 data-[state=active]:bg-white/60 dark:data-[state=active]:bg-transparent">
                       <BookOpen className="w-4 h-4 mr-2" />
                       Planes
                     </TabsTrigger>
-                    <TabsTrigger value="programs" className="flex-1 text-sm whitespace-nowrap cursor-pointer">
+                    <TabsTrigger value="programs" className="flex-1 text-sm whitespace-nowrap cursor-pointer data-[state=active]:border-b-blue-800 dark:data-[state=active]:border-b-blue-800 data-[state=active]:bg-white/60 dark:data-[state=active]:bg-transparent">
                       <BookCheck className="w-4 h-4 mr-2" />
                       Programas
                     </TabsTrigger>

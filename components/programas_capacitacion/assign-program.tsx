@@ -284,7 +284,7 @@ export function AssignProgramModal({
                       id="select-all"
                       checked={areAllSelected}
                       onCheckedChange={(checked) => checked ? selectAll() : deselectAll()}
-                      className="dark:border dark:border-gray-500 data-[state=checked]:dark:border-transparent cursor-pointer"
+                      className="dark:border dark:border-gray-600 data-[state=checked]:dark:border-transparent cursor-pointer"
                     />
                     <label htmlFor="select-all" className="text-sm font-medium cursor-pointer select-none">
                       Seleccionar todo
@@ -344,7 +344,7 @@ export function AssignProgramModal({
                                 checked={isColaboradorFullySelected(colab.idColaborador, capacitacionesDisponibles.map(c => c.idDetalle))}
                                 disabled={!hasCapacitaciones}
                                 onCheckedChange={() => toggleColaborador(colab.idColaborador, capacitacionesDisponibles.map(cap => cap.idDetalle))}
-                                className="dark:border dark:border-gray-500 data-[state=checked]:dark:border-transparent cursor-pointer"
+                                className="dark:border dark:border-gray-600 data-[state=checked]:dark:border-transparent cursor-pointer"
                               />
                             </TableCell>
 

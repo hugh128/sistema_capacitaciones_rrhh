@@ -3,10 +3,10 @@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Upload, Download, Eye, CheckCircle, FileText, Trash2, Info, FileCheck } from "lucide-react"
-import type { COLABORADORES_SESION, ExamenCompleto, Serie, SESION_DETALLE } from "./capacitaciones-types"
+import type { COLABORADORES_SESION, ExamenCompleto, Serie, SESION_DETALLE } from "@/lib/mis-capacitaciones/capacitaciones-types"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useCapacitaciones } from "@/hooks/useCapacitaciones"
-import { UsuarioLogin } from "../auth"
+import { UsuarioLogin } from "@/lib/auth"
 import { useState, memo, useEffect } from "react"
 import { useDocumentos } from "@/hooks/useDocumentos"
 import {

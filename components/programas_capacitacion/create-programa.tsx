@@ -495,7 +495,7 @@ export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: Cre
                   id="training-diploma"
                   checked={newTraining.APLICA_DIPLOMA}
                   onCheckedChange={(checked) => setNewTraining({ ...newTraining, APLICA_DIPLOMA: checked as boolean })}
-                  className="dark:border dark:border-gray-500 data-[state=checked]:dark:border-transparent"
+                  className="dark:border dark:border-gray-600 data-[state=checked]:dark:border-transparent"
                 />
                 <Label htmlFor="training-diploma" className="cursor-pointer">
                   Aplica Diploma
@@ -507,7 +507,7 @@ export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: Cre
                   <Checkbox
                     id="training-todos-colab"
                     checked={newTraining.APLICA_TODOS_COLABORADORES}
-                    className="dark:border dark:border-gray-500 data-[state=checked]:dark:border-transparent"
+                    className="dark:border dark:border-gray-600 data-[state=checked]:dark:border-transparent"
                     onCheckedChange={(checked) =>
                       setNewTraining({
                         ...newTraining,
@@ -531,7 +531,7 @@ export function CreatePrograma({ departamentos, puestos, onSave, onCancel }: Cre
                             <div key={dept.ID_DEPARTAMENTO} className="flex items-center space-x-2">
                               <Checkbox
                                 id={`dept-${dept.ID_DEPARTAMENTO}`}
-                                className="dark:border dark:border-gray-500 data-[state=checked]:dark:border-transparent"
+                                className="dark:border dark:border-gray-600 data-[state=checked]:dark:border-transparent"
                                 checked={newTraining.DEPARTAMENTO_RELACIONES.some(
                                   (d) => d.ID_DEPARTAMENTO === dept.ID_DEPARTAMENTO,
                                 )}
@@ -643,7 +643,7 @@ const PuestosFiltrados = ({ newTraining, setNewTraining, puestos }: PuestosFiltr
           <div key={puesto.ID_PUESTO} className="flex items-center space-x-2">
             <Checkbox
               id={`puesto-${puesto.ID_PUESTO}`}
-              className="dark:border dark:border-gray-500 data-[state=checked]:dark:border-transparent"
+              className="dark:border dark:border-gray-600 data-[state=checked]:dark:border-transparent"
               checked={newTraining.PUESTO_RELACIONES.some(
                 (p) => p.ID_PUESTO === puesto.ID_PUESTO,
               )}

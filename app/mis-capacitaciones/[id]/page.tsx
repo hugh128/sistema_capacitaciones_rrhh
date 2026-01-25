@@ -12,10 +12,10 @@ import { useParams, useRouter } from "next/navigation"
 import type { ColaboradorAsistenciaData, COLABORADORES_SESION, FileState, Serie, SESION_DETALLE } from "@/lib/mis-capacitaciones/capacitaciones-types"
 import { TrainingHeader } from "@/components/mis-capacitaciones/training-header"
 import { InfoTab } from "@/components/mis-capacitaciones/info-tab"
-import { ParticipantsTab } from "@/lib/mis-capacitaciones/participants-tab"
-import { DocumentsTab } from "@/lib/mis-capacitaciones/documents-tab"
-import { FinalizationTab } from "@/lib/mis-capacitaciones/finalization-tab"
-import { ExamTab } from "@/lib/mis-capacitaciones/exam-tab"
+import { ParticipantsTab } from "@/components/mis-capacitaciones/participants-tab"
+import { DocumentsTab } from "@/components/mis-capacitaciones/documents-tab"
+import { FinalizationTab } from "@/components/mis-capacitaciones/finalization-tab"
+import { ExamTab } from "@/components/mis-capacitaciones/exam-tab"
 import { RequirePermission } from "@/components/RequirePermission"
 import { useCapacitaciones } from "@/hooks/useCapacitaciones"
 import { AppHeader } from "@/components/app-header"
@@ -489,23 +489,23 @@ export default function TrainerCapacitacionDetailPage() {
 
             <Tabs defaultValue="info" className="w-full">
               <TabsList className="flex flex-wrap w-full gap-1 p-1 h-auto">
-                <TabsTrigger value="info" className="flex items-center gap-2 py-3 cursor-pointer">
+                <TabsTrigger value="info" className="flex items-center gap-2 py-3 cursor-pointer data-[state=active]:border-b-blue-800 dark:data-[state=active]:border-b-blue-800 data-[state=active]:bg-white/60 dark:data-[state=active]:bg-transparent">
                   <Info className="h-4 w-4" />
                   <span className="hidden sm:inline">Información</span>
                 </TabsTrigger>
-                <TabsTrigger value="participantes" className="flex items-center gap-2 py-3 cursor-pointer">
+                <TabsTrigger value="participantes" className="flex items-center gap-2 py-3 cursor-pointer data-[state=active]:border-b-blue-800 dark:data-[state=active]:border-b-blue-800 data-[state=active]:bg-white/60 dark:data-[state=active]:bg-transparent">
                   <Users className="h-4 w-4" />
                   <span className="hidden sm:inline">Participantes</span>
                 </TabsTrigger>
-                <TabsTrigger value="examen" className="flex items-center gap-2 py-3 cursor-pointer">
+                <TabsTrigger value="examen" className="flex items-center gap-2 py-3 cursor-pointer data-[state=active]:border-b-blue-800 dark:data-[state=active]:border-b-blue-800 data-[state=active]:bg-white/60 dark:data-[state=active]:bg-transparent">
                   <FileEdit className="h-4 w-4" />
                   <span className="hidden sm:inline">Examen</span>
                 </TabsTrigger>
-                <TabsTrigger value="documentos" className="flex items-center gap-2 py-3 cursor-pointer">
+                <TabsTrigger value="documentos" className="flex items-center gap-2 py-3 cursor-pointer data-[state=active]:border-b-blue-800 dark:data-[state=active]:border-b-blue-800 data-[state=active]:bg-white/60 dark:data-[state=active]:bg-transparent">
                   <FileText className="h-4 w-4" />
                   <span className="hidden sm:inline">Documentos</span>
                 </TabsTrigger>
-                <TabsTrigger value="finalizacion" className="flex items-center gap-2 py-3 cursor-pointer">
+                <TabsTrigger value="finalizacion" className="flex items-center gap-2 py-3 cursor-pointer data-[state=active]:border-b-blue-800 dark:data-[state=active]:border-b-blue-800 data-[state=active]:bg-white/60 dark:data-[state=active]:bg-transparent">
                   <Award className="h-4 w-4" />
                   <span className="hidden sm:inline">Finalización</span>
                 </TabsTrigger>

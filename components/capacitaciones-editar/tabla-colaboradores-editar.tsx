@@ -150,7 +150,7 @@ export const TablaColaboradoresEditar = memo(function TablaColaboradoresEditar({
                     checked={allSelected}
                     onCheckedChange={handleToggleAll}
                     className="
-                      dark:border dark:border-gray-500
+                      dark:border dark:border-gray-600
                       data-[state=checked]:dark:border-transparent cursor-pointer
                     "
                   />
@@ -191,7 +191,7 @@ export const TablaColaboradoresEditar = memo(function TablaColaboradoresEditar({
                             handleToggleColaborador(col.ID_COLABORADOR, checked as boolean)
                           }
                           className="
-                            dark:border dark:border-gray-500
+                            dark:border dark:border-gray-600
                             data-[state=checked]:dark:border-transparent cursor-pointer
                           "
                         />
