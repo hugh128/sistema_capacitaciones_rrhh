@@ -828,9 +828,19 @@ export default function RevisarCapacitacionPage() {
                 <div className="flex gap-3">
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button size="lg" className="flex-1 cursor-pointer" disabled={!canApprove}>
-                        <CheckCircle2 className="h-5 w-5 mr-2" />
-                        Aprobar y Finalizar
+                      <Button size="lg" className="flex-1 cursor-pointer" disabled={!canApprove || loading}
+                      >
+                        {loading ? (
+                          <>
+                            <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                            Finalizando...
+                          </>
+                        ) : (
+                          <>
+                            <CheckCircle2 className="h-6 w-6 mr-2" />
+                            Aprobar y Finalizar
+                          </>
+                        )}
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
@@ -859,9 +869,20 @@ export default function RevisarCapacitacionPage() {
 
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button size="lg" variant="secondary" className="flex-1 bg-transparent border cursor-pointer">
-                        <XCircle className="h-5 w-5 mr-2" />
-                        Devolver al Capacitador
+                      <Button size="lg" variant="secondary" className="flex-1 bg-transparent border cursor-pointer" disabled={loading}
+                      >
+                        {loading ? (
+                          <>
+                            <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                            Devolviendo...
+                          </>
+                        ) : (
+                          <>
+                            <XCircle className="h-6 w-6 mr-2" />
+                            Devolver al Capacitador
+                          </>
+                        )}
+
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
