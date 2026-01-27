@@ -38,7 +38,7 @@ import { getEstadoCapacitacionColor, getEstadoColaboradorColor } from "@/lib/cap
 import { RequirePermission } from "@/components/RequirePermission"
 import { useCapacitaciones } from "@/hooks/useCapacitaciones"
 import { COLABORADORES_SESION, EstadoColaborador, SESION_DETALLE } from "@/lib/mis-capacitaciones/capacitaciones-types"
-import toast from "react-hot-toast"
+import toast, { Toaster } from "react-hot-toast"
 
 export default function RevisarCapacitacionPage() {
   const { user, loading: isAuthLoading } = useAuth()
@@ -53,8 +53,7 @@ export default function RevisarCapacitacionPage() {
     descargarDiploma,
     aprobarAsistencia,
     aprobarSesion,
-    devolverSesion,
-    loading
+    devolverSesion
   } = useCapacitaciones(user);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -63,6 +62,8 @@ export default function RevisarCapacitacionPage() {
   const [asistenciaState, setAsistenciaState] = useState<Record<number, boolean>>({})
   const [notasState, setNotasState] = useState<Record<number, number | null>>({})
   const [loadingDownload, setLoadingDownload] = useState(false);
+  const [isApproving, setIsApproving] = useState(false)
+  const [isReturning, setIsReturning] = useState(false)
 
   const [observacionesRRHH, setObservacionesRRHH] = useState("")
   const [editingColaborador, setEditingColaborador] = useState<COLABORADORES_SESION | null>(null)
@@ -294,9 +295,10 @@ export default function RevisarCapacitacionPage() {
         observaciones: editObservaciones,
       }));
 
-    try {
-      toast.loading("Aprobando capacitación...");
+    setIsApproving(true);
+    const toastId = toast.loading("Aprobando capacitación...");
 
+    try {
       const res = await aprobarAsistencia(
         sesionId,
         colaboradoresParaAPI,
@@ -310,10 +312,16 @@ export default function RevisarCapacitacionPage() {
           observacionesRRHH
         );
 
+        toast.success("Capacitación aprobada exitosamente", { id: toastId });
         router.push("/capacitaciones");
+      } else {
+        toast.error("Error al aprobar la capacitación", { id: toastId });
       }
     } catch (error) {
       console.error("Error al finalizar la sesión:", error);
+      toast.error("Error al aprobar la capacitación", { id: toastId });
+    } finally {
+      setIsApproving(false);
     }
   };
 
@@ -321,17 +329,23 @@ export default function RevisarCapacitacionPage() {
     setAttemptedRefound(true)
 
     if (!canRefound) {
+      toast.error('No se puede devolver. Debes agregar observaciones para RRHH.');
       return
     }
 
-    try {
-      toast.loading("Devolviendo capacitación...");
+    setIsReturning(true);
+    const toastId = toast.loading("Devolviendo capacitación...");
 
+    try {
       await devolverSesion(sesionId, user?.USERNAME || 'sistemas', observacionesRRHH)
 
+      toast.success("Capacitación devuelta exitosamente", { id: toastId });
       router.push("/capacitaciones");
     } catch (error) {
       console.error("Error al devolver la sesión:", error);
+      toast.error("Error al devolver la capacitación", { id: toastId });
+    } finally {
+      setIsReturning(false);
     }
   };
 
@@ -391,6 +405,8 @@ export default function RevisarCapacitacionPage() {
           <AppHeader title="Gestión de Capacitaciones" subtitle="Panel de control para administrar todas las capacitaciones de la empresa" />
 
           <main className="flex-1 p-6 space-y-6 overflow-auto custom-scrollbar">
+            <Toaster />
+
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <Link href="/capacitaciones">
@@ -827,22 +843,21 @@ export default function RevisarCapacitacionPage() {
 
                 <div className="flex gap-3">
                   <AlertDialog>
-                    <AlertDialogTrigger asChild>
-                      <Button size="lg" className="flex-1 cursor-pointer" disabled={!canApprove || loading}
-                      >
-                        {loading ? (
-                          <>
-                            <Loader2 className="h-6 w-6 animate-spin mr-2" />
-                            Finalizando...
-                          </>
-                        ) : (
-                          <>
-                            <CheckCircle2 className="h-6 w-6 mr-2" />
-                            Aprobar y Finalizar
-                          </>
-                        )}
-                      </Button>
-                    </AlertDialogTrigger>
+                  <AlertDialogTrigger asChild>
+                    <Button size="lg" className="flex-1 cursor-pointer" disabled={!canApprove || isApproving}>
+                      {isApproving ? (
+                        <>
+                          <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                          Finalizando...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="h-6 w-6 mr-2" />
+                          Aprobar y Finalizar
+                        </>
+                      )}
+                    </Button>
+                  </AlertDialogTrigger>
                     <AlertDialogContent>
                       <AlertDialogHeader>
                         <AlertDialogTitle>Aprobar Capacitación</AlertDialogTitle>
@@ -853,8 +868,8 @@ export default function RevisarCapacitacionPage() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel className="dark:hover:border-foreground/50 dark:hover:text-foreground/90 cursor-pointer">Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleAprobar} className="cursor-pointer" disabled={loading}>
-                          {loading ? (
+                        <AlertDialogAction onClick={handleAprobar} className="cursor-pointer" disabled={isApproving}>
+                          {isApproving ? (
                             <>
                               <Loader2 className="h-4 w-4 animate-spin mr-2" />
                               Aprobando...
@@ -869,9 +884,8 @@ export default function RevisarCapacitacionPage() {
 
                   <AlertDialog>
                     <AlertDialogTrigger asChild>
-                      <Button size="lg" variant="secondary" className="flex-1 bg-transparent border cursor-pointer" disabled={loading}
-                      >
-                        {loading ? (
+                      <Button size="lg" variant="secondary" className="flex-1 bg-transparent border cursor-pointer" disabled={isReturning}>
+                        {isReturning ? (
                           <>
                             <Loader2 className="h-6 w-6 animate-spin mr-2" />
                             Devolviendo...
@@ -882,7 +896,6 @@ export default function RevisarCapacitacionPage() {
                             Devolver al Capacitador
                           </>
                         )}
-
                       </Button>
                     </AlertDialogTrigger>
                     <AlertDialogContent>
@@ -895,8 +908,8 @@ export default function RevisarCapacitacionPage() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel className="dark:hover:border-foreground/50 dark:hover:text-foreground/90 cursor-pointer">Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDevolver} className="cursor-pointer" disabled={loading}>
-                          {loading ? (
+                        <AlertDialogAction onClick={handleDevolver} className="cursor-pointer" disabled={isReturning}>
+                          {isReturning ? (
                             <>
                               <Loader2 className="h-4 w-4 animate-spin mr-2" />
                               Devolviendo...

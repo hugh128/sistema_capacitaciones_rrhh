@@ -370,9 +370,9 @@ export default function TrainerCapacitacionDetailPage() {
       } as ColaboradorAsistenciaData;
     });
 
+    const toastId = toast.loading("Finalizando sesión y registrando asistencias...");
+
     try {
-      toast.loading("Finalizando sesión y registrando asistencias...", { id: 'finalizacion' });
-      
       await finalizarSesionConAsistencias(
         sesionId,
         user.PERSONA_ID,
@@ -382,13 +382,13 @@ export default function TrainerCapacitacionDetailPage() {
         false
       );
       
-      toast.success("Sesión finalizada exitosamente. Será revisada por RRHH.", { id: 'finalizacion' });
+      toast.success("Sesión finalizada exitosamente. Será revisada por RRHH.", { id: toastId });
       router.push("/mis-capacitaciones");
       
     } catch (error) {
       console.error("Error al finalizar la sesión:", error);
       const errorMessage = error instanceof Error ? error.message : "Error desconocido";
-      toast.error(`Error al finalizar la sesión: ${errorMessage}`, { id: 'finalizacion' });
+      toast.error(`Error al finalizar la sesión: ${errorMessage}`, { id: toastId });
     }
   };
 

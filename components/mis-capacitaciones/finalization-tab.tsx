@@ -237,10 +237,17 @@ export function FinalizationTab({
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel className="cursor-pointer dark:hover:border-foreground/50 dark:hover:text-foreground/90" disabled={loading}>
+              <AlertDialogCancel 
+                className="cursor-pointer dark:hover:border-foreground/50 dark:hover:text-foreground/90" 
+                disabled={loading}
+              >
                 Cancelar
               </AlertDialogCancel>
-              <AlertDialogAction onClick={onFinalizar} className="cursor-pointer" disabled={loading}>
+              <AlertDialogAction 
+                onClick={onFinalizar} 
+                className="cursor-pointer" 
+                disabled={loading}
+              >
                 {loading ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
