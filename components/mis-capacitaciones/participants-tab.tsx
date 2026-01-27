@@ -358,8 +358,8 @@ export function ParticipantsTab({
                             <p className="text-xs text-muted-foreground">{col.CORREO}</p>
                           </div>
                         </TableCell>
-                        <TableCell className="font-medium">{col.DEPARTAMENTO}</TableCell>
-                        <TableCell>{col.PUESTO}</TableCell>
+                        <TableCell className="font-medium truncate max-w-[300px]" title={col.DEPARTAMENTO}>{col.DEPARTAMENTO}</TableCell>
+                        <TableCell className="truncate max-w-[300px]" title={col.PUESTO}>{col.PUESTO}</TableCell>
                         <TableCell>
                           <Badge className={getEstadoColaboradorColor(estadoDinamico)}>{estadoDinamico}</Badge>
                         </TableCell>

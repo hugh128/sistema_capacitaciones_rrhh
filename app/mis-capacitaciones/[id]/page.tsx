@@ -35,7 +35,6 @@ export default function TrainerCapacitacionDetailPage() {
     obtenerPlantillaExamen,
     descargarExamen,
     descargarDiploma,
-    loading,
   } = useCapacitaciones(user);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -51,6 +50,7 @@ export default function TrainerCapacitacionDetailPage() {
   const [examenesState, setExamenesState] = useState<Record<number, boolean>>({});
   const [diplomasState, setDiplomasState] = useState<Record<number, boolean>>({});
   const [plantillaExamen, setPlantillaExamen] = useState<{ series: Serie[] } | undefined>()
+  const [isFinalizing, setIsFinalizing] = useState(false)
 
   const isInitialMount = useRef(true);
 
@@ -370,6 +370,7 @@ export default function TrainerCapacitacionDetailPage() {
       } as ColaboradorAsistenciaData;
     });
 
+    setIsFinalizing(true);
     const toastId = toast.loading("Finalizando sesión y registrando asistencias...");
 
     try {
@@ -389,6 +390,8 @@ export default function TrainerCapacitacionDetailPage() {
       console.error("Error al finalizar la sesión:", error);
       const errorMessage = error instanceof Error ? error.message : "Error desconocido";
       toast.error(`Error al finalizar la sesión: ${errorMessage}`, { id: toastId });
+    } finally {
+      setIsFinalizing(false);
     }
   };
 
@@ -578,7 +581,7 @@ export default function TrainerCapacitacionDetailPage() {
                   observacionesFinales={observacionesFinales}
                   onObservacionesChange={setObservacionesFinales}
                   onFinalizar={handleFinalizar}
-                  loading={loading}
+                  isFinalizingState={isFinalizing}
                 />
               </TabsContent>
             </Tabs>

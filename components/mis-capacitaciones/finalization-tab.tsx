@@ -35,7 +35,7 @@ interface FinalizationTabProps {
   observacionesFinales: string
   onObservacionesChange: (value: string) => void
   onFinalizar: () => void
-  loading?: boolean
+  isFinalizingState?: boolean
 }
 
 export function FinalizationTab({
@@ -45,7 +45,7 @@ export function FinalizationTab({
   observacionesFinales,
   onObservacionesChange,
   onFinalizar,
-  loading = false,
+  isFinalizingState = false,
 }: FinalizationTabProps) {
 
   const isEditable = sesion.ESTADO === 'EN_PROCESO' || sesion.ESTADO === 'RECHAZADA'
@@ -204,7 +204,7 @@ export function FinalizationTab({
             placeholder="Agrega observaciones finales sobre la capacitación, logros, desafíos, recomendaciones..."
             rows={5}
             className="mt-2"
-            disabled={!isEditable || loading}
+            disabled={!isEditable || isFinalizingState}
           />
         </div>
 
@@ -213,9 +213,9 @@ export function FinalizationTab({
             <Button
               size="lg"
               className="w-full h-14 text-md sm:text-lg cursor-pointer"
-              disabled={!canFinalize || !isEditable || loading}
+              disabled={!canFinalize || !isEditable || isFinalizingState}
             >
-              {loading ? (
+              {isFinalizingState ? (
                 <>
                   <Loader2 className="h-6 w-6 animate-spin mr-2" />
                   Finalizando...
@@ -239,16 +239,16 @@ export function FinalizationTab({
             <AlertDialogFooter>
               <AlertDialogCancel 
                 className="cursor-pointer dark:hover:border-foreground/50 dark:hover:text-foreground/90" 
-                disabled={loading}
+                disabled={isFinalizingState}
               >
                 Cancelar
               </AlertDialogCancel>
               <AlertDialogAction 
                 onClick={onFinalizar} 
                 className="cursor-pointer" 
-                disabled={loading}
+                disabled={isFinalizingState}
               >
-                {loading ? (
+                {isFinalizingState ? (
                   <>
                     <Loader2 className="h-4 w-4 animate-spin mr-2" />
                     Finalizando...
