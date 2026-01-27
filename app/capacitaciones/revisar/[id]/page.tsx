@@ -31,7 +31,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { ArrowLeft, CheckCircle2, XCircle, AlertCircle, Eye, Calendar, Clock, Edit, MinusCircle, GraduationCap, FileText } from "lucide-react"
+import { ArrowLeft, CheckCircle2, XCircle, AlertCircle, Eye, Calendar, Clock, Edit, MinusCircle, GraduationCap, FileText, Loader2 } from "lucide-react"
 import Link from "next/link"
 import { useParams, useRouter } from "next/navigation"
 import { getEstadoCapacitacionColor, getEstadoColaboradorColor } from "@/lib/capacitaciones/capacitaciones-types"
@@ -54,6 +54,7 @@ export default function RevisarCapacitacionPage() {
     aprobarAsistencia,
     aprobarSesion,
     devolverSesion,
+    loading
   } = useCapacitaciones(user);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -294,6 +295,8 @@ export default function RevisarCapacitacionPage() {
       }));
 
     try {
+      toast.loading("Aprobando capacitación...");
+
       const res = await aprobarAsistencia(
         sesionId,
         colaboradoresParaAPI,
@@ -322,6 +325,8 @@ export default function RevisarCapacitacionPage() {
     }
 
     try {
+      toast.loading("Devolviendo capacitación...");
+
       await devolverSesion(sesionId, user?.USERNAME || 'sistemas', observacionesRRHH)
 
       router.push("/capacitaciones");
@@ -838,7 +843,16 @@ export default function RevisarCapacitacionPage() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel className="dark:hover:border-foreground/50 dark:hover:text-foreground/90 cursor-pointer">Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleAprobar} className="cursor-pointer">Aprobar</AlertDialogAction>
+                        <AlertDialogAction onClick={handleAprobar} className="cursor-pointer" disabled={loading}>
+                          {loading ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                              Aprobando...
+                            </>
+                          ) : (
+                            "Aprobar"
+                          )}
+                        </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
@@ -860,7 +874,16 @@ export default function RevisarCapacitacionPage() {
                       </AlertDialogHeader>
                       <AlertDialogFooter>
                         <AlertDialogCancel className="dark:hover:border-foreground/50 dark:hover:text-foreground/90 cursor-pointer">Cancelar</AlertDialogCancel>
-                        <AlertDialogAction onClick={handleDevolver} className="cursor-pointer">Devolver</AlertDialogAction>
+                        <AlertDialogAction onClick={handleDevolver} className="cursor-pointer" disabled={loading}>
+                          {loading ? (
+                            <>
+                              <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                              Devolviendo...
+                            </>
+                          ) : (
+                            "Devolver"
+                          )}
+                        </AlertDialogAction>
                       </AlertDialogFooter>
                     </AlertDialogContent>
                   </AlertDialog>
