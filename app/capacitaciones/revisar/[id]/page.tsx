@@ -635,11 +635,11 @@ export default function RevisarCapacitacionPage() {
                                   {col.URL_EXAMEN ? (
                                     <Button
                                       size="icon"
-                                      variant="outline"
+                                      variant="secondary"
                                       title="Descargar Examen"
                                       onClick={() => handleDownloadExamen(col.ID_COLABORADOR)}
                                       disabled={loadingDownload}
-                                      className="h-9 w-9 text-blue-600 hover:text-blue-700"
+                                      className="h-9 w-9 text-blue-600 hover:text-blue-700 hover:border hover:border-blue-700 cursor-pointer"
                                     >
                                       <FileText className="h-4 w-4" />
                                     </Button>
@@ -659,11 +659,11 @@ export default function RevisarCapacitacionPage() {
                                   {col.URL_DIPLOMA ? (
                                     <Button
                                       size="icon"
-                                      variant="outline"
+                                      variant="secondary"
                                       title="Descargar Diploma"
                                       onClick={() => handleDownloadDiploma(col.ID_COLABORADOR)}
                                       disabled={loadingDownload}
-                                      className="h-9 w-9 text-emerald-600 hover:text-emerald-700"
+                                      className="h-9 w-9 text-emerald-600 hover:text-emerald-700 hover:border hover:border-emerald-700 cursor-pointer"
                                     >
                                       <GraduationCap className="h-4 w-4" />
                                     </Button>

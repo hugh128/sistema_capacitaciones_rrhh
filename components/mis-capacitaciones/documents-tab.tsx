@@ -7,7 +7,7 @@ import type { COLABORADORES_SESION, ExamenCompleto, Serie, SESION_DETALLE } from
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { useCapacitaciones } from "@/hooks/useCapacitaciones"
 import { UsuarioLogin } from "@/lib/auth"
-import { useState, memo, useEffect } from "react"
+import { useState, memo, useEffect, useCallback } from "react"
 import { useDocumentos } from "@/hooks/useDocumentos"
 import {
   Dialog,
@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/dialog"
 import { Textarea } from "@/components/ui/textarea"
 import { Label } from "@/components/ui/label"
+import { cn } from "@/lib/utils"
 
 interface ObservacionesModalProps {
   open: boolean
@@ -129,6 +130,8 @@ export function DocumentsTab({
 }: DocumentsTabProps) {
   const [loadingDownload, setLoadingDownload] = useState(false);
   const [showObservacionesModal, setShowObservacionesModal] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragError, setDragError] = useState<string | null>(null);
   
   const {
     descargarListaAsistencia,
@@ -145,6 +148,53 @@ export function DocumentsTab({
   const isEditable = sesion.ESTADO === 'EN_PROCESO' || sesion.ESTADO === 'RECHAZADA'
 
   const fileInputId = `attendance-upload-${sesion.ID_SESION || 'new'}`;
+
+  const validateFile = useCallback((file: File): boolean => {
+    setDragError(null)
+
+    if (!file.type.includes("pdf")) {
+      setDragError("Solo se permiten archivos PDF")
+      return false
+    }
+
+    const fileSizeMB = file.size / (1024 * 1024)
+    if (fileSizeMB > 30) {
+      setDragError("El archivo no puede superar 30MB")
+      return false
+    }
+
+    return true
+  }, [])
+
+  const handleDrop = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    setIsDragging(false)
+
+    if (!isEditable) {
+      setDragError("No se pueden subir archivos en el estado actual")
+      return
+    }
+
+    const files = Array.from(e.dataTransfer.files)
+    if (files.length > 0) {
+      const file = files[0]
+      if (validateFile(file)) {
+        onSelectAttendanceFile(file)
+      }
+    }
+  }, [isEditable, validateFile, onSelectAttendanceFile])
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    if (isEditable) {
+      setIsDragging(true)
+    }
+  }, [isEditable])
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    setIsDragging(false)
+  }, [])
 
   const getFileName = (): string => {
     if (listaAsistenciaFile) {
@@ -315,21 +365,50 @@ export function DocumentsTab({
           <div>
             <h3 className="text-lg font-semibold mb-3">1. Lista de Asistencia General</h3>
             
-            <div className="border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-xl p-6 sm:p-8 text-center bg-white dark:bg-transparent transition duration-300 hover:border-blue-400">
+            <div 
+              onDrop={handleDrop}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              className={cn(
+                "border-2 border-dashed rounded-xl p-6 sm:p-8 text-center transition-all duration-300",
+                isDragging && isEditable
+                  ? "border-primary bg-primary/5 scale-[1.02]"
+                  : "border-gray-300 dark:border-gray-600 bg-white dark:bg-transparent hover:border-blue-400",
+                !isEditable && "cursor-not-allowed opacity-75"
+              )}
+            >
               {attendanceInfo ? (
                 <div className="space-y-4">
                   
                   {isFileUploaded ? (
-                    <CheckCircle className="w-12 h-12 mx-auto text-green-500" />
+                    <CheckCircle className={cn(
+                      "w-12 h-12 mx-auto text-green-500 transition-transform",
+                      isDragging && "animate-bounce"
+                    )} />
                   ) : (
-                    <FileText className="w-12 h-12 mx-auto text-blue-500" />
+                    <FileText className={cn(
+                      "w-12 h-12 mx-auto text-blue-500 transition-transform",
+                      isDragging && "animate-bounce"
+                    )} />
                   )}
 
                   <div>
                     <p className="font-medium text-lg">
-                      {isFileUploaded ? 'Registro de asistencia subido' : 'Archivo seleccionado localmente'}
+                      {isDragging 
+                        ? "Suelta el archivo aquí" 
+                        : isFileUploaded 
+                        ? 'Registro de asistencia subido' 
+                        : 'Archivo seleccionado localmente'
+                      }
                     </p>
-                    <p className="text-sm text-muted-foreground truncate px-4">
+                    <p 
+                      className="text-sm text-muted-foreground px-4"
+                      style={{
+                        wordBreak: 'break-word',
+                        overflowWrap: 'anywhere',
+                        hyphens: 'auto'
+                      }}
+                    >
                       {getFileName()}
                       {!isFileUploaded && (
                         <span className="text-orange-500 ml-2 font-semibold">(Pendiente de Subida)</span>
@@ -366,8 +445,11 @@ export function DocumentsTab({
                             accept=".pdf"
                             className="hidden"
                             onChange={(e) => {
-                              if (e.target.files?.[0]) {
-                                onSelectAttendanceFile(e.target.files[0]) 
+                              const file = e.target.files?.[0]
+                              if (file) {
+                                if (validateFile(file)) {
+                                  onSelectAttendanceFile(file)
+                                }
                                 e.target.value = ''
                               }
                             }}
@@ -396,11 +478,22 @@ export function DocumentsTab({
                 </div>
               ) : (
                 <div className="space-y-4">
-                  <FileText className="w-12 h-12 mx-auto text-muted-foreground" />
+                  <FileText className={cn(
+                    "w-12 h-12 mx-auto text-muted-foreground transition-transform",
+                    isDragging && "animate-bounce text-primary"
+                  )} />
                   <div>
-                    <p className="font-medium text-lg">Subir registro de asistencia</p>
+                    <p className="font-medium text-lg">
+                      {isDragging 
+                        ? "Suelta el archivo PDF aquí" 
+                        : "Subir registro de asistencia"
+                      }
+                    </p>
                     <p className="text-sm text-muted-foreground">
-                      Archivo requerido para la conclusión de la sesión.
+                      {isDragging 
+                        ? "Solo archivos PDF de hasta 10MB"
+                        : "Arrastra y suelta o haz clic para seleccionar. Archivo requerido para la conclusión de la sesión."
+                      }
                     </p>
                   </div>
                   {isEditable ? (
@@ -417,8 +510,11 @@ export function DocumentsTab({
                         accept=".pdf"
                         className="hidden"
                         onChange={(e) => {
-                          if (e.target.files?.[0]) {
-                            onSelectAttendanceFile(e.target.files[0]) 
+                          const file = e.target.files?.[0]
+                          if (file) {
+                            if (validateFile(file)) {
+                              onSelectAttendanceFile(file)
+                            }
                             e.target.value = ''
                           }
                         }}
@@ -430,6 +526,16 @@ export function DocumentsTab({
                 </div>
               )}
             </div>
+
+            {dragError && (
+              <Alert className="mt-4 border-l-4 border-red-500 bg-red-50 dark:bg-red-950/20">
+                <Info className="w-4 h-4 text-red-600" />
+                <AlertDescription>
+                  <p className="font-semibold text-red-700 dark:text-red-300">Error al cargar archivo:</p>
+                  <p className="text-sm text-red-600 dark:text-red-400">{dragError}</p>
+                </AlertDescription>
+              </Alert>
+            )}
             
             <Alert className="mt-4 border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-950/20">
               <Info className="w-4 h-4 text-blue-600" />
@@ -437,6 +543,8 @@ export function DocumentsTab({
                 <p className="font-semibold mb-2 text-blue-700 dark:text-blue-300">Formato del Archivo y Proceso:</p>
                 <ul className="text-sm space-y-1 list-disc list-inside text-gray-700 dark:text-gray-300">
                   <li>El archivo debe ser un **PDF** de la lista de asistencia firmada.</li>
+                  <li>Puedes arrastrar y soltar el archivo o hacer clic para seleccionarlo.</li>
+                  <li>Tamaño máximo: 10MB.</li>
                   <li>El documento debe incluir columnas para No., Nombre del Colaborador, Firma y Área.</li>
                 </ul>
               </AlertDescription>

@@ -33,6 +33,8 @@ export default function TrainerCapacitacionDetailPage() {
     finalizarSesionConAsistencias,
     guardarPlantillaExamen,
     obtenerPlantillaExamen,
+    descargarExamen,
+    descargarDiploma,
   } = useCapacitaciones(user);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -528,6 +530,8 @@ export default function TrainerCapacitacionDetailPage() {
                   onSubirDocumento={handleSubirDocumento}
                   onEliminarDocumento={handleEliminarDocumento}
                   onMarcarAsistenciaMasiva={handleMarcarAsistenciaMasiva}
+                  onDescargarExamen={descargarExamen}
+                  onDescargarDiploma={descargarDiploma}
                 />
               </TabsContent>
 
