@@ -15,7 +15,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Users, CheckCircle2, FileText, Award, AlertCircle, CheckCheck } from "lucide-react"
+import { Users, CheckCircle2, FileText, Award, AlertCircle, CheckCheck, Loader2 } from "lucide-react"
 import type { SESION_DETALLE } from "@/lib/mis-capacitaciones/capacitaciones-types"
 
 interface FinalizationTabProps {
@@ -35,6 +35,7 @@ interface FinalizationTabProps {
   observacionesFinales: string
   onObservacionesChange: (value: string) => void
   onFinalizar: () => void
+  loading?: boolean
 }
 
 export function FinalizationTab({
@@ -44,6 +45,7 @@ export function FinalizationTab({
   observacionesFinales,
   onObservacionesChange,
   onFinalizar,
+  loading = false,
 }: FinalizationTabProps) {
 
   const isEditable = sesion.ESTADO === 'EN_PROCESO' || sesion.ESTADO === 'RECHAZADA'
@@ -202,7 +204,7 @@ export function FinalizationTab({
             placeholder="Agrega observaciones finales sobre la capacitación, logros, desafíos, recomendaciones..."
             rows={5}
             className="mt-2"
-            disabled={!isEditable}
+            disabled={!isEditable || loading}
           />
         </div>
 
@@ -211,10 +213,19 @@ export function FinalizationTab({
             <Button
               size="lg"
               className="w-full h-14 text-md sm:text-lg cursor-pointer"
-              disabled={!canFinalize || !isEditable}
+              disabled={!canFinalize || !isEditable || loading}
             >
-              <CheckCheck className="h-6 w-6" />
-              Finalizar y Enviar a RRHH
+              {loading ? (
+                <>
+                  <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                  Finalizando...
+                </>
+              ) : (
+                <>
+                  <CheckCheck className="h-6 w-6 mr-2" />
+                  Finalizar y Enviar a RRHH
+                </>
+              )}
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
@@ -226,8 +237,19 @@ export function FinalizationTab({
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
-              <AlertDialogCancel className="cursor-pointer dark:hover:border-foreground/50 dark:hover:text-foreground/90">Cancelar</AlertDialogCancel>
-              <AlertDialogAction onClick={onFinalizar} className="cursor-pointer">Sí, Finalizar</AlertDialogAction>
+              <AlertDialogCancel className="cursor-pointer dark:hover:border-foreground/50 dark:hover:text-foreground/90" disabled={loading}>
+                Cancelar
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={onFinalizar} className="cursor-pointer" disabled={loading}>
+                {loading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    Finalizando...
+                  </>
+                ) : (
+                  "Sí, Finalizar"
+                )}
+              </AlertDialogAction>
             </AlertDialogFooter>
           </AlertDialogContent>
         </AlertDialog>

@@ -35,6 +35,7 @@ export default function TrainerCapacitacionDetailPage() {
     obtenerPlantillaExamen,
     descargarExamen,
     descargarDiploma,
+    loading,
   } = useCapacitaciones(user);
 
   const [isLoading, setIsLoading] = useState(true);
@@ -577,6 +578,7 @@ export default function TrainerCapacitacionDetailPage() {
                   observacionesFinales={observacionesFinales}
                   onObservacionesChange={setObservacionesFinales}
                   onFinalizar={handleFinalizar}
+                  loading={loading}
                 />
               </TabsContent>
             </Tabs>
