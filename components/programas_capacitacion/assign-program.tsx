@@ -59,16 +59,7 @@ export function AssignProgramModal({
     try {
       const data = await obtenerColaboradores(programaId)
       setColaboradores(data)
-      const initialSelections = new Map<number, Set<number>>()
-      data.forEach(colab => {
-        const capacitacionesDisponibles = colab.capacitaciones
-          .filter(cap => cap.puedeAsignarse)
-          .map(cap => cap.idDetalle)
-        if (capacitacionesDisponibles.length > 0) {
-          initialSelections.set(colab.idColaborador, new Set(capacitacionesDisponibles))
-        }
-      })
-      setSelections(initialSelections)
+      setSelections(new Map())
     } catch (error) {
       console.error("Error loading colaboradores:", error)
     } finally {
