@@ -129,6 +129,7 @@ const FormFieldRenderer = memo(({ field, value, updateField, disabled = false }:
                             checked={isChecked}
                             onCheckedChange={handleCheckChange}
                             disabled={disabled}
+                            className="dark:border dark:border-gray-600 data-[state=checked]:dark:border-transparent cursor-pointer"
                         />
                         <Label 
                           htmlFor={`${field.key}-${optionValue}`} 

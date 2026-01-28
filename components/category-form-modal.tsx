@@ -386,7 +386,7 @@ export function CategoryFormModal({
             <div className="flex gap-2">
               <Button 
                 type="button" 
-                variant="secondary" 
+                variant="destructive" 
                 onClick={() => onOpenChange(false)} 
                 disabled={isSubmitting}
                 className="flex-1 sm:flex-none cursor-pointer"

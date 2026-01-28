@@ -79,6 +79,7 @@ const FormFieldRenderer = React.memo(({ field, value, updateField, options, disa
           checked={!!value} 
           onCheckedChange={handleCheckboxChange}
           disabled={isFieldDisabled}
+          className="dark:border dark:border-gray-600 data-[state=checked]:dark:border-transparent cursor-pointer"
         />
         <Label 
           htmlFor={field.key} 
