@@ -592,23 +592,50 @@ export function DocumentsTab({
           </div>
 
           {/* --------------------------- 3. Resumen de Documentos --------------------------- */}
-          <div className="pt-4 border-t dark:border-gray-700">
-            <h3 className="text-lg font-semibold mb-3">3. Resumen y Estadísticas</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="text-center p-4 bg-blue-50 dark:bg-blue-950/20 rounded-xl shadow-inner">
-                <p className="text-sm font-medium text-muted-foreground mb-1">Exámenes Subidos</p>
-                <p className="text-4xl font-bold text-blue-600 dark:text-blue-400">
-                  {stats.examenes} <span className="text-2xl text-muted-foreground">/ {stats.asistencias}</span>
-                </p>
+          {
+            sesion.APLICA_EXAMEN || sesion.APLICA_DIPLOMA ? (
+              <Alert className="border-l-4 border-green-500 bg-green-50 dark:bg-green-950/20">
+                <Info className="w-4 h-4 text-green-600" />
+                <AlertDescription>
+                  <p className="font-semibold mb-2 text-green-700 dark:text-green-300">Resumen de Documentos</p>
+                  <p className="text-sm text-green-800 dark:text-green-300">
+                    {sesion.APLICA_EXAMEN && sesion.APLICA_DIPLOMA ? "Exámenes y diplomas" : sesion.APLICA_EXAMEN ? "Exámenes" : "Diplomas"} generados para esta sesión.
+                  </p>
+                </AlertDescription>
+              </Alert>
+            ) : null
+          }
+
+          {
+            (sesion.APLICA_EXAMEN || sesion.APLICA_DIPLOMA) && (
+              <div className="pt-4 border-t dark:border-gray-700">
+                <h3 className="text-lg font-semibold mb-3">3. Resumen y Estadísticas</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {
+                    sesion.APLICA_EXAMEN && (
+                      <div className="text-center p-4 bg-blue-50 dark:bg-blue-950/20 rounded-xl shadow-inner">
+                        <p className="text-sm font-medium text-muted-foreground mb-1">Exámenes Subidos</p>
+                        <p className="text-4xl font-bold text-blue-600 dark:text-blue-400">
+                          {stats.examenes} <span className="text-2xl text-muted-foreground">/ {stats.asistencias}</span>
+                        </p>
+                      </div>
+                    )
+                  }
+
+                  {
+                    sesion.APLICA_DIPLOMA && (
+                      <div className="text-center p-4 bg-green-50 dark:bg-green-950/20 rounded-xl shadow-inner">
+                        <p className="text-sm font-medium text-muted-foreground mb-1">Diplomas Emitidos</p>
+                        <p className="text-4xl font-bold text-green-600 dark:text-green-400">
+                          {stats.diplomas} <span className="text-2xl text-muted-foreground">/ {stats.asistencias}</span>
+                        </p>
+                      </div>
+                    )
+                  }
+                </div>
               </div>
-              <div className="text-center p-4 bg-purple-50 dark:bg-purple-950/20 rounded-xl shadow-inner">
-                <p className="text-sm font-medium text-muted-foreground mb-1">Diplomas Subidos</p>
-                <p className="text-4xl font-bold text-purple-600 dark:text-purple-400">
-                  {stats.diplomas} <span className="text-2xl text-muted-foreground">/ {stats.asistencias}</span>
-                </p>
-              </div>
-            </div>
-          </div>
+            )
+          }
 
           {sesion.ESTADO === "RECHAZADA" && sesion.URL_LISTA_ASISTENCIA && !listaAsistenciaFile && (
             <Alert className="mt-4 border-l-4 border-blue-500 bg-blue-50 dark:bg-blue-950/20">
