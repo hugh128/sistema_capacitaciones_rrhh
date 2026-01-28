@@ -18,7 +18,7 @@ import { CapacitacionesProgramadasTab } from "@/components/mis-capacitaciones/ca
 import { TodasCapacitacionesTab } from "@/components/mis-capacitaciones/todas-capacitaciones-tab"
 
 export default function MisCapacitacionesPage() {
-  const { user } = useAuth()
+  const { user, loading: isAuthLoading } = useAuth()
   const [misCapacitaciones, setMisCapacitaciones] = useState<CapacitacionSesion[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [hasError, setHasError] = useState(false)
@@ -30,6 +30,10 @@ export default function MisCapacitacionesPage() {
   const { obtenerCapacitacionesPorCapacitador } = useCapacitaciones(user)
 
   const fetchCapacitaciones = useCallback(async () => {
+    if (isAuthLoading) {
+      return;
+    }
+
     if (!user?.PERSONA_ID || isFetchingRef.current) {
       setIsLoading(false)
       return
@@ -71,7 +75,7 @@ export default function MisCapacitacionesPage() {
       setIsLoading(false)
       isFetchingRef.current = false
     }
-  }, [user?.PERSONA_ID, obtenerCapacitacionesPorCapacitador])
+  }, [isAuthLoading, user?.PERSONA_ID, obtenerCapacitacionesPorCapacitador])
 
   useEffect(() => {
     if (!hasFetchedRef.current) {
