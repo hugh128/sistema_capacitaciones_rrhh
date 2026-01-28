@@ -236,7 +236,7 @@ export function ProgramasCapacitacionList({
                       <TableCell className="text-center">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" className="h-8 w-8 p-0">
+                            <Button variant="secondary" className="h-8 w-8 p-0 cursor-pointer hover:border hover:border-foreground/50">
                               <span className="sr-only">Abrir menú</span>
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
@@ -247,7 +247,7 @@ export function ProgramasCapacitacionList({
                               onClick={() => onViewDetails(programa)}
                               className="cursor-pointer"
                             >
-                              <Eye className="w-4 h-4 mr-2 text-primary" />
+                              <Eye className="w-4 h-4 mr-2 text-blue-700 dark:text-blue-400" />
                               Ver Detalles
                             </DropdownMenuItem>
                             

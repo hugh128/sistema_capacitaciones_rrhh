@@ -21,7 +21,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
-import { Search, AlertCircle, CheckCircle2, XCircle, Loader2 } from "lucide-react"
+import { Search, AlertCircle, CheckCircle2, XCircle, Loader2, Briefcase, Building2 } from "lucide-react"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import type { 
   AsignarProgramaCapacitacionSelectivo, 
@@ -212,11 +212,13 @@ export function AssignProgramModal({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-5xl h-[80vh] flex flex-col">
+      <DialogContent className="sm:max-w-5xl h-[95vh] flex flex-col gap-0">
         <DialogHeader>
-          <DialogTitle className="text-xl">Asignar Programa</DialogTitle>
-          <DialogDescription className="text-base">
-            <span className="font-semibold text-foreground text-xl block truncate">{programaNombre}</span>
+          <DialogTitle className="text-lg">
+            Asignar Programa
+          </DialogTitle>
+          <DialogDescription className="">
+            <span className="font-semibold text-foreground text-lg block truncate">{programaNombre}</span>
             Selecciona los colaboradores y las capacitaciones específicas que deseas asignar
           </DialogDescription>
         </DialogHeader>
@@ -227,92 +229,94 @@ export function AssignProgramModal({
           </div>
         ) : (
           <>
-            <div className="space-y-4 flex-1 overflow-hidden flex flex-col min-h-0">
+            <div className="flex-1 overflow-hidden flex flex-col min-h-0 space-y-2">
 
-            <div className="px-6 py-4 border-b bg-muted/30 flex flex-col gap-3">
-              {/* Buscadores */}
-              <div className="flex flex-col sm:flex-row gap-3">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar por colaborador, departamento o puesto..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-                
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Buscar por capacitación o categoría..."
-                    value={searchCapacitacion}
-                    onChange={(e) => setSearchCapacitacion(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-              </div>
-
-              {/* Controles */}
-              <div className="flex items-center gap-3 justify-between sm:justify-end">
-                {(searchTerm || searchCapacitacion) && (
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => {
-                      setSearchTerm("")
-                      setSearchCapacitacion("")
-                    }}
-                    className="cursor-pointer text-xs dark:hover:border-foreground/50 dark:hover:text-foreground/90"
-                  >
-                    Limpiar búsqueda
-                  </Button>
-                )}
-                
-                <div className="flex items-center gap-3">
-                  <div className="flex items-center gap-2 hover:scale-[1.02]">
-                    <Checkbox
-                      id="select-all"
-                      checked={areAllSelected}
-                      onCheckedChange={(checked) => checked ? selectAll() : deselectAll()}
-                      className="dark:border dark:border-gray-600 data-[state=checked]:dark:border-transparent cursor-pointer"
+              <div className="px-6 py-4 border-b bg-muted/30 flex flex-col gap-3">
+                {/* Buscadores */}
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar por colaborador, departamento o puesto..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10"
                     />
-                    <label htmlFor="select-all" className="text-sm font-medium cursor-pointer select-none">
-                      Seleccionar todo
-                    </label>
                   </div>
                   
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={deselectAll}
-                    disabled={totalSeleccionados === 0}
-                    className="cursor-pointer"
-                  >
-                    Limpiar
-                  </Button>
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                    <Input
+                      placeholder="Buscar por capacitación o categoría..."
+                      value={searchCapacitacion}
+                      onChange={(e) => setSearchCapacitacion(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                </div>
+
+                {/* Controles */}
+                <div className="flex items-center gap-3 justify-between sm:justify-end">
+                  {(searchTerm || searchCapacitacion) && (
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        setSearchTerm("")
+                        setSearchCapacitacion("")
+                      }}
+                      className="cursor-pointer text-xs dark:hover:border-foreground/50 dark:hover:text-foreground/90"
+                    >
+                      Limpiar búsqueda
+                    </Button>
+                  )}
+                  
+                  <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-2 hover:scale-[1.02]">
+                      <Checkbox
+                        id="select-all"
+                        checked={areAllSelected}
+                        onCheckedChange={(checked) => checked ? selectAll() : deselectAll()}
+                        className="dark:border dark:border-gray-600 data-[state=checked]:dark:border-transparent cursor-pointer"
+                      />
+                      <label htmlFor="select-all" className="text-sm font-medium cursor-pointer select-none">
+                        Seleccionar todo
+                      </label>
+                    </div>
+                    
+                    <Button
+                      size="sm"
+                      variant="destructive"
+                      onClick={deselectAll}
+                      disabled={totalSeleccionados === 0}
+                      className="cursor-pointer"
+                    >
+                      Limpiar
+                    </Button>
+                  </div>
                 </div>
               </div>
-            </div>
 
               {totalSeleccionados > 0 && (
-                <Alert className="flex-shrink-0 mx-6 w-auto">
-                  <CheckCircle2 className="h-4 w-4" />
-                  <AlertDescription>
-                    <strong>{totalSeleccionados}</strong> colaborador(es) seleccionado(s) con{" "}
-                    <strong>{totalCapacitaciones}</strong> capacitación(es) total(es)
-                  </AlertDescription>
-                </Alert>
+                <div className="px-4 sm:px-6 py-2">
+                  <Alert className="py-2 border-primary/20 bg-primary/5 dark:border-foreground/50">
+                    <CheckCircle2 className="h-4 w-4 text-primary" />
+                    <AlertDescription className="text-xs sm:text-sm flex flex-wrap gap-x-4">
+                      <span><strong>{totalSeleccionados}</strong> Colaboradores</span>
+                      <span><strong>{totalCapacitaciones}</strong> Capacitaciones totales</span>
+                    </AlertDescription>
+                  </Alert>
+                </div>
               )}
 
-              <div className="flex-1 min-h-0 overflow-auto rounded-lg border bg-background mx-6 mb-4">
+              <div className="flex-1 min-h-0 overflow-auto rounded-lg border bg-background mb-4 custom-scrollbar">
                 <Table className="border-separate border-spacing-y-0 table-fixed w-full">
                   <TableHeader className="sticky top-0 z-10 bg-muted/90 backdrop-blur supports-[backdrop-filter]:bg-muted/60">
                     <TableRow>
                       <TableHead className="w-[50px] text-center" />
-                      <TableHead className="w-[200px] md:w-[250px]">Colaborador</TableHead>
-                      <TableHead className="w-auto">Capacitaciones</TableHead>
-                      <TableHead className="w-[120px] text-center">Estado</TableHead>
+                      <TableHead className="w-[150px] md:w-[250px]">Colaborador</TableHead>
+                      <TableHead className="">Capacitaciones</TableHead>
+                      <TableHead className="w-[110px] text-center hidden sm:table-cell">Estado</TableHead>
                     </TableRow>
                   </TableHeader>
 
@@ -346,12 +350,12 @@ export function AssignProgramModal({
                               </div>
                               <div className="mt-1.5 space-y-1">
                                 <div className="text-xs text-muted-foreground break-words whitespace-normal leading-relaxed">
-                                  <span className="font-medium text-[11px] uppercase opacity-70 block text-primary dark:text-blue-400">Departamento:</span>
-                                  {colab.departamento}
+                                  {/* <span className="font-medium text-[11px] uppercase opacity-70 block text-primary dark:text-blue-400">Departamento:</span> */}
+                                  <Building2 className="w-3 h-3 inline mr-1 bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-400" />{colab.departamento}
                                 </div>
-                                <div className="text-xs text-muted-foreground break-words whitespace-normal leading-relaxed">
-                                  <span className="font-medium text-[11px] uppercase opacity-70 block text-primary dark:text-blue-400">Puesto:</span>
-                                  {colab.puesto}
+                                <div className="text-xs text-muted-foreground break-words whitespace-normal leading-relaxed ">
+                                  {/* <span className="font-medium text-[11px] uppercase opacity-70 block text-primary dark:text-blue-400">Puesto:</span> */}
+                                  <Briefcase className="w-3 h-3 inline mr-1 bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-500" /> {colab.puesto}
                                 </div>
                               </div>
                             </TableCell>
@@ -390,7 +394,7 @@ export function AssignProgramModal({
                               )}
                             </TableCell>
 
-                            <TableCell className="align-top pt-4 text-center">
+                            <TableCell className="align-top pt-4 text-center hidden sm:table-cell">
                               {colab.yaTieneProgramaActivo ? (
                                 <Badge variant="secondary" className="text-[11px] px-1">
                                   <AlertCircle className="w-3 h-3 mr-1" /> Activo
