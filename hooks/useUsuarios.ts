@@ -2,7 +2,7 @@ import { apiClient } from "@/lib/api-client";
 import type { UsuarioLogin } from "@/lib/auth";
 import { handleApiError } from "@/utils/error-handler";
 import { useCallback, useEffect, useState } from "react";
-import type { Usuario, usuarioPayload } from "@/lib/types";
+import type { PersonaSinUsuario, Usuario, usuarioPayload } from "@/lib/types";
 import toast from "react-hot-toast";
 
 export function useUsuarios(user: UsuarioLogin | null) {
@@ -141,6 +141,26 @@ export function useUsuarios(user: UsuarioLogin | null) {
     }
   }, [user, refreshUsuarios]);
 
+  const getPersonasList = useCallback(async () => {  
+    if (!user) {
+      return undefined;
+    }
+
+    setIsMutating(true);
+    setError(null);
+
+    try {
+      const { data } = await apiClient.get<PersonaSinUsuario[]>('/persona/sin-usuario');
+      return data;
+    } catch (err) {
+      const baseMessage = "Error al cargar lista personas.";
+      setError(baseMessage);
+      handleApiError(err, baseMessage);
+    } finally {
+      setIsMutating(false);
+    }
+  }, [user]);
+
   return {
     usuarios,
     loading,
@@ -148,6 +168,7 @@ export function useUsuarios(user: UsuarioLogin | null) {
     isMutating,
     saveUsuario,
     deleteUsuario,
-    updatePassword
+    updatePassword,
+    getPersonasList
   }
 }

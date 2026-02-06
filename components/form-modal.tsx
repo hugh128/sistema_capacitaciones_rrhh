@@ -93,8 +93,8 @@ const FormFieldRenderer = memo(({ field, value, updateField, disabled = false }:
           required={field.required}
           disabled={disabled}
         >
-          <SelectTrigger>
-            <SelectValue placeholder={field.placeholder} />
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder={field.placeholder}/>
           </SelectTrigger>
           <SelectContent>
             {field.options?.map((option) => (
@@ -199,8 +199,10 @@ export function FormModal({
   const [formData, setFormData] = useState<FormData>({}) 
 
   useEffect(() => {
-    setFormData(initialData || {});
-  }, [initialData]) 
+    if (open) {
+      setFormData(initialData || {});
+    }
+  }, [open, initialData])
 
   const updateField = React.useCallback((key: string, value: string | (string | number)[]) => {
     const fieldDef = fields?.find(f => f.key === key); 
@@ -234,7 +236,6 @@ export function FormModal({
   }
 
   const handleOpenChange = (newOpenState: boolean) => {
-      // Prevenir cerrar el modal mientras se está guardando
       if (loading && newOpenState === false) {
         return;
       }
@@ -248,15 +249,13 @@ export function FormModal({
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}> 
       <DialogContent 
-        className="sm:max-w-[425px]"
+        className="sm:max-w-[425px] overflow-auto flex flex-col"
         onInteractOutside={(e) => {
-          // Prevenir cerrar haciendo clic afuera mientras se guarda
           if (loading) {
             e.preventDefault();
           }
         }}
         onEscapeKeyDown={(e) => {
-          // Prevenir cerrar con ESC mientras se guarda
           if (loading) {
             e.preventDefault();
           }

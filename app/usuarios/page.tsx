@@ -25,16 +25,6 @@ const getRolesList = async () => {
   }
 }
 
-const getPersonasList = async () => {
-  try {
-    const { data } = await apiClient.get<PersonaSinUsuario[]>('/persona/sin-usuario');
-    return data;
-  } catch (error) {
-    console.error("Error al cargar lista personas ", error);
-    return [];
-  }
-}
-
 export default function UsuariosPage() {
   const { user } = useAuth()
   const [modalOpen, setModalOpen] = useState(false)
@@ -52,14 +42,15 @@ export default function UsuariosPage() {
     deleteUsuario,
     updatePassword,
     loading,
+    getPersonasList
   } = useUsuarios(user);
 
   useEffect(() => {
     if (user) {
       getRolesList().then(setRolesList);
-      getPersonasList().then(setPersonasList);
+      getPersonasList().then(data => setPersonasList(data || []));
     }
-  }, [user])
+  }, [user, getPersonasList])
 
   const columns = useMemo(() => getUsuarioColumns(), []);
 
@@ -171,8 +162,17 @@ export default function UsuariosPage() {
       const apiPayload = transformFrontendToApi(formData, isEditing);
       const idToEdit = editingUsuario?.ID_USUARIO;
 
-      await saveUsuario(apiPayload, idToEdit); 
+      await saveUsuario(apiPayload, idToEdit);
+      
+      if (!isEditing) {
+        const updatedPersonas = await getPersonasList();
+        if (updatedPersonas) {
+          setPersonasList(updatedPersonas);
+        }
+      }
+      
       setModalOpen(false);
+      setEditingUsuario(null);
         
     } catch (err) {
       console.error("Submit Error:", err);

@@ -750,7 +750,6 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
       return;
     }
     
-    // Validar que la lista de asistencia sea PDF si se está subiendo un nuevo archivo
     if (listaAsistenciaFile && listaAsistenciaFile.type !== "application/pdf") {
       toast.error("La lista de asistencia debe ser un PDF válido.");
       return;
@@ -761,7 +760,6 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     
     const formData = new FormData();
     
-    // 1. Agregar parámetros básicos
     formData.append('idCapacitador', idCapacitador.toString());
     formData.append('soloGuardar', soloGuardar.toString());
     
@@ -769,12 +767,10 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
       formData.append('observaciones', observaciones);
     }
     
-    // 2. Agregar lista de asistencia general (si existe)
     if (listaAsistenciaFile) {
       formData.append('listaAsistencia', listaAsistenciaFile);
     }
     
-    // 3. Preparar datos de colaboradores (sin archivos)
     const colaboradoresDataJson = colaboradores.map(colab => ({
       idColaborador: colab.idColaborador,
       asistio: colab.asistio,
@@ -784,7 +780,6 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     
     formData.append('colaboradores', JSON.stringify(colaboradoresDataJson));
     
-    // 4. Agregar archivos individuales (exámenes y diplomas)
     colaboradores.forEach(colab => {
       if (colab.archivoExamen instanceof File) {
         formData.append(`examen_${colab.idColaborador}`, colab.archivoExamen);
