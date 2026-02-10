@@ -229,7 +229,7 @@ export function UsuarioDataTable({
                                   <KeyIcon className="h-4 w-4 mr-2" />
                                   <div className="flex flex-col">
                                     <span>Cambiar Contraseña</span>
-                                    {isRestricted && <span className="text-[10px] text-muted-foreground">Usa Alt+Shift+U</span>}
+                                    {isRestricted && <span className="text-[10px] text-muted-foreground">No se puede cambiar</span>}
                                   </div>
                                 </DropdownMenuItem>
                               )}
