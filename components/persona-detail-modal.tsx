@@ -111,9 +111,6 @@ const DetailRow: React.FC<DetailRowProps> = ({ icon, label, value }) => (
 
 
 export function PersonaDetailModal({ open, onOpenChange, persona }: PersonaDetailModalProps) {
-
-  console.log(persona)
-
   if (!persona) return null;
 
   const isColaboradorInterno = persona.TIPO_PERSONA === 'INTERNO';
