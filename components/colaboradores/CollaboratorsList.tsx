@@ -102,36 +102,41 @@ export default function CollaboratorsList({
           </div>
         </div>
 
-        <div className="flex gap-3">
-          <div className="flex-1 relative">
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:gap-3">
+          <div className="relative w-full md:flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               type="text"
               placeholder="Buscar por nombre, email o puesto..."
               value={localSearchQuery}
               onChange={(e) => setLocalSearchQuery(e.target.value)}
-              className="pl-10"
+              className="pl-10 w-full"
             />
           </div>
 
-          <div className="flex gap-2">
+          <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 md:overflow-visible">
             <Button
               onClick={() => setFilterStatus("all")}
               variant={filterStatus === "all" ? "default" : "outline"}
+              className="flex-1 md:flex-none"
             >
               Todos
             </Button>
             <Button
               onClick={() => setFilterStatus("activo")}
               variant={filterStatus === "activo" ? "default" : "outline"}
-              className={filterStatus === "activo" ? "bg-green-500 hover:bg-green-600" : ""}
+              className={`flex-1 md:flex-none ${
+                filterStatus === "activo" ? "bg-green-500 hover:bg-green-600" : ""
+              }`}
             >
               Activos
             </Button>
             <Button
               onClick={() => setFilterStatus("inactivo")}
               variant={filterStatus === "inactivo" ? "default" : "outline"}
-              className={filterStatus === "inactivo" ? "bg-red-500 hover:bg-red-600" : ""}
+              className={`flex-1 md:flex-none ${
+                filterStatus === "inactivo" ? "bg-red-500 hover:bg-red-600" : ""
+              }`}
             >
               Inactivos
             </Button>
@@ -227,14 +232,17 @@ export default function CollaboratorsList({
       )}
 
       {filteredCollaborators.length > 0 && (
-        <div className="flex items-center justify-between border-t border-border p-4">
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-muted-foreground">Filas por página:</span>
+        <div className="flex flex-col gap-6 border-t border-border p-4 md:flex-row md:items-center md:justify-between">
+          
+          <div className="flex items-center justify-between gap-2 md:justify-start">
+            <span className="text-sm text-muted-foreground whitespace-nowrap">
+              Filas por página:
+            </span>
             <Select
               value={rowsPerPage.toString()}
               onValueChange={handleRowsPerPageChange}
             >
-              <SelectTrigger className="w-[80px] h-8">
+              <SelectTrigger className="w-[70px] h-8">
                 <SelectValue placeholder="10" />
               </SelectTrigger>
               <SelectContent>
@@ -247,16 +255,18 @@ export default function CollaboratorsList({
             </Select>
           </div>
 
-          <div className="flex items-center gap-4">
-            <span className="text-sm text-muted-foreground">
-              Página {currentPage} de {totalPages}
+          <div className="flex flex-col items-center gap-3 md:flex-row md:gap-6">
+            <span className="text-sm text-muted-foreground whitespace-nowrap order-first">
+              Página <span className="font-medium text-foreground">{currentPage}</span> de {totalPages}
             </span>
-            <div className="flex gap-2">
+            
+            <div className="flex gap-2 w-full md:w-auto">
               <Button
                 variant="outline"
                 size="sm"
                 onClick={handlePrevPage}
                 disabled={currentPage === 1}
+                className="flex-1 px-4 md:flex-none"
               >
                 Anterior
               </Button>
@@ -265,6 +275,7 @@ export default function CollaboratorsList({
                 size="sm"
                 onClick={handleNextPage}
                 disabled={currentPage === totalPages}
+                className="flex-1 px-4 md:flex-none"
               >
                 Siguiente
               </Button>
