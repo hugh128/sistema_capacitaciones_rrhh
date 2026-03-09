@@ -239,6 +239,26 @@ export function useColaboradores(user: UsuarioLogin | null) {
     }
   }, []);
 
+  const editarCategoriaColaborador = useCallback(async (ids: number[], categoria: string) => {
+    if (!user) {
+      toast.error("Usuario no autenticado.");
+      return;
+    }
+
+    try {
+      const { data } = await apiClient.patch('/colaboradores/categoria', {
+        ids,
+        categoria,
+        usuario: user.USERNAME,
+      });
+      toast.success("Categoría actualizada correctamente.");
+      return data;
+    } catch (err) {
+      handleApiError(err, "Error al editar la categoría.");
+      throw err;
+    }
+  }, [user]);
+
   return {
     colaboradores,
     loading,
@@ -254,5 +274,6 @@ export function useColaboradores(user: UsuarioLogin | null) {
     obtenerResumenColaborador,
     descargarInduccionDocumental,
     obtenerDetallePlanColaborador,
+    editarCategoriaColaborador,
   }
 }

@@ -37,6 +37,7 @@ export interface Colaborador {
 }
 
 export interface CapacitacionColaborador {
+  ID_CAPACITACION_COLABORADOR: number;
   ID_SESION: number;
   ID_CAPACITACION: number;
   NOMBRE_CAPACITACION: string;

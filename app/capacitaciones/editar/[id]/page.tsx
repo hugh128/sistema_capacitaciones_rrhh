@@ -149,6 +149,8 @@ export default function EditarSesionPage() {
   const handleEditar = useCallback(async () => {
     const errors: string[] = []
 
+    const toastId = toast.loading("Editando capacitación...");
+
     if (!capacitadorId) {
       errors.push("Selecciona un capacitador.")
       toast.error("Selecciona un capacitador.")
@@ -219,9 +221,11 @@ export default function EditarSesionPage() {
 
     try {
       await editarSesion(payloadEditarSesion)
+      toast.success("Capacitación editada exitosamente", { id: toastId });
       router.push(`/capacitaciones/${sesionId}`)
     } catch (error) {
       console.error("Error al editar la sesión:", error)
+      toast.error("Error al editar la sesión")
     }
   }, [
     capacitadorId, fechaProgramada, horaInicio, horaFin, nombreSesion, selectedColaboradores,

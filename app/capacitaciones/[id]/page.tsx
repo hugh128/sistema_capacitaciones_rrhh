@@ -16,6 +16,7 @@ import { getEstadoCapacitacionColor, getEstadoColaboradorColor } from "@/lib/cap
 import { RequirePermission } from "@/components/RequirePermission"
 import { useCapacitaciones } from "@/hooks/useCapacitaciones"
 import { COLABORADORES_SESION, SESION_DETALLE } from "@/lib/mis-capacitaciones/capacitaciones-types"
+import { Toaster } from "react-hot-toast"
 
 export default function CapacitacionDetailPage() {
   const { user, loading: isAuthLoading } = useAuth()
@@ -179,6 +180,8 @@ export default function CapacitacionDetailPage() {
           />
 
           <main className="flex-1 p-4 sm:p-6 space-y-4 sm:space-y-6 max-w-[1600px] mx-auto w-full overflow-auto custom-scrollbar">
+            <Toaster />
+
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div className="flex items-start gap-3 sm:gap-4">
                 <Link href="/capacitaciones">

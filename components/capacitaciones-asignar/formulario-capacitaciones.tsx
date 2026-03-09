@@ -257,7 +257,7 @@ export const FormularioCapacitacion = memo(function FormularioCapacitacion({
 
         <TextInputOptimizado
           id="grupoObjetivo"
-          label="Grupo Objetivo"
+          label="Grupo Objetivo *"
           value={grupoObjetivo}
           onChange={setGrupoObjetivo}
           placeholder="Ej: Personal de laboratorio nuevo"
@@ -265,7 +265,7 @@ export const FormularioCapacitacion = memo(function FormularioCapacitacion({
 
         <TextAreaOptimizado
           id="objetivo"
-          label="Objetivo"
+          label="Objetivo *"
           value={objetivo}
           onChange={setObjetivo}
           placeholder="Describe el objetivo de la capacitación..."

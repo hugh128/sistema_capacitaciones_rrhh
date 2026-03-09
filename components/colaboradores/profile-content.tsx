@@ -49,6 +49,7 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
     obtenerResumenColaborador,
     descargarInduccionDocumental,
     obtenerDetallePlanColaborador,
+    editarCategoriaColaborador,
   } = useColaboradores(user)
 
   useEffect(() => {
@@ -211,6 +212,12 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
     handleDownloadInduccionDocumental(dataInduccion)
   }
 
+  const handleEditarCategoria = async (ids: number[], categoria: string) => {
+    await editarCategoriaColaborador(ids, categoria)
+    const capacitacionesActualizadas = await obtenerCapacitacionesColaborador(collaborator.ID_COLABORADOR)
+    setCapacitaciones(capacitacionesActualizadas)
+  }
+
   const LoadingState = ({ message }: { message: string }) => (
     <div className="text-center py-12">
       <div className="flex flex-col items-center gap-3">
@@ -239,6 +246,8 @@ export default function ProfileContent({ collaborator, onBack }: ProfileContentP
             onDownloadExamen={handleDownloadExamen}
             onDownloadDiploma={handleDownloadDiploma}
             loadingDownload={loadingDownload}
+            onEditarCategoria={handleEditarCategoria}
+            isAdmin={user?.USERNAME === 'admin'}
           />
         )
       case "Capacitaciones":

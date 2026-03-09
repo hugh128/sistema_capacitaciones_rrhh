@@ -1,5 +1,5 @@
 import { useState } from "react"
-import { ChevronDown, ChevronUp, FileText, Download, Award, CheckCircle2 } from "lucide-react"
+import { ChevronDown, ChevronUp, FileText, Download, Award, CheckCircle2, Pencil, X, Check } from "lucide-react"
 import type { CapacitacionColaborador } from "@/lib/colaboradores/type"
 
 type ExpedienteTabProps = {
@@ -9,6 +9,8 @@ type ExpedienteTabProps = {
   onDownloadExamen: (colaboradorId: number, sesionId: number) => void
   onDownloadDiploma: (colaboradorId: number, sesionId: number) => void
   loadingDownload: boolean
+  onEditarCategoria: (ids: number[], categoria: string) => Promise<void>
+  isAdmin: boolean
 }
 
 export default function ExpedienteTab({
@@ -18,8 +20,15 @@ export default function ExpedienteTab({
   onDownloadExamen,
   onDownloadDiploma,
   loadingDownload,
+  onEditarCategoria,
+  isAdmin,
 }: ExpedienteTabProps) {
   const [expandedCategories, setExpandedCategories] = useState<Set<string>>(new Set())
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
+  const [editingId, setEditingId] = useState<number | null>(null)
+  const [editValue, setEditValue] = useState("")
+  const [bulkValue, setBulkValue] = useState("")
+  const [isSaving, setIsSaving] = useState(false)
 
   const capacitacionesFinalizadas = capacitaciones.filter(
     (cap) => cap.ESTADO_SESION === "FINALIZADA"
@@ -27,9 +36,7 @@ export default function ExpedienteTab({
 
   const capacitacionesPorCategoria = capacitacionesFinalizadas.reduce((acc, cap) => {
     const categoria = cap.CATEGORIA || "Sin Categoría"
-    if (!acc[categoria]) {
-      acc[categoria] = []
-    }
+    if (!acc[categoria]) acc[categoria] = []
     acc[categoria].push(cap)
     return acc
   }, {} as Record<string, CapacitacionColaborador[]>)
@@ -39,13 +46,52 @@ export default function ExpedienteTab({
   const toggleCategoria = (categoria: string) => {
     setExpandedCategories((prev) => {
       const newSet = new Set(prev)
-      if (newSet.has(categoria)) {
-        newSet.delete(categoria)
-      } else {
-        newSet.add(categoria)
-      }
+      if (newSet.has(categoria)) newSet.delete(categoria)
+      else newSet.add(categoria)
       return newSet
     })
+  }
+
+  const toggleSeleccion = (id: number) => {
+    setSelectedIds((prev) => {
+      const newSet = new Set(prev)
+      if (newSet.has(id)) newSet.delete(id)
+      else newSet.add(id)
+      return newSet
+    })
+  }
+
+  const limpiarSeleccion = () => {
+    setSelectedIds(new Set())
+    setBulkValue("")
+  }
+
+  const handleEditIndividual = (cap: CapacitacionColaborador) => {
+    setEditingId(cap.ID_CAPACITACION_COLABORADOR)
+    setEditValue(cap.CATEGORIA || "")
+  }
+
+  const handleGuardarIndividual = async (id: number) => {
+    if (!editValue.trim()) return
+    setIsSaving(true)
+    try {
+      await onEditarCategoria([id], editValue.trim())
+      setEditingId(null)
+      setEditValue("")
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleGuardarBulk = async () => {
+    if (!bulkValue.trim() || selectedIds.size === 0) return
+    setIsSaving(true)
+    try {
+      await onEditarCategoria(Array.from(selectedIds), bulkValue.trim())
+      limpiarSeleccion()
+    } finally {
+      setIsSaving(false)
+    }
   }
 
   if (capacitacionesFinalizadas.length === 0) {
@@ -61,15 +107,49 @@ export default function ExpedienteTab({
 
   return (
     <div>
+      {/* Header */}
       <div className="flex items-center justify-between mb-6">
         <h2 className="text-lg font-semibold text-foreground">
           Expediente de Capacitaciones Finalizadas
         </h2>
         <span className="text-sm text-muted-foreground">
-          {capacitacionesFinalizadas.length} {capacitacionesFinalizadas.length === 1 ? 'capacitación' : 'capacitaciones'}
+          {capacitacionesFinalizadas.length}{" "}
+          {capacitacionesFinalizadas.length === 1 ? "capacitación" : "capacitaciones"}
         </span>
       </div>
 
+      {/* Barra de edición masiva */}
+      {isAdmin && selectedIds.size > 0 && (
+        <div className="flex items-center gap-3 mb-4 p-3 bg-primary/5 border border-primary/20 rounded-lg">
+          <span className="text-sm font-medium text-foreground">
+            {selectedIds.size} {selectedIds.size === 1 ? "seleccionada" : "seleccionadas"}
+          </span>
+          <input
+            type="text"
+            value={bulkValue}
+            onChange={(e) => setBulkValue(e.target.value)}
+            placeholder="Nueva categoría..."
+            className="flex-1 text-sm px-3 py-1.5 rounded-md border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary"
+          />
+          <button
+            onClick={handleGuardarBulk}
+            disabled={!bulkValue.trim() || isSaving}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold bg-primary text-primary-foreground rounded-md hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+          >
+            <Check className="w-3.5 h-3.5" />
+            Aplicar
+          </button>
+          <button
+            onClick={limpiarSeleccion}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-semibold border border-border rounded-md hover:bg-muted cursor-pointer"
+          >
+            <X className="w-3.5 h-3.5" />
+            Cancelar
+          </button>
+        </div>
+      )}
+
+      {/* Categorías */}
       <div className="space-y-3">
         {categorias.map((categoria) => {
           const isExpanded = expandedCategories.has(categoria)
@@ -77,7 +157,7 @@ export default function ExpedienteTab({
 
           return (
             <div key={categoria} className="border border-border rounded-lg overflow-hidden">
-              {/* Header de categoría */}
+              {/* Header categoría */}
               <button
                 onClick={() => toggleCategoria(categoria)}
                 className="w-full flex items-center justify-between p-4 bg-muted/40 hover:bg-muted transition-colors cursor-pointer"
@@ -91,7 +171,10 @@ export default function ExpedienteTab({
                   <div className="text-left">
                     <h3 className="text-base font-semibold text-foreground">{categoria}</h3>
                     <p className="text-xs text-muted-foreground">
-                      {capacitacionesCategoria.length} {capacitacionesCategoria.length === 1 ? 'capacitación completada' : 'capacitaciones completadas'}
+                      {capacitacionesCategoria.length}{" "}
+                      {capacitacionesCategoria.length === 1
+                        ? "capacitación completada"
+                        : "capacitaciones completadas"}
                     </p>
                   </div>
                 </div>
@@ -102,82 +185,143 @@ export default function ExpedienteTab({
                 )}
               </button>
 
-              {/* Contenido expandible */}
+              {/* Contenido */}
               {isExpanded && (
                 <div className="p-4 space-y-3 bg-card">
-                  {capacitacionesCategoria.map((capacitacion, index) => (
-                    <div
-                      key={index}
-                      className="bg-muted/30 rounded-lg p-4 border border-border hover:border-primary/50 transition-all"
-                    >
-                      <div className="flex flex-col gap-3">
-                        {/* Header de la capacitación */}
-                        <div className="flex items-start justify-between gap-4">
-                          <div className="flex-1">
-                            <h4 className="text-sm font-semibold text-foreground mb-1">
-                              {capacitacion.NOMBRE_CAPACITACION}
-                            </h4>
-                            <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-                              {capacitacion.CODIGO_DOCUMENTO && (
-                                <>
-                                  <span className="font-mono bg-muted px-2 py-0.5 rounded">
-                                    {capacitacion.CODIGO_DOCUMENTO}
-                                  </span>
-                                  <span>•</span>
-                                </>
-                              )}
-                              <span>{capacitacion.FECHA}</span>
-                              {capacitacion.NOTA && (
-                                <>
-                                  <span>•</span>
-                                  <span className="font-semibold text-green-600 dark:text-green-400">
-                                    Nota: {capacitacion.NOTA}
-                                  </span>
-                                </>
-                              )}
-                            </div>
-                          </div>
-                          <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 whitespace-nowrap">
-                            Completado
-                          </span>
-                        </div>
+                  {capacitacionesCategoria.map((capacitacion, index) => {
+                    const isSelected = selectedIds.has(capacitacion.ID_CAPACITACION_COLABORADOR)
+                    const isEditing = editingId === capacitacion.ID_CAPACITACION_COLABORADOR
 
-                        {/* Botones de descarga */}
-                        <div className="flex flex-wrap gap-2">
-                          {capacitacion.ASISTENCIA && (
-                            <button
-                              onClick={() => onDownloadAsistencia(capacitacion.ID_SESION)}
-                              disabled={loadingDownload}
-                              className="flex items-center gap-2 px-3 py-2 text-xs bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-semibold rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                            >
-                              <FileText className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                              Descargar Asistencia
-                            </button>
-                          )}
-                          {capacitacion.EXAMEN && (
-                            <button
-                              onClick={() => onDownloadExamen(colaboradorId, capacitacion.ID_SESION)}
-                              disabled={loadingDownload}
-                              className="flex items-center gap-2 px-3 py-2 text-xs bg-purple-50 dark:bg-purple-950 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 font-semibold rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                            >
-                              <Download className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
-                              Descargar Examen
-                            </button>
-                          )}
-                          {capacitacion.DIPLOMA && (
-                            <button
-                              onClick={() => onDownloadDiploma(colaboradorId, capacitacion.ID_SESION)}
-                              disabled={loadingDownload}
-                              className="flex items-center gap-2 px-3 py-2 text-xs bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 font-semibold rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
-                            >
-                              <Award className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
-                              Descargar Diploma
-                            </button>
-                          )}
+                    return (
+                      <div
+                        key={index}
+                        className={`bg-muted/30 rounded-lg p-4 border transition-all ${
+                          isSelected
+                            ? "border-primary/60 bg-primary/5"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        <div className="flex flex-col gap-3">
+                          <div className="flex items-start justify-between gap-4">
+                            <div className="flex items-start gap-3 flex-1">
+                              {/* Checkbox selección múltiple */}
+                              {isAdmin && (
+                                <input
+                                  type="checkbox"
+                                  checked={isSelected}
+                                  onChange={() => toggleSeleccion(capacitacion.ID_CAPACITACION_COLABORADOR)}
+                                  className="mt-0.5 cursor-pointer accent-primary"
+                                />
+                              )}
+                              <div className="flex-1">
+                                <h4 className="text-sm font-semibold text-foreground mb-1">
+                                  {capacitacion.NOMBRE_CAPACITACION}
+                                </h4>
+                                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                                  {capacitacion.CODIGO_DOCUMENTO && (
+                                    <>
+                                      <span className="font-mono bg-muted px-2 py-0.5 rounded">
+                                        {capacitacion.CODIGO_DOCUMENTO}
+                                      </span>
+                                      <span>•</span>
+                                    </>
+                                  )}
+                                  <span>{capacitacion.FECHA}</span>
+                                  {capacitacion.NOTA && (
+                                    <>
+                                      <span>•</span>
+                                      <span className="font-semibold text-green-600 dark:text-green-400">
+                                        Nota: {capacitacion.NOTA}
+                                      </span>
+                                    </>
+                                  )}
+                                </div>
+
+                                {/* Edición individual de categoría */}
+                                {isAdmin && (
+                                  <div className="mt-2">
+                                    {isEditing ? (
+                                      <div className="flex items-center gap-2">
+                                        <input
+                                          type="text"
+                                          value={editValue}
+                                          onChange={(e) => setEditValue(e.target.value)}
+                                          className="text-xs px-2 py-1 rounded border border-border bg-background focus:outline-none focus:ring-1 focus:ring-primary w-40"
+                                          autoFocus
+                                          onKeyDown={(e) => {
+                                            if (e.key === "Enter") handleGuardarIndividual(capacitacion.ID_CAPACITACION_COLABORADOR)
+                                            if (e.key === "Escape") { setEditingId(null); setEditValue("") }
+                                          }}
+                                        />
+                                        <button
+                                          onClick={() => handleGuardarIndividual(capacitacion.ID_CAPACITACION_COLABORADOR)}
+                                          disabled={isSaving}
+                                          className="text-green-600 hover:text-green-700 disabled:opacity-50 cursor-pointer"
+                                        >
+                                          <Check className="w-4 h-4" />
+                                        </button>
+                                        <button
+                                          onClick={() => { setEditingId(null); setEditValue("") }}
+                                          className="text-muted-foreground hover:text-foreground cursor-pointer"
+                                        >
+                                          <X className="w-4 h-4" />
+                                        </button>
+                                      </div>
+                                    ) : (
+                                      <button
+                                        onClick={() => handleEditIndividual(capacitacion)}
+                                        className="flex items-center gap-1 text-xs text-muted-foreground hover:text-primary dark:hover:text-blue-600 transition-colors cursor-pointer"
+                                      >
+                                        <Pencil className="w-3 h-3" />
+                                        Editar categoría
+                                      </button>
+                                    )}
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <span className="px-3 py-1 rounded-full text-xs font-semibold bg-green-100 dark:bg-green-900 text-green-700 dark:text-green-300 whitespace-nowrap">
+                              Completado
+                            </span>
+                          </div>
+
+                          {/* Botones descarga */}
+                          <div className="flex flex-wrap gap-2">
+                            {capacitacion.ASISTENCIA && (
+                              <button
+                                onClick={() => onDownloadAsistencia(capacitacion.ID_SESION)}
+                                disabled={loadingDownload}
+                                className="flex items-center gap-2 px-3 py-2 text-xs bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-300 font-semibold rounded-lg hover:bg-blue-100 dark:hover:bg-blue-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                              >
+                                <FileText className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                                Descargar Asistencia
+                              </button>
+                            )}
+                            {capacitacion.EXAMEN && (
+                              <button
+                                onClick={() => onDownloadExamen(colaboradorId, capacitacion.ID_SESION)}
+                                disabled={loadingDownload}
+                                className="flex items-center gap-2 px-3 py-2 text-xs bg-purple-50 dark:bg-purple-950 border border-purple-200 dark:border-purple-800 text-purple-700 dark:text-purple-300 font-semibold rounded-lg hover:bg-purple-100 dark:hover:bg-purple-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                              >
+                                <Download className="w-3.5 h-3.5 text-purple-600 dark:text-purple-400" />
+                                Descargar Examen
+                              </button>
+                            )}
+                            {capacitacion.DIPLOMA && (
+                              <button
+                                onClick={() => onDownloadDiploma(colaboradorId, capacitacion.ID_SESION)}
+                                disabled={loadingDownload}
+                                className="flex items-center gap-2 px-3 py-2 text-xs bg-amber-50 dark:bg-amber-950 border border-amber-200 dark:border-amber-800 text-amber-700 dark:text-amber-300 font-semibold rounded-lg hover:bg-amber-100 dark:hover:bg-amber-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                              >
+                                <Award className="w-3.5 h-3.5 text-amber-600 dark:text-amber-400" />
+                                Descargar Diploma
+                              </button>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
               )}
             </div>
