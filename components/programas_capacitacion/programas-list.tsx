@@ -103,7 +103,7 @@ export function ProgramasCapacitacionList({
                 <CardHeader className="pb-3 flex-grow">
                   <div className="flex items-start justify-between gap-2">
                     <div className="flex-1 min-w-0">
-                      <h3 className="font-semibold text-foreground group-hover:text-primary dark:group-hover:text-gray-500 transition-colors break-words leading-snug line-clamp-2">
+                      <h3 className="font-semibold text-foreground group-hover:text-primary dark:group-hover:text-blue-300 transition-colors break-words leading-snug line-clamp-2">
                         {programa.NOMBRE}
                       </h3>
                       <p className="text-sm text-muted-foreground mt-1 line-clamp-2">{programa.DESCRIPCION}</p>
@@ -207,14 +207,17 @@ export function ProgramasCapacitacionList({
                   </TableRow>
                 ) : (
                   filteredProgramas.map((programa) => (
-                    <TableRow key={programa.ID_PROGRAMA} className="hover:bg-muted/50">
+                    <TableRow key={programa.ID_PROGRAMA} className="hover:bg-muted/50 group">
                       <TableCell className="font-medium" title={programa.NOMBRE}>{programa.NOMBRE}</TableCell>
                       <TableCell className="max-w-xs truncate" title={programa.DESCRIPCION}>
                         {programa.DESCRIPCION}
                       </TableCell>
                       <TableCell>
-                        <Badge variant="outline" className="bg-primary/10 text-primary border-primary/20 dark:text-foreground dark:border-blue-900">
-                          {programa.TIPO}
+                        <Badge 
+                            variant="outline" 
+                            className="inline-flex items-center justify-center bg-primary/10 text-primary border-primary/20 dark:text-foreground dark:border-blue-900 transition-discrete duration-400 group-hover:scale-105"
+                          >
+                            {programa.TIPO}
                         </Badge>
                       </TableCell>
                       <TableCell>{programa.PERIODO}</TableCell>
@@ -223,39 +226,47 @@ export function ProgramasCapacitacionList({
                       </TableCell>
                       <TableCell>
                         <Badge
-                          variant={programa.ESTADO === "ACTIVO" ? "default" : "secondary"}
-                          className={
-                            programa.ESTADO === "ACTIVO"
-                              ? "bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20"
-                              : ""
-                          }
-                        >
-                          {programa.ESTADO}
+                            variant={programa.ESTADO === "ACTIVO" ? "default" : "secondary"}
+                            className={
+                              programa.ESTADO === "ACTIVO"
+                                ? "inline-flex items-center justify-center bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20 transition-discrete duration-400 group-hover:scale-105"
+                                : ""
+                            }
+                          >
+                            {programa.ESTADO}
                         </Badge>
                       </TableCell>
                       <TableCell className="text-center">
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="secondary" className="h-8 w-8 p-0 cursor-pointer hover:border hover:border-foreground/50">
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-9 w-9 hover:bg-primary/10 dark:hover:bg-blue-400/10 hover:text-primary dark:hover:text-blue-400 transition-all duration-200 group-hover:scale-110 cursor-pointer"
+                            >
                               <span className="sr-only">Abrir menú</span>
                               <MoreHorizontal className="h-4 w-4" />
                             </Button>
                           </DropdownMenuTrigger>
                           
-                          <DropdownMenuContent align="end">
+                          <DropdownMenuContent align="end" className="min-w-40 bg-background border border-border rounded-md shadow-lg p-1">
                             <DropdownMenuItem 
                               onClick={() => onViewDetails(programa)}
-                              className="cursor-pointer"
+                              className="cursor-pointer group/item py-2 focus:bg-blue-500/10 focus:text-blue-700 dark:focus:text-blue-400"
                             >
-                              <Eye className="w-4 h-4 mr-2 text-blue-700 dark:text-blue-400" />
+                              <div className="w-8 h-8 rounded-lg bg-blue-500/10 flex items-center justify-center group-hover/item:bg-blue-500/20 transition-colors">
+                                <Eye className="w-4 h-4 text-blue-600 dark:text-blue-400 group-hover/item:scale-110 transition-transform" />
+                              </div>
                               Ver Detalles
                             </DropdownMenuItem>
                             
                             <DropdownMenuItem 
                               onClick={() => onEdit(programa)}
-                              className="cursor-pointer text-blue-600 dark:text-blue-400"
+                              className="cursor-pointer group/item py-2 focus:bg-orange-500/10 focus:text-orange-700 dark:focus:text-orange-400"
                             >
-                              <Pencil className="w-4 h-4 mr-2" />
+                              <div className="w-8 h-8 rounded-lg bg-orange-500/10 flex items-center justify-center group-hover/item:bg-orange-500/20 transition-colors">
+                                <Pencil className="w-4 h-4 text-orange-600 dark:text-orange-400 group-hover/item:scale-110 transition-transform" />
+                              </div>
                               Editar
                             </DropdownMenuItem>
 
@@ -263,9 +274,11 @@ export function ProgramasCapacitacionList({
 
                             <DropdownMenuItem 
                               onClick={() => handleAssignClick(programa)} 
-                              className="cursor-pointer text-emerald-600 dark:text-emerald-400"
+                              className="cursor-pointer group/item py-2 focus:bg-emerald-500/10 focus:text-emerald-700 dark:focus:text-emerald-400"
                             >
-                              <UserPlus className="w-4 h-4 mr-2" /> 
+                              <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center group-hover/item:bg-emerald-500/20 transition-colors">
+                                <UserPlus className="w-4 h-4 text-emerald-600 dark:text-emerald-400 group-hover/item:scale-110 transition-transform" />
+                              </div>
                               Asignar Programa
                             </DropdownMenuItem>
                           
@@ -274,6 +287,10 @@ export function ProgramasCapacitacionList({
                       </TableCell>
                     </TableRow>
                   ))
+
+
+
+                  
                 )}
               </TableBody>
             </Table>

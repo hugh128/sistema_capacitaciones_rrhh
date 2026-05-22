@@ -293,17 +293,32 @@ export function Sidebar({ className }: SidebarProps) {
                   disabled={isNavigating}
                   title={!shouldShowText ? item.label : undefined}
                   className={cn(
-                    "w-full justify-start gap-3 text-sidebar-foreground hover:bg-accent hover:text-sidebar-accent-foreground cursor-pointer",
-                    !shouldShowText ? "justify-center px-2" : "", 
-                    isActive && "bg-sidebar-foreground/12"
+                    "w-full justify-start gap-3 cursor-pointer transition-all duration-150",
+                    "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                    !shouldShowText ? "justify-center px-2" : "",
+                    isActive
+                      ? [
+                          "bg-white/11 text-white font-medium",
+                          "border border-transparent",
+                          "border-l-4 border-l-accent/90",
+                          "dark:bg-blue-300/9 dark:text-blue-50",
+                          "border-l-4 dark:border-l-blue-500",
+                          "hover:bg-white/14 dark:hover:bg-blue-300/12",
+                        ].join(" ")
+                      : "opacity-60 hover:opacity-100 border border-transparent dark:hover:bg-blue-300/12"
                   )}
                 >
                   {isNavigating && navigatingTo === item.label ? (
                     <Loader2 className="w-4 h-4 flex-shrink-0 animate-spin" />
                   ) : (
-                    <Icon className="w-4 h-4 flex-shrink-0" />
+                    <Icon className={cn(
+                      "w-4 h-4 flex-shrink-0 transition-colors",
+                      isActive && "text-accent dark:text-blue-300"
+                    )} />
                   )}
-                  {shouldShowText && <span className="truncate">{item.label}</span>}
+                  {shouldShowText && (
+                    <span className="truncate">{item.label}</span>
+                  )}
                 </Button>
               </div>
             )

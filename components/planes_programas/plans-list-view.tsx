@@ -239,7 +239,7 @@ export default function PlansListView({ plans, onCreatePlan, onViewDetails, onAs
                 <CardHeader className="space-y-3 flex-grow">
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex-1 min-w-0 space-y-2">
-                      <CardTitle className="text-lg font-semibold leading-tight break-words group-hover:text-primary transition-colors">
+                      <CardTitle className="text-lg font-semibold leading-tight break-words group-hover:text-primary dark:group-hover:text-blue-300 transition-colors">
                         {plan.NOMBRE}
                       </CardTitle>
                       <CardDescription className="text-sm">
@@ -258,7 +258,7 @@ export default function PlansListView({ plans, onCreatePlan, onViewDetails, onAs
                 <CardContent className="space-y-3">
                   <div className="flex items-center gap-3 text-sm">
                     <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary/10">
-                      <BookOpen className="w-4 h-4 text-primary" />
+                      <BookOpen className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                     </div>
                     <div>
                       <p className="font-semibold">{plan.DOCUMENTOS_PLANES.length || 0}</p>

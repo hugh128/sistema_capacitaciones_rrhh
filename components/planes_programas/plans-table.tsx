@@ -117,13 +117,13 @@ export function PlansTable({ title, filteredPlans, onViewDetails, onAssignPlan, 
                     className="group hover:bg-primary/5 hover:shadow-sm transition-all duration-200 border-b border-border/30 last:border-0"
                   >
                     <TableCell className="font-medium py-4">
-                      <span className="text-base group-hover:text-primary transition-colors duration-200 font-semibold">
+                      <span className="text-base group-hover:text-primary dark:group-hover:text-white transition-colors duration-200 font-semibold">
                         {plan.NOMBRE}
                       </span>
                     </TableCell>
 
                     <TableCell className="max-w-sm truncate">
-                      <span className="text-base group-hover:text-primary transition-colors duration-200">
+                      <span className="text-base group-hover:text-primary dark:group-hover:text-white transition-colors duration-200">
                         {plan.DESCRIPCION}
                       </span>
                     </TableCell>
@@ -145,7 +145,7 @@ export function PlansTable({ title, filteredPlans, onViewDetails, onAssignPlan, 
 
                     <TableCell className="text-muted-foreground whitespace-nowrap">
                       <div className="flex items-center justify-center gap-2 text-center">
-                        <div className="w-1.5 h-1.5 rounded-full bg-primary/40" />
+                        <div className="w-1.5 h-1.5 rounded-full bg-primary/40 dark:bg-blue-500/50" />
                         <span className="text-sm">{plan.FECHA_CREACION}</span>
                       </div>
                     </TableCell>
