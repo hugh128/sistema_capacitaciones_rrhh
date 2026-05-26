@@ -269,7 +269,7 @@ export const TablaColaboradoresLms = memo(function TablaColaboradoresLms({
   const colaboradoresValidos = useMemo(() =>
     colaboradores.filter((c) => {
       const nombre = `${c.NOMBRE} ${c.APELLIDO}`.toLowerCase().trim()
-      return !EXCLUIDOS.has(nombre) && c.ESTADO
+      return !EXCLUIDOS.has(nombre)
     }),
     [colaboradores]
   )

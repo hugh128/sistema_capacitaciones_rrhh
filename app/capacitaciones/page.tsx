@@ -128,10 +128,26 @@ export default function GestionCapacitacionesPage() {
             {user?.USERNAME.toLowerCase() === "admin" &&
               user.ROLES.some((r) => r.NOMBRE === "RRHH") && (
                 <div className="flex justify-end">
-                  <Link href="/capacitaciones/subir">
-                    <Button className="cursor-pointer gap-2">
-                      <Upload className="h-4 w-4" />
-                      Subir Capacitación
+                  <Link
+                    href="/capacitaciones/subir"
+                    aria-disabled={capacitacionesLoading}
+                    onClick={(e) => capacitacionesLoading && e.preventDefault()}
+                  >
+                    <Button
+                      disabled={capacitacionesLoading}
+                      className="cursor-pointer gap-2 min-w-[170px]"
+                    >
+                      {capacitacionesLoading ? (
+                        <>
+                          <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary-foreground border-t-transparent" />
+                          Cargando...
+                        </>
+                      ) : (
+                        <>
+                          <Upload className="h-4 w-4" />
+                          Subir Capacitación
+                        </>
+                      )}
                     </Button>
                   </Link>
                 </div>

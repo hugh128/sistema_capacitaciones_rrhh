@@ -126,7 +126,7 @@ export default function CollaboratorsList({
               onClick={() => setFilterStatus("activo")}
               variant={filterStatus === "activo" ? "default" : "secondary"}
               className={`flex-1 md:flex-none cursor-pointer ${
-                filterStatus === "activo" ? "bg-green-500 hover:bg-green-600" : "border-2 border-green-500/50"
+                filterStatus === "activo" ? "bg-green-500 hover:bg-green-600" : "border-1 border-green-500/50"
               }`}
             >
               Activos
@@ -135,7 +135,7 @@ export default function CollaboratorsList({
               onClick={() => setFilterStatus("inactivo")}
               variant={filterStatus === "inactivo" ? "default" : "secondary"}
               className={`flex-1 md:flex-none cursor-pointer ${
-                filterStatus === "inactivo" ? "bg-red-500 hover:bg-red-600" : "border-2 border-red-500/50"
+                filterStatus === "inactivo" ? "bg-red-500 hover:bg-red-600" : "border-1 border-red-500/50"
               }`}
             >
               Inactivos
