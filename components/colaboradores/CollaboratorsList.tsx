@@ -117,25 +117,25 @@ export default function CollaboratorsList({
           <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 md:overflow-visible">
             <Button
               onClick={() => setFilterStatus("all")}
-              variant={filterStatus === "all" ? "default" : "outline"}
-              className="flex-1 md:flex-none"
+              variant={filterStatus === "all" ? "default" : "secondary"}
+              className="flex-1 md:flex-none cursor-pointer hover:bg-blue-950"
             >
               Todos
             </Button>
             <Button
               onClick={() => setFilterStatus("activo")}
-              variant={filterStatus === "activo" ? "default" : "outline"}
-              className={`flex-1 md:flex-none ${
-                filterStatus === "activo" ? "bg-green-500 hover:bg-green-600" : ""
+              variant={filterStatus === "activo" ? "default" : "secondary"}
+              className={`flex-1 md:flex-none cursor-pointer ${
+                filterStatus === "activo" ? "bg-green-500 hover:bg-green-600" : "border-2 border-green-500/50"
               }`}
             >
               Activos
             </Button>
             <Button
               onClick={() => setFilterStatus("inactivo")}
-              variant={filterStatus === "inactivo" ? "default" : "outline"}
-              className={`flex-1 md:flex-none ${
-                filterStatus === "inactivo" ? "bg-red-500 hover:bg-red-600" : ""
+              variant={filterStatus === "inactivo" ? "default" : "secondary"}
+              className={`flex-1 md:flex-none cursor-pointer ${
+                filterStatus === "inactivo" ? "bg-red-500 hover:bg-red-600" : "border-2 border-red-500/50"
               }`}
             >
               Inactivos
@@ -181,7 +181,7 @@ export default function CollaboratorsList({
                       {collaborator.INICIALES}
                     </div>
                     <div>
-                      <div className="font-semibold text-foreground hover:text-primary">
+                      <div className="font-semibold text-foreground hover:text-primary dark:hover:text-blue-400/90">
                         {collaborator.NOMBRE_COMPLETO}
                       </div>
                       <div className="text-sm text-muted-foreground">{collaborator.EMAIL}</div>

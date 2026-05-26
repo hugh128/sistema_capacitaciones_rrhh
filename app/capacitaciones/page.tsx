@@ -13,6 +13,9 @@ import { AllCapacitacionesTab } from "@/components/capacitaciones/all-capacitaci
 import { RequirePermission } from "@/components/RequirePermission"
 import { useCapacitaciones } from "@/hooks/useCapacitaciones"
 import { Toaster } from "react-hot-toast"
+import { Upload } from "lucide-react"
+import Link from "next/link"
+import { Button } from "@/components/ui/button"
 
 export default function GestionCapacitacionesPage() {
   const { user, loading: authLoading } = useAuth()
@@ -121,6 +124,18 @@ export default function GestionCapacitacionesPage() {
               aprobacionPromedio={metrics.aprobacionPromedio}
               loading={capacitacionesLoading}
             />
+
+            {user?.USERNAME.toLowerCase() === "admin" &&
+              user.ROLES.some((r) => r.NOMBRE === "RRHH") && (
+                <div className="flex justify-end">
+                  <Link href="/capacitaciones/subir">
+                    <Button className="cursor-pointer gap-2">
+                      <Upload className="h-4 w-4" />
+                      Subir Capacitación
+                    </Button>
+                  </Link>
+                </div>
+            )}
 
             <Tabs defaultValue="pendientes" className="w-full">
               <TabsList className="flex flex-wrap w-full gap-1 p-1 h-auto">

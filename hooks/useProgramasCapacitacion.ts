@@ -22,7 +22,7 @@ export function useProgramasCapacitacion(user: UsuarioLogin | null) {
 
     try {
       const { data } = await apiClient.get<ProgramaCapacitacion[]>('/programa-capacitacion');
-      setProgramasCapacitacion(data);
+      setProgramasCapacitacion(data.sort((a, b) => a.NOMBRE.localeCompare(b.NOMBRE)));
     } catch (err) {
       const baseMessage = "Error al cargar los planes de capacitacion.";
       setError(baseMessage);

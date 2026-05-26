@@ -6,6 +6,7 @@ import { handleApiError } from "@/utils/error-handler";
 import { useCallback, useEffect, useState, useRef, useMemo } from "react";
 import toast from "react-hot-toast";
 import { AxiosError } from "axios";
+import { CrearCapacitacionLmsPayload } from "@/lib/capacitaciones/capacitacion-lms.types";
 
 export function useCapacitaciones(user: UsuarioLogin | null) {
   const userId = user?.PERSONA_ID;
@@ -820,6 +821,52 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     }
   }, [userId, obtenerCapacitaciones]);
 
+  const crearCapacitacionLms = useCallback(async (
+    payload: CrearCapacitacionLmsPayload,
+    listaAsistenciaFile: File,
+    examenFiles: { idColaborador: number; file: File }[]
+  ) => {
+    setIsMutating(true)
+    try {
+      const formData = new FormData()
+ 
+      formData.append('nombre',                payload.nombre)
+      formData.append('categoriaCapacitacion', payload.categoriaCapacitacion)
+      formData.append('tipoCapacitacion',      payload.tipoCapacitacion)
+      formData.append('aplicaExamen',          String(payload.aplicaExamen))
+      formData.append('notaMinima',            String(payload.notaMinima ?? 70))
+      formData.append('programaId',            String(payload.programaId))
+      formData.append('capacitadorId',         String(payload.capacitadorId))
+      formData.append('fechaProgramada',       payload.fechaProgramada)
+      formData.append('modalidad',             payload.modalidad)
+      formData.append('categoriaSesion',       payload.categoriaSesion)
+      formData.append('usuarioCreacion',       payload.usuarioCreacion)
+      formData.append('colaboradores',         JSON.stringify(
+        payload.colaboradores.map(c => ({ idColaborador: c.idColaborador }))
+      ))
+ 
+      formData.append('listaAsistencia', listaAsistenciaFile, listaAsistenciaFile.name)
+ 
+      for (const { idColaborador, file } of examenFiles) {
+        formData.append(`examen_${idColaborador}`, file, file.name)
+      }
+ 
+      const { data } = await apiClient.post('/capacitaciones/lms', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+      })
+ 
+      toast.success('Capacitación creada exitosamente.')
+      return data
+    } catch (err) {
+      const baseMessage = 'Error al crear la capacitación.'
+      handleApiError(err, baseMessage)
+      throw err
+    } finally {
+      setIsMutating(false)
+    }
+  }, [])
+
+
   return useMemo(() => ({
     capacitaciones,
     loading,
@@ -850,6 +897,7 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     devolverSesion,
     editarSesion,
     finalizarSesionConAsistencias,
+    crearCapacitacionLms,
   }), [
     capacitaciones,
     loading,
@@ -880,5 +928,6 @@ export function useCapacitaciones(user: UsuarioLogin | null) {
     devolverSesion,
     editarSesion,
     finalizarSesionConAsistencias,
+    crearCapacitacionLms,
   ]);
 }
