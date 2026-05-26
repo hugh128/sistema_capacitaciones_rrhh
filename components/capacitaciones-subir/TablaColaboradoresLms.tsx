@@ -39,6 +39,7 @@ const formatFileSize = (bytes: number): string => {
 interface FilaColaboradorProps {
   sel: ColaboradorSeleccionado
   col: ColaboradorLms | undefined
+  index: number
   aplicaExamen: boolean
   onQuitar: (id: number) => void
   onExamen: (id: number, file: File | null) => void
@@ -47,6 +48,7 @@ interface FilaColaboradorProps {
 const FilaColaborador = memo(function FilaColaborador({
   sel,
   col,
+  index,
   aplicaExamen,
   onQuitar,
   onExamen,
@@ -54,6 +56,7 @@ const FilaColaborador = memo(function FilaColaborador({
   const [isDragOver, setIsDragOver] = useState(false)
   const [dragError, setDragError] = useState<string | null>(null)
   const fileInputRef = useRef<HTMLInputElement | null>(null)
+  const dragCounter = useRef(0)
 
   const validarArchivo = useCallback((file: File): boolean => {
     setDragError(null)
@@ -70,36 +73,42 @@ const FilaColaborador = memo(function FilaColaborador({
     return true
   }, [])
 
-  const handleDragOver = useCallback((e: React.DragEvent) => {
-    if (e.dataTransfer.types.includes("Files")) {
-      e.preventDefault()
-      e.stopPropagation()
-      setIsDragOver(true)
-    }
+  const handleDragEnter = useCallback((e: React.DragEvent) => {
+    if (!e.dataTransfer.types.includes("Files")) return
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounter.current += 1
+    if (dragCounter.current === 1) setIsDragOver(true)
   }, [])
 
   const handleDragLeave = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
-    setIsDragOver(false)
+    dragCounter.current -= 1
+    if (dragCounter.current === 0) setIsDragOver(false)
+  }, [])
+
+  const handleDragOver = useCallback((e: React.DragEvent) => {
+    if (!e.dataTransfer.types.includes("Files")) return
+    e.preventDefault()
+    e.stopPropagation()
   }, [])
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault()
     e.stopPropagation()
+    dragCounter.current = 0
     setIsDragOver(false)
-
     const file = e.dataTransfer.files[0]
     if (!file) return
-    if (validarArchivo(file)) {
-      onExamen(sel.idColaborador, file)
-    }
+    if (validarArchivo(file)) onExamen(sel.idColaborador, file)
   }, [sel.idColaborador, onExamen, validarArchivo])
 
   return (
     <TableRow
-      onDragOver={aplicaExamen ? handleDragOver : undefined}
+      onDragEnter={aplicaExamen ? handleDragEnter : undefined}
       onDragLeave={aplicaExamen ? handleDragLeave : undefined}
+      onDragOver={aplicaExamen ? handleDragOver : undefined}
       onDrop={aplicaExamen ? handleDrop : undefined}
       className={cn(
         "transition-colors duration-150",
@@ -109,12 +118,17 @@ const FilaColaborador = memo(function FilaColaborador({
         ]
       )}
     >
+      {/* Correlativo */}
+      <TableCell className="py-2.5 w-10 text-center text-sm text-muted-foreground font-mono select-none">
+        {index + 1}
+      </TableCell>
+
       {/* Nombre */}
-      <TableCell className="py-2.5 font-medium text-sm min-w-[160px]">
+      <TableCell className="py-2.5 text-sm min-w-[160px]">
         <div className="flex flex-col">
           <span>{sel.nombre}</span>
           {col?.TIPO_PERSONA === "EXTERNO" && (
-            <Badge variant="outline" className="text-xs py-0 mt-0.5 w-fit">
+            <Badge variant="destructive" className="text-xs py-0 mt-0.5 w-fit">
               Externo
             </Badge>
           )}
@@ -126,9 +140,7 @@ const FilaColaborador = memo(function FilaColaborador({
         {col?.DEPARTAMENTO?.NOMBRE ? (
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="cursor-default">
-                {truncar(col.DEPARTAMENTO.NOMBRE)}
-              </span>
+              <span className="cursor-default">{truncar(col.DEPARTAMENTO.NOMBRE)}</span>
             </TooltipTrigger>
             {col.DEPARTAMENTO.NOMBRE.length > 22 && (
               <TooltipContent side="top">{col.DEPARTAMENTO.NOMBRE}</TooltipContent>
@@ -144,9 +156,7 @@ const FilaColaborador = memo(function FilaColaborador({
         {col?.PUESTO?.NOMBRE ? (
           <Tooltip>
             <TooltipTrigger asChild>
-              <span className="cursor-default">
-                {truncar(col.PUESTO.NOMBRE)}
-              </span>
+              <span className="cursor-default">{truncar(col.PUESTO.NOMBRE)}</span>
             </TooltipTrigger>
             {col.PUESTO.NOMBRE.length > 22 && (
               <TooltipContent side="top">{col.PUESTO.NOMBRE}</TooltipContent>
@@ -159,9 +169,9 @@ const FilaColaborador = memo(function FilaColaborador({
 
       {/* Examen individual */}
       {aplicaExamen && (
-        <TableCell className="py-2.5 min-w-[120px]">
+        <TableCell className="py-2.5 min-w-[160px]">
           {isDragOver ? (
-            <div className="flex items-center gap-1.5 text-primary">
+            <div className="flex items-center gap-1.5 text-primary dark:text-blue-500">
               <FileUp className="h-4 w-4 animate-bounce" />
               <span className="text-xs font-medium">Soltar para asignar</span>
             </div>
@@ -221,16 +231,16 @@ const FilaColaborador = memo(function FilaColaborador({
                   className="hidden"
                   onChange={(e) => {
                     const file = e.target.files?.[0] ?? null
-                    if (file && validarArchivo(file)) {
-                      onExamen(sel.idColaborador, file)
-                    }
+                    if (file && validarArchivo(file)) onExamen(sel.idColaborador, file)
                     e.target.value = ""
                   }}
                 />
               </label>
+
 {/*               <span className="text-xs text-muted-foreground/50 hidden sm:inline">
                 o arrastra aquí
               </span> */}
+
             </div>
           )}
         </TableCell>
@@ -387,6 +397,9 @@ export const TablaColaboradoresLms = memo(function TablaColaboradoresLms({
               <Table className="min-w-full">
                 <TableHeader>
                   <TableRow className="bg-muted/50 hover:bg-muted/50">
+                    <TableHead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm font-semibold text-foreground w-10 text-center">
+                      #
+                    </TableHead>
                     <TableHead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm font-semibold text-foreground min-w-[160px]">
                       Colaborador
                     </TableHead>
@@ -397,7 +410,7 @@ export const TablaColaboradoresLms = memo(function TablaColaboradoresLms({
                       Puesto
                     </TableHead>
                     {aplicaExamen && (
-                      <TableHead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm font-semibold text-foreground min-w-[120px]">
+                      <TableHead className="sticky top-0 z-10 bg-muted/80 backdrop-blur-sm font-semibold text-foreground min-w-[160px]">
                         Examen individual
                       </TableHead>
                     )}
@@ -405,11 +418,12 @@ export const TablaColaboradoresLms = memo(function TablaColaboradoresLms({
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {seleccionados.map((sel) => (
+                  {seleccionados.map((sel, index) => (
                     <FilaColaborador
                       key={sel.idColaborador}
                       sel={sel}
                       col={colaboradoresValidos.find((c) => c.ID_PERSONA === sel.idColaborador)}
+                      index={index}
                       aplicaExamen={aplicaExamen}
                       onQuitar={handleQuitar}
                       onExamen={handleExamen}

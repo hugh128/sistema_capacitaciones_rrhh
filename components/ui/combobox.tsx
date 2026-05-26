@@ -107,7 +107,7 @@ export function Combobox({
                     }}
                     className={cn(itemBase, isSelected && itemSelected)}
                   >
-                    <div className="flex flex-col min-w-0 flex-1">
+                    <div className="flex flex-col min-w-0 flex-1 space-y-0.5">
                       <span className={cn(
                         "truncate text-sm",
                         isSelected

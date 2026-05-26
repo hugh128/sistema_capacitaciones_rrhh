@@ -1,6 +1,6 @@
 "use client"
 
-import { memo, useState, useCallback } from "react"
+import { memo, useState, useCallback, useRef } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Alert, AlertDescription } from "@/components/ui/alert"
@@ -28,6 +28,7 @@ export const ZonaListadoAsistencia = memo(function ZonaListadoAsistencia({
 }: Props) {
   const [isDragging, setIsDragging] = useState(false)
   const [dragError, setDragError] = useState<string | null>(null)
+  const dragCounter = useRef(0)
 
   const validate = useCallback((f: File): boolean => {
     setDragError(null)
@@ -42,25 +43,40 @@ export const ZonaListadoAsistencia = memo(function ZonaListadoAsistencia({
     return true
   }, [])
 
+  const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounter.current += 1
+    if (dragCounter.current === 1 && e.dataTransfer.types.includes("Files")) {
+      setIsDragging(true)
+    }
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    dragCounter.current -= 1
+    if (dragCounter.current === 0) {
+      setIsDragging(false)
+    }
+  }, [])
+
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+  }, [])
+
   const handleDrop = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
       e.preventDefault()
+      e.stopPropagation()
+      dragCounter.current = 0
       setIsDragging(false)
       const dropped = e.dataTransfer.files[0]
       if (dropped && validate(dropped)) onFileSelect(dropped)
     },
     [validate, onFileSelect]
   )
-
-  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    setIsDragging(true)
-  }, [])
-
-  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault()
-    setIsDragging(false)
-  }, [])
 
   return (
     <Card>
@@ -80,9 +96,10 @@ export const ZonaListadoAsistencia = memo(function ZonaListadoAsistencia({
 
       <CardContent className="space-y-3">
         <div
-          onDrop={handleDrop}
-          onDragOver={handleDragOver}
+          onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
+          onDragOver={handleDragOver}
+          onDrop={handleDrop}
           className={cn(
             "border-2 border-dashed rounded-xl p-6 text-center transition-all duration-300",
             isDragging
