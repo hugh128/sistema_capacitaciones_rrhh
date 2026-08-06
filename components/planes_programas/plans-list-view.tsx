@@ -496,8 +496,7 @@ export default function PlansListView({ plans, onCreatePlan, onViewDetails, onAs
                           <Checkbox
                             id={id}
                             checked={colab.seleccionado}
-                            onCheckedChange={() => handleToggleColaborador(colab.ID_COLABORADOR)}
-                            className="h-5 w-5 mt-1"
+                            className="h-5 w-5 mt-1 cursor-pointer"
                           />
 
                           <Label htmlFor={id} className="flex-1 cursor-pointer space-y-1">
